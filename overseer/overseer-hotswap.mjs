@@ -25,6 +25,8 @@ export class OverseerHotSwap {
   }
 
   async init() {
+    // Fail before touching persistent state if no independently provisioned trust root exists.
+    if (!this.publicKey) throw new Error("PINNED_AUTHORITY_PUBLIC_KEY_REQUIRED");
     if (!globalThis.isSecureContext || !navigator.storage?.getDirectory || !crypto?.subtle) {
       throw new Error("UNSUPPORTED_RUNTIME: secure context, OPFS and WebCrypto are required");
     }
