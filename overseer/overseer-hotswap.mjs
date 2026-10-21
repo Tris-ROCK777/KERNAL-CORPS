@@ -140,12 +140,11 @@ export class OverseerHotSwap {
     const previous = this.activePods.get(podId);
     const oldHash = previous?.hash ?? this.lkgPointers.get(podId) ?? null;
     // WAL commit happens before publishing the new active module.
-    await this.appendRingWAL({op:"HOTSWAP_COMMIT", podId, hash, lkgHash:oldHash,
-      durability:["WRITE_ACK","READ_BACK_SHA256_PASS","RESTART_READY"]});
-
     let candidate;
     try {
       candidate = await this.mount(code);
+      await this.appendRingWAL({op:"HOTSWAP_COMMIT", podId, hash, lkgHash:oldHash, signature,
+        durability:["WRITE_ACK","READ_BACK_SHA256_PASS","RESTART_READY"]});
       this.activePods.set(podId, {hash, ...candidate});
       if (oldHash) this.lkgPointers.set(podId, oldHash);
       if (previous?.objectUrl) URL.revokeObjectURL(previous.objectUrl);
@@ -156,13 +155,25 @@ export class OverseerHotSwap {
     }
   }
 
-  async rollbackPod(podId) {
+  async rollbackPod(podId, {signature} = {}) {
     if (!PODS.has(podId)) throw new Error("INVALID_POD: " + podId);
     const hash = this.lkgPointers.get(podId);
     if (!hash) throw new Error("NO_LKG_TARGET");
+    if (!signature) {
+      try {
+        const wal = await this.root.getFileHandle("ring-wal.jsonl");
+        const lines = (await (await wal.getFile()).text()).split("\\n").filter(Boolean);
+        for (let i = lines.length - 1; i >= 0; i--) {
+          const row = JSON.parse(lines[i]);
+          if (row.op === "HOTSWAP_COMMIT" && row.podId === podId && row.hash === hash && row.signature) {
+            signature = row.signature; break;
+          }
+        }
+      } catch {}
+    }
+    if (!signature) throw new Error("NO_LKG_SIGNATURE: cannot authenticate rollback target");
     const code = await this.loadVerified(hash);
-    // Rollback still requires a signature from the configured authority.
-    throw new Error("ROLLBACK_REQUIRES_SIGNED_REINSTALL: call mutatePod with the original valid signature for this module");
+    return this.mutatePod(podId, code, {signature});
   }
 
   async recoverFromRestart() {
