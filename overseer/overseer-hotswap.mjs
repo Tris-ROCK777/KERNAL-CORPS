@@ -203,28 +203,42 @@ export class OverseerHotSwap {
       const handle = await this.root.getFileHandle("ring-wal.jsonl");
       text = await (await handle.getFile()).text();
     } catch { return; }
-    const latest = new Map();
+
+    // Keep the commit history for each pod, newest first. If the newest entry
+    // is corrupt or unauthenticated, recovery can fall back to an older verified
+    // commit instead of leaving a previously valid pod unavailable.
+    const commitsByPod = new Map();
     for (const line of text.split("\n").filter(Boolean)) {
       try {
         const row = JSON.parse(line);
-        if (row.op === "HOTSWAP_COMMIT" && PODS.has(row.podId)) latest.set(row.podId, row);
+        if (row.op !== "HOTSWAP_COMMIT" || !PODS.has(row.podId)) continue;
+        if (!commitsByPod.has(row.podId)) commitsByPod.set(row.podId, []);
+        commitsByPod.get(row.podId).push(row);
       } catch { /* ignore torn/corrupt WAL lines */ }
     }
-    for (const [podId, row] of latest) {
-      try {
-        const code = await this.loadVerified(row.hash);
-        // Persisted bytes are not trusted just because their digest matches.
-        // Recovery must authenticate them against the independently configured trust root.
-        if (row.algorithm !== this.signatureAlgorithm) {
-          throw new Error("RECOVERY_SIGNATURE_ALGORITHM_MISMATCH");
+
+    for (const [podId, commits] of commitsByPod) {
+      for (let i = commits.length - 1; i >= 0; i--) {
+        const row = commits[i];
+        try {
+          if (typeof row.hash !== "string" || !/^[0-9a-f]{64}$/.test(row.hash)) {
+            throw new Error("RECOVERY_BAD_SHARD_HASH");
+          }
+          if (row.algorithm !== this.signatureAlgorithm) {
+            throw new Error("RECOVERY_SIGNATURE_ALGORITHM_MISMATCH");
+          }
+          const code = await this.loadVerified(row.hash);
+          await this.verifySignature(code, row.signature, this.publicKey);
+          await this.runSandboxGate(code);
+          const mounted = await this.mount(code);
+          this.activePods.set(podId, {hash:row.hash, ...mounted});
+          if (typeof row.lkgHash === "string" && /^[0-9a-f]{64}$/.test(row.lkgHash)) {
+            this.lkgPointers.set(podId, row.lkgHash);
+          }
+          break;
+        } catch (e) {
+          await this.appendRingWAL({op:"RECOVERY_REJECTED", podId, hash:row.hash, reason:String(e)});
         }
-        await this.verifySignature(code, row.signature, this.publicKey);
-        await this.runSandboxGate(code);
-        const mounted = await this.mount(code);
-        this.activePods.set(podId, {hash:row.hash, ...mounted});
-        if (row.lkgHash) this.lkgPointers.set(podId, row.lkgHash);
-      } catch (e) {
-        await this.appendRingWAL({op:"RECOVERY_REJECTED", podId, hash:row.hash, reason:String(e)});
       }
     }
   }
