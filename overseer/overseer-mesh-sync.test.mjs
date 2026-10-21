@@ -429,5 +429,54 @@ export async function runOverseerMeshVerification() {
     f.receiverMesh.dispose();
   }
 
+
+  // TEST 14: a transfer ID cannot be opened twice, even before the first
+  // transfer has received any payload bytes.
+  {
+    const f = await makePair();
+    const header = {
+      protocol:1, transferId:"abcdef123456", podId:"KashKorner",
+      hash:"a".repeat(64), signature:"00", algorithm:"ECDSA-P256",
+      totalBytes:32, totalChunks:1
+    };
+    f.receiverMesh.startTransfer("sender", header);
+    let rejected = false;
+    try { f.receiverMesh.startTransfer("sender", {...header}); }
+    catch (error) { rejected = /TRANSFER_REPLAY/.test(String(error?.message)); }
+    assert(rejected, "TEST_14_FAILED: duplicate transfer ID was accepted");
+    assert(f.receiverMesh.inboundBuffers.size === 1,
+      "TEST_14_FAILED: duplicate header altered the original transfer state");
+    f.receiverMesh.dropTransfer(header.transferId);
+    f.senderMesh.dispose();
+    f.receiverMesh.dispose();
+    results.push("duplicate transfer ID rejected without replacing active transfer");
+  }
+
+  // TEST 15: EOF from a different peer must not complete or install a transfer.
+  {
+    const f = await makePair();
+    const header = {
+      protocol:1, transferId:"123456abcdef", podId:"KashKorner",
+      hash:"a".repeat(64), signature:"00", algorithm:"ECDSA-P256",
+      totalBytes:32, totalChunks:1
+    };
+    f.receiverMesh.startTransfer("sender", header);
+    let rejected = false;
+    try {
+      await f.receiverMesh.finishTransfer("attacker", {
+        type:"OVERSEER_SHARD_EOF", transferId:header.transferId, expectedHash:header.hash
+      });
+    } catch (error) { rejected = /UNKNOWN_TRANSFER_OR_WRONG_PEER/.test(String(error?.message)); }
+    assert(rejected, "TEST_15_FAILED: EOF from a different peer was accepted");
+    assert(f.receiverMesh.inboundBuffers.has(header.transferId),
+      "TEST_15_FAILED: wrong-peer EOF changed legitimate transfer state");
+    assert(!f.receiverEngine.activePods.has("KashKorner"),
+      "TEST_15_FAILED: wrong-peer EOF installed a shard");
+    f.receiverMesh.dropTransfer(header.transferId);
+    f.senderMesh.dispose();
+    f.receiverMesh.dispose();
+    results.push("wrong-peer EOF rejected; legitimate transfer state preserved");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
