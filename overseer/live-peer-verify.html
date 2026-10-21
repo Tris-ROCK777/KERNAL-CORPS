@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050507">
+  <title>KERNEL CORP. — Live WebRTC Verification</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    body { margin: 0 auto; padding: 20px; max-width: 760px; background: #050507; color: #e4e4e7; }
+    h1 { font-size: 1.05rem; }
+    p, label { font-size: .88rem; line-height: 1.5; color: #c4c4cc; }
+    .card { border: 1px solid #30303b; border-radius: 12px; padding: 16px; margin: 14px 0; }
+    input, select, button { box-sizing: border-box; width: 100%; padding: 12px; margin: 6px 0 12px; border-radius: 8px; border: 1px solid #454553; background: #111118; color: #fff; font: inherit; }
+    button { background: #10b981; color: #04130d; border: 0; font-weight: 800; }
+    button:disabled { opacity: .5; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #0d0d13; border-radius: 8px; padding: 12px; min-height: 100px; font-size: .78rem; }
+    .warning { color: #fbbf24; }
+  </style>
+</head>
+<body>
+  <h1>KERNEL CORP. / OVERSEER — LIVE PEER TRANSFER</h1>
+  <p>This is a real-device smoke test, not a production signaling service. The public MQTT broker is untrusted and shared. Use only a random room ID and non-sensitive test data. No private keys or application secrets are sent.</p>
+  <p class="warning">Both devices must use the same room ID and different peer roles. Keep this page open until the test finishes. Public broker availability and network/NAT conditions can affect connection success.</p>
+  <section class="card">
+    <label for="room">Random room ID (copy the same value to both devices)</label>
+    <input id="room" autocomplete="off" spellcheck="false">
+    <label for="role">This device</label>
+    <select id="role"><option value="sender">Sender (initiates offer)</option><option value="receiver">Receiver (answers offer)</option></select>
+    <button id="connect">CONNECT & START WEBRTC</button>
+    <button id="send" disabled>SEND TEST SHARD (32 KiB)</button>
+    <button id="close" disabled>CLOSE SESSION</button>
+  </section>
+  <section class="card">
+    <strong>Verification log</strong>
+    <pre id="log">Ready. Set a room ID, share it with the other device, then connect both.</pre>
+  </section>
+  <script type="module">
+    import mqtt from "https://unpkg.com/mqtt@5.10.4/dist/mqtt.esm.js";
+    import { createMqttSignaling } from "./overseer-signaling-bootstrap.mjs";
+    import { createRealPeerNode } from "./overseer-real-peer.mjs";
+
+    const $ = id => document.getElementById(id);
+    const logBox = $("log");
+    const connectButton = $("connect");
+    const sendButton = $("send");
+    const closeButton = $("close");
+    let mqttClient, signaling, peer, closed = false;
+    const peerId = "peer_" + crypto.randomUUID().replaceAll("-", "").slice(0, 20);
+    const testBytes = new Uint8Array(32 * 1024);
+    for (let i = 0; i < testBytes.length; i++) testBytes[i] = (i * 31 + 17) & 255;
+
+    function log(message, data) {
+      const line = new Date().toISOString() + " " + message + (data ? " " + JSON.stringify(data) : "");
+      logBox.textContent += "\n" + line;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+    async function digest(bytes) {
+      const hash = await crypto.subtle.digest("SHA-256", bytes);
+      return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+    const roomInput = $("room");
+    roomInput.value = "kc_" + crypto.randomUUID().replaceAll("-", "");
+
+    function cleanup() {
+      closed = true;
+      try { peer?.close(); } catch {}
+      try { signaling?.close(); } catch {}
+      try { mqttClient?.end(true); } catch {}
+      peer = signaling = mqttClient = null;
+      sendButton.disabled = true;
+      closeButton.disabled = true;
+      connectButton.disabled = false;
+    }
+
+    connectButton.addEventListener("click", async () => {
+      connectButton.disabled = true;
+      closed = false;
+      try {
+        const roomId = roomInput.value.trim();
+        if (!/^[A-Za-z0-9_-]{16,128}$/.test(roomId)) throw new Error("ROOM_ID_MUST_BE_16_TO_128_SAFE_CHARACTERS");
+        const role = $("role").value;
+        log("Connecting to public MQTT-over-WebSocket broker", { broker: "wss://broker.emqx.io:8084/mqtt", role, peerId });
+        mqttClient = mqtt.connect("wss://broker.emqx.io:8084/mqtt", {
+          clientId: "kc_" + crypto.randomUUID().replaceAll("-", "").slice(0, 20),
+          clean: true, connectTimeout: 12000, reconnectPeriod: 0
+        });
+        await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error("MQTT_CONNECT_TIMEOUT")), 15000);
+          mqttClient.once("connect", () => { clearTimeout(timer); resolve(); });
+          mqttClient.once("error", error => { clearTimeout(timer); reject(error); });
+        });
+        log("MQTT connected");
+        signaling = createMqttSignaling({ client: mqttClient, roomId, peerId });
+        const meshAdapter = {
+          attachPeerChannel(remotePeerId, channel) {
+            log("RTC data channel attached", { remotePeerId, label: channel.label });
+            channel.binaryType = "arraybuffer";
+            channel.addEventListener("open", () => {
+              log("WEBRTC_DATA_CHANNEL_OPEN");
+              if (role === "sender") sendButton.disabled = false;
+            });
+            channel.addEventListener("message", async event => {
+              try {
+                const packet = JSON.parse(typeof event.data === "string" ? event.data : new TextDecoder().decode(event.data));
+                if (packet.kind !== "KERNEL_TEST_SHARD" || !Array.isArray(packet.bytes)) return;
+                const bytes = new Uint8Array(packet.bytes);
+                const actualHash = await digest(bytes);
+                const passed = bytes.byteLength === packet.byteLength && actualHash === packet.sha256;
+                log(passed ? "PASS: SHARD_LENGTH_AND_SHA256_MATCH" : "FAIL: SHARD_INTEGRITY_MISMATCH", {
+                  receivedBytes: bytes.byteLength, expectedBytes: packet.byteLength, expectedSha256: packet.sha256, actualSha256: actualHash
+                });
+              } catch (error) { log("Received message parse failed", { error: String(error) }); }
+            });
+          },
+          detachPeerChannel() {}
+        };
+        peer = await createRealPeerNode(meshAdapter, {
+          peerId: role === "sender" ? "receiver" : "sender",
+          isInitiator: role === "sender",
+          signalingTransport: signaling,
+          onStateChange: state => {
+            log("PEER_STATE", state);
+            if (state.type === "datachannel" && state.state === "open" && role === "sender") sendButton.disabled = false;
+          }
+        });
+        log("Peer connector started. Waiting for ICE/WebRTC connection.");
+        closeButton.disabled = false;
+      } catch (error) {
+        log("CONNECT_FAILED", { error: String(error?.stack || error) });
+        cleanup();
+      }
+    });
+
+    sendButton.addEventListener("click", async () => {
+      const channel = peer?.getDataChannel();
+      if (!channel || channel.readyState !== "open") {
+        log("SEND_BLOCKED: data channel is not open");
+        return;
+      }
+      sendButton.disabled = true;
+      try {
+        const bytes = testBytes;
+        const packet = { kind: "KERNEL_TEST_SHARD", byteLength: bytes.byteLength, sha256: await digest(bytes), bytes: Array.from(bytes) };
+        channel.send(JSON.stringify(packet));
+        log("TEST_SHARD_SENT", { byteLength: bytes.byteLength, sha256: packet.sha256 });
+      } catch (error) { log("SEND_FAILED", { error: String(error) }); }
+      finally { if (!closed) sendButton.disabled = false; }
+    });
+    closeButton.addEventListener("click", () => { log("Session closed by user"); cleanup(); });
+    window.addEventListener("pagehide", cleanup);
+  </script>
+</body>
+</html>
