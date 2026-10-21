@@ -1,0 +1,140 @@
+/**
+ * KERNEL CORP. — ROOM-BASED WEBSOCKET SIGNALING RELAY
+ *
+ * Attach to an existing Node HTTP/Express server:
+ *   import { attachSignalingRelay } from "./server-signaling.mjs";
+ *   attachSignalingRelay(server);
+ *
+ * WebSocket path: /kernel-signal
+ * Protocol: { type: "JOIN", roomId, peerId? }, then OFFER / ANSWER / ICE messages.
+ *
+ * This relays signaling only. It never receives shard payloads or private keys.
+ */
+import { WebSocket, WebSocketServer } from "ws";
+
+const MAX_ROOM_ID_LENGTH = 96;
+const MAX_PEER_ID_LENGTH = 96;
+const MAX_MESSAGE_BYTES = 128 * 1024;
+const MAX_CLIENTS_PER_ROOM = 8;
+
+function validToken(value, maxLength) {
+  return typeof value === "string" &&
+    value.length > 0 &&
+    value.length <= maxLength &&
+    /^[A-Za-z0-9_-]+$/.test(value);
+}
+
+function safeSend(ws, payload) {
+  if (ws.readyState !== WebSocket.OPEN) return;
+  if (ws.bufferedAmount > 1024 * 1024) {
+    ws.close(1013, "signaling backpressure");
+    return;
+  }
+  ws.send(JSON.stringify(payload));
+}
+
+export function attachSignalingRelay(server, { path = "/kernel-signal" } = {}) {
+  if (!server || typeof server.on !== "function") {
+    throw new Error("HTTP_SERVER_REQUIRED");
+  }
+
+  const wss = new WebSocketServer({
+    server,
+    path,
+    maxPayload: MAX_MESSAGE_BYTES,
+    perMessageDeflate: false
+  });
+  const rooms = new Map();
+  const membership = new Map();
+
+  function leave(ws) {
+    const roomId = membership.get(ws);
+    membership.delete(ws);
+    if (!roomId) return;
+    const room = rooms.get(roomId);
+    if (!room) return;
+    room.delete(ws);
+    for (const peer of room) safeSend(peer, { type: "PEER_LEFT" });
+    if (room.size === 0) rooms.delete(roomId);
+  }
+
+  wss.on("connection", ws => {
+    let joined = false;
+    ws.on("message", raw => {
+      if (raw.length > MAX_MESSAGE_BYTES) {
+        ws.close(1009, "message too large");
+        return;
+      }
+
+      let message;
+      try { message = JSON.parse(raw.toString()); } catch {
+        safeSend(ws, { type: "ERROR", message: "INVALID_JSON" });
+        return;
+      }
+      if (!message || typeof message.type !== "string") {
+        safeSend(ws, { type: "ERROR", message: "INVALID_MESSAGE" });
+        return;
+      }
+
+      if (message.type === "JOIN") {
+        if (joined || !validToken(message.roomId, MAX_ROOM_ID_LENGTH)) {
+          safeSend(ws, { type: "ERROR", message: "INVALID_OR_DUPLICATE_JOIN" });
+          ws.close(1008, "invalid join");
+          return;
+        }
+        const roomId = message.roomId;
+        let room = rooms.get(roomId);
+        if (!room) {
+          room = new Set();
+          rooms.set(roomId, room);
+        }
+        if (room.size >= MAX_CLIENTS_PER_ROOM) {
+          safeSend(ws, { type: "ERROR", message: "ROOM_FULL" });
+          ws.close(1013, "room full");
+          return;
+        }
+        room.add(ws);
+        membership.set(ws, roomId);
+        joined = true;
+        safeSend(ws, { type: "JOINED", roomId, peers: room.size - 1 });
+        for (const peer of room) {
+          if (peer !== ws) safeSend(peer, { type: "PEER_JOINED" });
+        }
+        return;
+      }
+
+      if (!joined) {
+        safeSend(ws, { type: "ERROR", message: "JOIN_REQUIRED" });
+        return;
+      }
+      if (!["OFFER", "ANSWER", "ICE"].includes(message.type)) {
+        safeSend(ws, { type: "ERROR", message: "UNSUPPORTED_SIGNAL_TYPE" });
+        return;
+      }
+
+      const room = rooms.get(membership.get(ws));
+      if (!room) return;
+      // Server relays signaling only; SDP and ICE are not treated as trusted.
+      for (const peer of room) {
+        if (peer !== ws) safeSend(peer, message);
+      }
+    });
+
+    ws.on("close", () => leave(ws));
+    ws.on("error", () => leave(ws));
+  });
+
+  wss.on("close", () => {
+    for (const ws of membership.keys()) {
+      try { ws.close(1001, "signaling relay closing"); } catch {}
+    }
+    membership.clear();
+    rooms.clear();
+  });
+
+  return {
+    wss,
+    get roomCount() { return rooms.size; },
+    close: () => wss.close()
+  };
+}
