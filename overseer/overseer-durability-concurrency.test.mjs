@@ -39,7 +39,7 @@ try {
   assert.ok(race.every(r => r.status === "fulfilled"), "both serialized competing commits should succeed");
   const chainBefore = await pipeline.verifyReceiptChain();
   assert.equal(chainBefore.valid, true, JSON.stringify(chainBefore));
-  assert.equal(chainBefore.records, 2);
+  assert.equal(chainBefore.records, 4, "two successful commits each produce pre-commit and terminal receipts");
 
   // TEST 2 — receipt persists, but the engine WAL fails afterward.
   failEngineAppend = true;
@@ -56,7 +56,7 @@ try {
   assert.equal(pods.has("XShield"), false, "failed engine commit must not publish pod state");
   const afterAbort = await pipeline.verifyReceiptChain();
   assert.equal(afterAbort.valid, true, JSON.stringify(afterAbort));
-  assert.equal(afterAbort.records, 4, "failed engine write must append a linked abort receipt");
+  assert.equal(afterAbort.records, 6, "failed engine write must append a linked abort receipt after the four successful-commit receipts");
 
   // TEST 3 — a receipt-store failure must stop before engine WAL and pod state.
   const logBefore = engineLog.length;
