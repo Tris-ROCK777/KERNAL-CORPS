@@ -112,7 +112,7 @@ export class OverseerDurabilityBridge {
         let row;
         try { row = JSON.parse(line); }
         catch { continue; } // preserve existing WAL; malformed lines are not receipts
-        if (row.op === RECEIPT_OP) {
+        if (row.op === RECEIPT_OP || row.op === "HOTSWAP_ABORT_RECEIPT") {
           if (!HEX_256.test(row.receiptHash || "")) {
             throw new Error("DURABILITY_CHAIN_BROKEN: malformed prior receipt hash");
           }
