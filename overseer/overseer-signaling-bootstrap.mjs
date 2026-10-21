@@ -211,3 +211,100 @@ export function createBroadcastSignaling({
     get readyState() { return ws.readyState; }
   };
 }
+
+
+/**
+ * MQTT-over-WebSocket signaling adapter.
+ *
+ * Pass a connected MQTT.js/Paho-compatible client. The broker transports MQTT
+ * messages; it is NOT a raw JSON WebSocket endpoint. Public brokers are shared:
+ * use a random roomId and never send secrets or private application data.
+ *
+ * client contract: connected, subscribe(topic), publish(topic, payload),
+ * on("message", (topic, payload) => ...), end()/close().
+ */
+export function createMqttSignaling({
+  client,
+  roomId,
+  peerId,
+  topicPrefix = "kernel-corp/signaling",
+  closeClient = false
+} = {}) {
+  if (!client || typeof client.subscribe !== "function" ||
+      typeof client.publish !== "function" || typeof client.on !== "function") {
+    throw new Error("CONNECTED_MQTT_CLIENT_REQUIRED");
+  }
+  if (typeof roomId !== "string" || !/^[A-Za-z0-9_-]{16,128}$/.test(roomId)) {
+    throw new Error("USE_RANDOM_ROOM_ID_FOR_PUBLIC_BROKER");
+  }
+  if (typeof peerId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/.test(peerId)) {
+    throw new Error("VALID_PEER_ID_REQUIRED");
+  }
+  if (typeof topicPrefix !== "string" ||
+      !/^[A-Za-z0-9_/-]{1,96}$/.test(topicPrefix) ||
+      topicPrefix.includes("//") || topicPrefix.startsWith("/") || topicPrefix.endsWith("/")) {
+    throw new Error("INVALID_MQTT_TOPIC_PREFIX");
+  }
+
+  const topic = `${topicPrefix}/${roomId}`;
+  const listeners = new Set();
+  let closed = false;
+
+  const onMessage = (receivedTopic, rawPayload) => {
+    if (closed || receivedTopic !== topic) return;
+    let message;
+    try {
+      const raw = typeof rawPayload === "string"
+        ? rawPayload
+        : new TextDecoder().decode(rawPayload);
+      message = JSON.parse(raw);
+    } catch { return; }
+    if (!message || message.roomId !== roomId || message.peerId === peerId) return;
+    if (!["OFFER", "ANSWER", "ICE", "ERROR"].includes(message.type)) return;
+    for (const listener of listeners) {
+      try { listener(message); } catch {}
+    }
+  };
+
+  client.on("message", onMessage);
+  client.subscribe(topic, { qos: 0 });
+
+  return {
+    topic,
+    ready: Promise.resolve(),
+    async send(payload) {
+      if (closed) throw new Error("MQTT_SIGNALING_CLOSED");
+      if (!payload || !["OFFER", "ANSWER", "ICE"].includes(payload.type)) {
+        throw new Error("UNSUPPORTED_SIGNAL_TYPE");
+      }
+      const packet = JSON.stringify({ ...payload, roomId, peerId });
+      await new Promise((resolve, reject) => {
+        client.publish(topic, packet, { qos: 0, retain: false }, error => {
+          if (error) reject(error);
+          else resolve();
+        });
+      });
+    },
+    subscribe(listener) {
+      if (typeof listener !== "function") throw new Error("SIGNALING_LISTENER_REQUIRED");
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    onMessage(listener) {
+      return this.subscribe(listener);
+    },
+    close() {
+      if (closed) return;
+      closed = true;
+      listeners.clear();
+      if (typeof client.removeListener === "function") client.removeListener("message", onMessage);
+      else if (typeof client.off === "function") client.off("message", onMessage);
+      if (closeClient) {
+        if (typeof client.end === "function") client.end(true);
+        else if (typeof client.close === "function") client.close();
+      } else {
+        client.unsubscribe?.(topic);
+      }
+    }
+  };
+}
