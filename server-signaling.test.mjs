@@ -61,6 +61,24 @@ function connect(roomId, suppliedPeerId) {
 
 const peers = [];
 try {
+  // Signaling before JOIN must be rejected and must not reach other peers.
+  const prejoin = new WebSocket(url);
+  peers.push({ close() { if (prejoin.readyState === WebSocket.OPEN) prejoin.close(); } });
+  await once(prejoin, "open");
+  const prejoinError = new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("TEST_MESSAGE_TIMEOUT")), 1500);
+    prejoin.on("message", raw => {
+      let message;
+      try { message = JSON.parse(raw.toString()); } catch { return; }
+      if (message.type === "ERROR" && message.message === "JOIN_REQUIRED") {
+        clearTimeout(timer);
+        resolve(message);
+      }
+    });
+  });
+  prejoin.send(JSON.stringify({ type: "OFFER", roomId: "room_alpha", peerId: "forged", sdp: "test" }));
+  assert.equal((await prejoinError).message, "JOIN_REQUIRED");
+
   // Assigned IDs must be unique and must not trust a client-supplied identity.
   const a = connect("room_alpha", "spoofed_identity");
   peers.push(a);
