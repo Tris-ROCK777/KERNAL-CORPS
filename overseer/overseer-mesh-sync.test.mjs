@@ -387,5 +387,47 @@ export async function runOverseerMeshVerification() {
     results.push("initialization fails closed without pinned authority");
   }
 
+
+  // TEST 12: a near-limit payload traverses the actual framing, signature,
+  // hash, OPFS persistence and WAL commit path.
+  {
+    const f = await makePair();
+    const suffix = '\nexport function mountPod() { return "near-limit-transfer"; }';
+    const code = "// " + "K".repeat(1_048_300) + suffix;
+    assert(new TextEncoder().encode(code).byteLength <= 1_048_576,
+      "TEST_12_SETUP_FAILED: fixture exceeds configured payload limit");
+    const hash = await broadcast(f.senderMesh, f.senderEngine, f.sign, "KashKorner", code);
+    await waitUntil(() => f.receiverEngine.activePods.has("KashKorner"), 10000);
+    assert(f.receiverEngine.activePods.get("KashKorner").hash === hash,
+      "TEST_12_FAILED: near-limit active shard hash mismatch");
+    const shardDir = await f.receiverEngine.root.getDirectoryHandle("shards");
+    const stored = await (await shardDir.getFileHandle(hash + ".mjs")).getFile();
+    assert((await stored.text()) === code, "TEST_12_FAILED: near-limit OPFS read-back mismatch");
+    results.push("near-limit multi-chunk signed transfer + persistence");
+    f.senderMesh.dispose();
+    f.receiverMesh.dispose();
+  }
+
+  // TEST 13: an oversized inbound header is rejected before buffer allocation.
+  {
+    const f = await makePair();
+    let rejected = false;
+    try {
+      f.receiverMesh.startTransfer("sender", {
+        protocol:1, transferId:"fedcba654321", podId:"KashKorner",
+        hash:"a".repeat(64), signature:"00", algorithm:"ECDSA-P256",
+        totalBytes:1_048_577, totalChunks:33
+      });
+    } catch (error) {
+      rejected = /TRANSFER_BOUNDS/.test(String(error?.message));
+    }
+    assert(rejected, "TEST_13_FAILED: oversized transfer header accepted");
+    assert(f.receiverMesh.inboundBuffers.size === 0,
+      "TEST_13_FAILED: oversized transfer allocated inbound state");
+    results.push("oversized inbound payload rejected before allocation");
+    f.senderMesh.dispose();
+    f.receiverMesh.dispose();
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
