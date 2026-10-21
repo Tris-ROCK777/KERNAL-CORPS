@@ -21,6 +21,33 @@ export class OverseerMeshReplicator {
     this.peers = new Map();
     this.inboundBuffers = new Map();
     this.seenTransferIds = new Map();
+    this.unsubscribeCommit = typeof this.engine.onCommit === "function"
+      ? this.engine.onCommit(event => this.handleHotSwapCommit(event))
+      : null;
+  }
+
+  async handleHotSwapCommit(event) {
+    if (!event || event.origin !== "local") return;
+    try {
+      const results = await this.broadcastPodMutation({
+        podId:event.podId, hash:event.hash, codeString:event.codeString,
+        signature:event.signature, algorithm:event.algorithm
+      });
+      const failures = results.filter(result => result.status !== "SENT");
+      if (failures.length) await this.log("MESH_AUTO_BROADCAST_PARTIAL", {
+        podId:event.podId, hash:event.hash, failures
+      });
+    } catch (error) {
+      await this.log("MESH_AUTO_BROADCAST_FAILED", {
+        podId:event.podId, hash:event.hash, reason:String(error)
+      });
+    }
+  }
+
+  dispose() {
+    if (this.unsubscribeCommit) this.unsubscribeCommit();
+    this.unsubscribeCommit = null;
+    for (const peerId of this.peers.keys()) this.detachPeerChannel(peerId);
   }
 
   generateTransferId() {
@@ -230,6 +257,8 @@ export class OverseerMeshReplicator {
     }
     const configuredAlgorithm = this.engine.signatureAlgorithm || "ECDSA-P256";
     if (meta.algorithm !== configuredAlgorithm) throw new Error("SIGNATURE_ALGORITHM_POLICY_MISMATCH");
-    return this.engine.mutatePod(meta.podId, code, {publicKey:this.authorityPublicKey, signature:meta.signature});
+    return this.engine.mutatePod(meta.podId, code, {
+      publicKey:this.authorityPublicKey, signature:meta.signature, origin:"peer"
+    });
   }
 }
