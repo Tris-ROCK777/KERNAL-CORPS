@@ -147,6 +147,43 @@ export class OverseerDurabilityBridge {
     return operation;
   }
 
+  async appendAbortReceipt(commit, reason, metadata = {}) {
+    const operation = this.queue.then(async () => {
+      const existingText = await this.readWalText();
+      let previousReceiptHash = null;
+      let sequence = 0;
+      for (const line of existingText.split("\n")) {
+        if (!line.trim()) continue;
+        let row;
+        try { row = JSON.parse(line); } catch { continue; }
+        if (row.op === RECEIPT_OP || row.op === "HOTSWAP_ABORT_RECEIPT") {
+          if (!HEX_256.test(row.receiptHash || "")) {
+            throw new Error("DURABILITY_CHAIN_BROKEN: malformed prior receipt hash");
+          }
+          previousReceiptHash = row.receiptHash;
+          sequence = Math.max(sequence, Number(row.sequence) || 0);
+        }
+      }
+      const payload = {
+        op:"HOTSWAP_ABORT_RECEIPT",
+        schema:1,
+        podId:commit.podId ?? null,
+        failedShardHash:commit.hash,
+        previousReceiptHash,
+        sequence:sequence + 1,
+        reason:String(reason || "ENGINE_COMMIT_FAILED"),
+        origin:metadata.origin || commit.origin || "unknown",
+        abortedAt:Date.now()
+      };
+      const receiptHash = await digest(canonicalJSON(payload));
+      const record = {...payload, receiptHash};
+      await this.appendLine(record);
+      return {status:"DURABILITY_ABORT_RECEIPT_PERSISTED", receiptHash, previousReceiptHash};
+    });
+    this.queue = operation.catch(() => {});
+    return operation;
+  }
+
   async verifyReceiptChain() {
     const text = await this.readWalText();
     let previous = null;
@@ -154,7 +191,7 @@ export class OverseerDurabilityBridge {
     for (const line of text.split("\n").filter(Boolean)) {
       let row;
       try { row = JSON.parse(line); } catch { continue; }
-      if (row.op !== RECEIPT_OP) continue;
+      if (row.op !== RECEIPT_OP && row.op !== "HOTSWAP_ABORT_RECEIPT") continue;
       const {receiptHash, ...payload} = row;
       if (!HEX_256.test(receiptHash || "") || row.previousReceiptHash !== previous) {
         return {valid:false, records:count, reason:"PREVIOUS_HASH_OR_FORMAT_MISMATCH"};
@@ -184,11 +221,22 @@ export function installDurabilityBridge(engine, bridge) {
   let queue = Promise.resolve();
   engine.appendRingWAL = entry => {
     const task = queue.then(async () => {
-      // Receipt failure must abort before the canonical engine WAL is advanced.
-      if (entry?.op === COMMIT_OP) {
-        await bridge.appendCommitReceipt(entry, {origin:entry.origin, peerId:entry.peerId, transferId:entry.transferId});
+      // Persist the pre-commit receipt before the canonical engine WAL.
+      if (entry?.op !== COMMIT_OP) return original(entry);
+      await bridge.appendCommitReceipt(entry, {origin:entry.origin, peerId:entry.peerId, transferId:entry.transferId});
+      try {
+        return await original(entry);
+      } catch (error) {
+        // Keep the receipt chain truthful when the engine WAL rejects after receipt.
+        try {
+          await bridge.appendAbortReceipt(entry, error?.message || error, {
+            origin:entry.origin, peerId:entry.peerId, transferId:entry.transferId
+          });
+        } catch (abortError) {
+          error.abortReceiptError = abortError;
+        }
+        throw error;
       }
-      return original(entry);
     });
     queue = task.catch(() => {});
     return task;
