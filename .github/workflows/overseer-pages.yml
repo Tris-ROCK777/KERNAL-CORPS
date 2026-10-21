@@ -47,6 +47,8 @@ jobs:
           node --check overseer/overseer-recovery-inspector.mjs
           node --check overseer/overseer-recovery-inspector.test.mjs
           node --check overseer/overseer-authority-signatures.mjs
+          node --check overseer/overseer-key-vault.mjs
+          node --check overseer/overseer-key-vault.test.mjs
           node --check overseer/overseer-authority-signatures.test.mjs
           node --check overseer/overseer-signed-durability.test.mjs
           node --check overseer/overseer-canonical-signer.mjs
@@ -60,6 +62,9 @@ jobs:
 
       - name: Run dangling pre-commit recovery test
         run: node overseer/overseer-recovery-inspector.test.mjs
+
+      - name: Run OPFS authority key-vault persistence test
+        run: node overseer/overseer-key-vault.test.mjs
 
       - name: Run Ed25519 authority signature tests
         run: node overseer/overseer-authority-signatures.test.mjs
