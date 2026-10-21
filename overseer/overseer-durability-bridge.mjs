@@ -112,7 +112,7 @@ export class OverseerDurabilityBridge {
         let row;
         try { row = JSON.parse(line); }
         catch { continue; } // preserve existing WAL; malformed lines are not receipts
-        if (row.op === RECEIPT_OP || row.op === "HOTSWAP_ABORT_RECEIPT") {
+        if ([RECEIPT_OP, "HOTSWAP_COMMIT_RECEIPT", "HOTSWAP_ABORT_RECEIPT", "HOTSWAP_FORCED_ABORT_RECEIPT"].includes(row.op)) {
           if (!HEX_256.test(row.receiptHash || "")) {
             throw new Error("DURABILITY_CHAIN_BROKEN: malformed prior receipt hash");
           }
@@ -125,6 +125,7 @@ export class OverseerDurabilityBridge {
         op: RECEIPT_OP,
         schema: 1,
         commitOp: COMMIT_OP,
+        durability: ["PRE_COMMIT_RECEIPT_ACK", "WRITE_PENDING"],
         podId: commit.podId ?? null,
         shardHash: commit.hash,
         signature: commit.signature ?? null,
@@ -156,7 +157,7 @@ export class OverseerDurabilityBridge {
         if (!line.trim()) continue;
         let row;
         try { row = JSON.parse(line); } catch { continue; }
-        if (row.op === RECEIPT_OP || row.op === "HOTSWAP_ABORT_RECEIPT") {
+        if ([RECEIPT_OP, "HOTSWAP_COMMIT_RECEIPT", "HOTSWAP_ABORT_RECEIPT", "HOTSWAP_FORCED_ABORT_RECEIPT"].includes(row.op)) {
           if (!HEX_256.test(row.receiptHash || "")) {
             throw new Error("DURABILITY_CHAIN_BROKEN: malformed prior receipt hash");
           }
@@ -184,6 +185,40 @@ export class OverseerDurabilityBridge {
     return operation;
   }
 
+  async appendTerminalReceipt(commit, op = "HOTSWAP_COMMIT_RECEIPT", metadata = {}) {
+    if (op !== "HOTSWAP_COMMIT_RECEIPT" && op !== "HOTSWAP_ABORT_RECEIPT" &&
+        op !== "HOTSWAP_FORCED_ABORT_RECEIPT") throw new Error("INVALID_TERMINAL_RECEIPT_OP");
+    const operation = this.queue.then(async () => {
+      const existingText = await this.readWalText();
+      let previousReceiptHash = null;
+      let sequence = 0;
+      for (const line of existingText.split("\\n")) {
+        if (!line.trim()) continue;
+        let row;
+        try { row = JSON.parse(line); } catch { continue; }
+        if ([RECEIPT_OP, "HOTSWAP_COMMIT_RECEIPT", "HOTSWAP_ABORT_RECEIPT", "HOTSWAP_FORCED_ABORT_RECEIPT"].includes(row.op)) {
+          if (!HEX_256.test(row.receiptHash || "")) throw new Error("DURABILITY_CHAIN_BROKEN");
+          previousReceiptHash = row.receiptHash;
+          sequence = Math.max(sequence, Number(row.sequence) || 0);
+        }
+      }
+      const payload = {
+        op, schema:1, podId:commit.podId ?? null,
+        shardHash:commit.hash ?? commit.shardHash ?? commit.failedShardHash ?? null,
+        previousReceiptHash, sequence:sequence + 1,
+        reason:metadata.reason || commit.reason || null,
+        origin:metadata.origin || commit.origin || "unknown",
+        ts:Date.now()
+      };
+      const receiptHash = await digest(canonicalJSON(payload));
+      const record = {...payload, receiptHash};
+      await this.appendLine(record);
+      return {status:"TERMINAL_RECEIPT_PERSISTED", op, receiptHash, previousReceiptHash, sequence:record.sequence};
+    });
+    this.queue = operation.catch(() => {});
+    return operation;
+  }
+
   async verifyReceiptChain() {
     const text = await this.readWalText();
     let previous = null;
@@ -191,7 +226,7 @@ export class OverseerDurabilityBridge {
     for (const line of text.split("\n").filter(Boolean)) {
       let row;
       try { row = JSON.parse(line); } catch { continue; }
-      if (row.op !== RECEIPT_OP && row.op !== "HOTSWAP_ABORT_RECEIPT") continue;
+      if (![RECEIPT_OP, "HOTSWAP_COMMIT_RECEIPT", "HOTSWAP_ABORT_RECEIPT", "HOTSWAP_FORCED_ABORT_RECEIPT"].includes(row.op)) continue;
       const {receiptHash, ...payload} = row;
       if (!HEX_256.test(receiptHash || "") || row.previousReceiptHash !== previous) {
         return {valid:false, records:count, reason:"PREVIOUS_HASH_OR_FORMAT_MISMATCH"};
@@ -202,7 +237,14 @@ export class OverseerDurabilityBridge {
       previous = receiptHash;
       count++;
     }
-    return {valid:true, records:count, lastReceiptHash:previous, target:this.target};
+    const rows = [];
+    for (const line of text.split("\\n").filter(Boolean)) {
+      try {
+        const row = JSON.parse(line);
+        if ([RECEIPT_OP, "HOTSWAP_COMMIT_RECEIPT", "HOTSWAP_ABORT_RECEIPT", "HOTSWAP_FORCED_ABORT_RECEIPT"].includes(row.op)) rows.push(row);
+      } catch {}
+    }
+    return {valid:true, records:count, lastReceiptHash:previous, headRecord:rows.at(-1) || null, receiptRecords:rows, target:this.target};
   }
 
   async flush() { await this.queue; }
@@ -225,12 +267,14 @@ export function installDurabilityBridge(engine, bridge) {
       if (entry?.op !== COMMIT_OP) return original(entry);
       await bridge.appendCommitReceipt(entry, {origin:entry.origin, peerId:entry.peerId, transferId:entry.transferId});
       try {
-        return await original(entry);
+        const result = await original(entry);
+        await bridge.appendTerminalReceipt(entry, "HOTSWAP_COMMIT_RECEIPT", {origin:entry.origin});
+        return result;
       } catch (error) {
-        // Keep the receipt chain truthful when the engine WAL rejects after receipt.
+        // The pending receipt remains visible if both engine write and abort receipt fail.
         try {
-          await bridge.appendAbortReceipt(entry, error?.message || error, {
-            origin:entry.origin, peerId:entry.peerId, transferId:entry.transferId
+          await bridge.appendTerminalReceipt(entry, "HOTSWAP_ABORT_RECEIPT", {
+            origin:entry.origin, reason:error?.message || String(error)
           });
         } catch (abortError) {
           error.abortReceiptError = abortError;
