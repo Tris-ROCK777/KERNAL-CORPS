@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080c16">
+<title>KERNEL CORP. — Pod Command Drawer</title>
+<style>
+:root{color-scheme:dark;--bg:#080c16;--panel:rgba(18,27,45,.78);--line:rgba(145,177,225,.2);--muted:#9eacc5;--text:#edf4ff;--cyan:#77e5ff;--green:#7df0bd}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 10% 0%,#172c4b 0,transparent 42%),radial-gradient(ellipse at 90% 20%,#25204b 0,transparent 36%),var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,sans-serif;min-height:100vh}
+main{max-width:1100px;margin:auto;padding:24px 16px 56px}header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}.eyebrow{color:var(--cyan);font-size:12px;letter-spacing:.18em;font-weight:750}h1{font-size:clamp(25px,5vw,38px);margin:5px 0}p{color:var(--muted);margin:6px 0}.status{border:1px solid var(--line);border-radius:99px;padding:7px 11px;color:var(--green);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.pod,.panel{border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:16px;box-shadow:0 14px 36px #0003}.pod{padding:16px;text-align:left;color:var(--text);min-height:100px;cursor:pointer}.pod:hover,.pod[aria-pressed=true]{border-color:var(--cyan);background:rgba(39,69,99,.55)}.pod strong{display:block;font-size:16px;margin-bottom:7px}.pod span{font-size:12px;color:var(--muted)}.layout{display:grid;grid-template-columns:1fr 1fr;gap:12px}.panel{padding:16px;min-width:0}.panel h2{font-size:16px;margin:0 0 10px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}button,.btn{font:inherit;color:var(--text);background:#17253b;border:1px solid var(--line);border-radius:9px;padding:9px 12px;cursor:pointer}button:hover{border-color:var(--cyan)}button:disabled{opacity:.5;cursor:wait}.readout{font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere;background:#060a12a8;border:1px solid #ffffff12;border-radius:10px;padding:12px;min-height:130px;max-height:350px;overflow:auto}.hint{font-size:12px;color:var(--muted)}.metric{display:inline-block;margin:0 12px 8px 0;color:var(--muted);font-size:12px}.metric b{color:var(--text);font-size:17px;display:block}.warn{color:#ffd18b}.good{color:var(--green)}@media(max-width:680px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.layout{grid-template-columns:1fr}main{padding:18px 12px 36px}.pod{padding:13px}}
+</style>
+</head>
+<body><main>
+<header><div><div class="eyebrow">KERNEL UMBRELLA CORP. / CONTROL PLANE</div><h1>Pod Command Drawer</h1><p>Six app pods · local storage inspection · Ring-WAL visibility</p></div><div class="status" id="runtime">INITIALIZING</div></header>
+<section class="grid" id="pods" aria-label="Application pods">
+<button class="pod" data-app="Apex Studio" aria-pressed="true"><strong>Apex Studio</strong><span>Selected pod · command context</span></button>
+<button class="pod" data-app="KashKorner" aria-pressed="false"><strong>KashKorner</strong><span>Commerce pod</span></button>
+<button class="pod" data-app="KernelVision" aria-pressed="false"><strong>KernelVision</strong><span>Visual intelligence pod</span></button>
+<button class="pod" data-app="Kernelodie’z" aria-pressed="false"><strong>Kernelodie’z</strong><span>Media pod</span></button>
+<button class="pod" data-app="PlanetApeX" aria-pressed="false"><strong>PlanetApeX</strong><span>Community pod</span></button>
+<button class="pod" data-app="XShield" aria-pressed="false"><strong>XShield</strong><span>Security pod</span></button>
+</section>
+<div class="toolbar"><button id="inspect">Inspect origin OPFS</button><button id="refresh">Refresh WAL view</button><button id="export">Export visible report</button></div>
+<div class="layout">
+<section class="panel"><h2>Selected pod</h2><div class="metric">POD<b id="selected">Apex Studio</b></div><div class="metric">OPFS API<b id="opfsState">Checking…</b></div><p class="hint">Inspection is read-only. This page does not create, modify, or delete shard files.</p><h2>OPFS file inventory</h2><pre class="readout" id="inventory" aria-live="polite">Ready. Tap “Inspect origin OPFS”.</pre></section>
+<section class="panel"><h2>Ring-WAL log view</h2><p class="hint">Shows files whose names resemble WAL, ring, shard, or log records. File names and sizes are observable; application-specific WAL decoding requires that format’s schema.</p><pre class="readout" id="wal" aria-live="polite">Waiting for OPFS inspection.</pre></section>
+</div>
+<p class="hint warn">Scope: browser origin’s OPFS only. This does not inspect remote peers, another app origin, or prove a distributed 10,000-worker mesh is running.</p>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let selected = "Apex Studio";
+  let lastReport = null;
+  const maxFiles = 2000, maxDepth = 12;
+  document.querySelectorAll("[data-app]").forEach(button => button.addEventListener("click", () => {
+    selected = button.dataset.app;
+    document.querySelectorAll("[data-app]").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+    $("selected").textContent = selected;
+    $("inventory").textContent = "Selected pod: " + selected + "\nInspect OPFS to refresh the origin-level inventory.";
+    $("wal").textContent = "Selected pod: " + selected + "\nNo pod-specific WAL adapter is configured; listing origin files by name only.";
+  }));
+  $("opfsState").textContent = navigator.storage && navigator.storage.getDirectory ? "Available" : "Unavailable";
+  $("runtime").textContent = location.protocol === "https:" || location.hostname === "localhost" ? "SECURE CONTEXT" : "INSECURE CONTEXT";
+  async function scan() {
+    $("inspect").disabled = true;
+    $("inventory").textContent = "Scanning origin OPFS…";
+    $("wal").textContent = "Scanning for WAL-like files…";
+    try {
+      if (!navigator.storage || typeof navigator.storage.getDirectory !== "function") throw new Error("OPFS_UNAVAILABLE_IN_THIS_BROWSER_OR_CONTEXT");
+      const root = await navigator.storage.getDirectory();
+      const files = [];
+      let directories = 0, truncated = false;
+      async function walk(dir, prefix, depth) {
+        if (depth > maxDepth) { truncated = true; return; }
+        for await (const [name, handle] of dir.entries()) {
+          if (files.length >= maxFiles) { truncated = true; return; }
+          const path = prefix ? prefix + "/" + name : name;
+          if (handle.kind === "directory") { directories++; await walk(handle, path, depth + 1); }
+          else {
+            let size = null, modified = null;
+            try { const file = await handle.getFile(); size = file.size; modified = file.lastModified ? new Date(file.lastModified).toISOString() : null; } catch {}
+            files.push({path, name, size, modified, kind:handle.kind});
+          }
+        }
+      }
+      await walk(root, "", 0);
+      files.sort((a,b)=>a.path.localeCompare(b.path));
+      const matches = files.filter(file => /wal|ring|shard|log|journal/i.test(file.path));
+      lastReport = {generatedAt:new Date().toISOString(), origin:location.origin, selectedPod:selected, directories, fileCount:files.length, truncated, files, walCandidates:matches};
+      $("inventory").textContent = JSON.stringify({origin:location.origin, directories, fileCount:files.length, truncated, files}, null, 2);
+      $("wal").textContent = JSON.stringify({candidateCount:matches.length, candidates:matches, note:"Candidate discovery only; WAL contents are not parsed or modified."}, null, 2);
+      $("runtime").textContent = "SCAN COMPLETE";
+    } catch (error) {
+      lastReport = null;
+      $("inventory").textContent = "INSPECTION ERROR\n" + (error && error.message ? error.message : String(error));
+      $("wal").textContent = "WAL VIEW UNAVAILABLE until OPFS inspection succeeds.";
+      $("runtime").textContent = "INSPECTION ERROR";
+    } finally { $("inspect").disabled = false; }
+  }
+  $("inspect").addEventListener("click", scan);
+  $("refresh").addEventListener("click", scan);
+  $("export").addEventListener("click", () => {
+    if (!lastReport) { $("inventory").textContent = "Run OPFS inspection successfully before exporting a report."; return; }
+    const blob = new Blob([JSON.stringify(lastReport, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = "kernel-opfs-inspection-" + new Date().toISOString().replace(/[:.]/g,"-") + ".json";
+    link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+})();
+</script>
+</body></html>
