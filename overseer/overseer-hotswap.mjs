@@ -152,13 +152,14 @@ export class OverseerHotSwap {
     await this.verifySignature(code, signature, this.publicKey);
     await this.runSandboxGate(code);
     const hash = await this.sha256(code);
-    await this.writeVerifiedShard(hash, code);
 
     const previous = this.activePods.get(podId);
     const oldHash = previous?.hash ?? this.lkgPointers.get(podId) ?? null;
+    // Stage and verify persistence inside the failure-recording boundary.
     // WAL commit happens before publishing the new active module.
     let candidate;
     try {
+      await this.writeVerifiedShard(hash, code);
       candidate = await this.mount(code);
       await this.appendRingWAL({op:"HOTSWAP_COMMIT", podId, hash, lkgHash:oldHash, signature,
         algorithm:this.signatureAlgorithm,
