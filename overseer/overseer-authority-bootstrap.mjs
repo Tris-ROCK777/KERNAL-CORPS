@@ -29,7 +29,7 @@ export async function provisionAuthorityIdentity({vaultOptions = {}, allowFirstB
 }
 
 export async function initializeTrustedAuthority({
-  publicKeyHex = globalThis.KERNEL_AUTHORITY_PUBKEY_HEX || "",
+  publicKeyHex = globalThis.KERNEL_AUTHORITY_PUBKEY_HEX || "dc66faf0e8cf6de4a1cce5872c146b7e1ec5f92b184c791a47219c71da038333",
   vaultOptions = {}
 } = {}) {
   if (typeof publicKeyHex !== "string" || !PIN_FORMAT.test(publicKeyHex)) {
