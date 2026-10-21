@@ -359,5 +359,20 @@ export async function runOverseerMeshVerification() {
     results.push("recovery falls back to last verified commit after corrupt newest commit");
   }
 
+  // TEST 10: the mesh layer must reject a different trust root from the engine.
+  {
+    const trusted = await createSignedFixture();
+    const attacker = await createSignedFixture();
+    const engine = createEngine(trusted.keyPair.publicKey);
+    let rejected = false;
+    try {
+      new OverseerMeshReplicator(engine, attacker.keyPair.publicKey);
+    } catch (error) {
+      rejected = /AUTHORITY_KEY_MISMATCH/.test(String(error?.message));
+    }
+    assert(rejected, "TEST_10_FAILED: mesh accepted a trust root different from the engine");
+    results.push("mesh rejects authority key mismatch with engine trust root");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
