@@ -507,5 +507,25 @@ export async function runOverseerMeshVerification() {
     results.push("storage write failure preserves active LKG and records no new commit");
   }
 
+  // TEST 17: rollback retrieves the prior signed commit from newline-delimited WAL
+  // without requiring a caller-supplied signature.
+  {
+    const fixture = await createSignedFixture();
+    const engine = createEngine(fixture.keyPair.publicKey);
+    engine.root = createMockOPFS();
+    const knownGood = 'export function mountPod() { return "rollback-known-good"; }';
+    const newer = 'export function mountPod() { return "rollback-newer-version"; }';
+    const goodSignature = await fixture.sign(knownGood);
+    const newerSignature = await fixture.sign(newer);
+    const first = await engine.mutatePod("KashKorner", knownGood, {signature:goodSignature});
+    await engine.mutatePod("KashKorner", newer, {signature:newerSignature});
+    const rolledBack = await engine.rollbackPod("KashKorner");
+    assert(rolledBack.hash === first.hash,
+      "TEST_17_FAILED: rollback did not restore the prior signed shard");
+    assert(engine.activePods.get("KashKorner")?.hash === first.hash,
+      "TEST_17_FAILED: rollback target did not become active");
+    results.push("rollback resolves prior signature from newline-delimited WAL");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
