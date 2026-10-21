@@ -40,11 +40,24 @@ async function withStore(db, mode, operation) {
     const transaction = db.transaction(STORE_NAME, mode);
     const store = transaction.objectStore(STORE_NAME);
     let request;
+    let result;
+    let settled = false;
+    const fail = error => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    };
     try { request = operation(store); }
-    catch (error) { reject(error); return; }
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(new Error("AUTHORITY_IDB_OPERATION_FAILED"));
-    transaction.onabort = () => reject(new Error("AUTHORITY_IDB_TRANSACTION_ABORTED"));
+    catch (error) { fail(error); return; }
+    request.onsuccess = () => { result = request.result; };
+    request.onerror = () => fail(new Error("AUTHORITY_IDB_OPERATION_FAILED"));
+    transaction.oncomplete = () => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
+    transaction.onerror = () => fail(new Error("AUTHORITY_IDB_TRANSACTION_FAILED"));
+    transaction.onabort = () => fail(new Error("AUTHORITY_IDB_TRANSACTION_ABORTED"));
   });
 }
 
