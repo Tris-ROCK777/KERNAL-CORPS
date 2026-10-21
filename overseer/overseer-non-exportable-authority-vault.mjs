@@ -21,9 +21,9 @@ const cryptoProvider = () => {
 const toHex = bytes => Array.from(new Uint8Array(bytes),
   byte => byte.toString(16).padStart(2, "0")).join("");
 
-function openDatabase(indexedDBProvider) {
+function openDatabase(indexedDBProvider, databaseName) {
   return new Promise((resolve, reject) => {
-    const request = indexedDBProvider.open(DB_NAME, 1);
+    const request = indexedDBProvider.open(databaseName, 1);
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(STORE_NAME)) {
         request.result.createObjectStore(STORE_NAME);
@@ -57,8 +57,9 @@ async function withStore(db, mode, operation) {
  */
 export class NonExportableAuthorityVault {
   constructor({ indexedDB = globalThis.indexedDB, crypto = null,
-    expectedPublicKeyHex } = {}) {
+    expectedPublicKeyHex, databaseName = DB_NAME } = {}) {
     this.indexedDB = indexedDB;
+    this.databaseName = databaseName;
     this.crypto = crypto || cryptoProvider();
     this.expectedPublicKeyHex = expectedPublicKeyHex?.toLowerCase() || null;
     this.dbPromise = null;
@@ -69,7 +70,7 @@ export class NonExportableAuthorityVault {
 
   async database() {
     if (!this.indexedDB) throw new Error("INDEXEDDB_UNAVAILABLE");
-    if (!this.dbPromise) this.dbPromise = openDatabase(this.indexedDB);
+    if (!this.dbPromise) this.dbPromise = openDatabase(this.indexedDB, this.databaseName);
     return this.dbPromise;
   }
 
