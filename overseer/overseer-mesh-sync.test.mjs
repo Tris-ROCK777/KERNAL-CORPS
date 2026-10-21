@@ -259,5 +259,25 @@ export async function runOverseerMeshVerification() {
   assert(missingKeyRejected, "TEST_5_FAILED: missing authority key accepted");
   results.push("mandatory authority key");
 
+  // TEST 6: A successful local hot-swap automatically broadcasts its signed shard.
+  // The receiving peer applies it with origin="peer", so it must not echo it back.
+  {
+    const f = await makePair();
+    const code = 'export function mountPod() { return "automatic-local-commit-broadcast"; }';
+    const signature = await f.sign(code);
+    const localResult = await f.senderEngine.mutatePod("KernelVision", code, {signature});
+    assert(localResult.status === "HOTSWAP_LIVE", "TEST_6_FAILED: local mutation did not commit");
+    const expectedHash = await f.senderEngine.sha256(code);
+    await waitUntil(() => f.receiverEngine.activePods.has("KernelVision"));
+    assert(f.receiverEngine.activePods.get("KernelVision").hash === expectedHash,
+      "TEST_6_FAILED: local commit was not automatically replicated");
+    const receiverWal = await (await f.receiverEngine.root.getFileHandle("ring-wal.jsonl")).getFile();
+    assert((await receiverWal.text()).includes('"op":"HOTSWAP_COMMIT"'),
+      "TEST_6_FAILED: receiver did not commit replicated shard");
+    results.push("automatic broadcast after successful local hot-swap; no peer echo");
+    f.senderMesh.dispose();
+    f.receiverMesh.dispose();
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
