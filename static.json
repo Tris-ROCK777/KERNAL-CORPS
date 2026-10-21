@@ -1,16 +1,13 @@
 {
   "root": ".",
-  "routes": [
-    { "src": "^/overseer/?$", "dest": "/overseer/verify.html" }
-  ],
-  "headers": [
-    {
-      "source": "/overseer/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-cache" },
-        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
-        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
-      ]
+  "routes": {
+    "/**": "/verify.html"
+  },
+  "headers": {
+    "/**": {
+      "Cache-Control": "no-cache",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin"
     }
-  ]
+  }
 }
