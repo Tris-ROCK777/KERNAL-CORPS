@@ -27,6 +27,7 @@ export async function createWebSocketSignalingTransport({
   const listeners = new Set();
   let settled = false;
   let closed = false;
+  let assignedPeerId;
   let joinTimer;
 
   const ready = new Promise((resolve, reject) => {
@@ -51,6 +52,18 @@ export async function createWebSocketSignalingTransport({
       let message;
       try { message = JSON.parse(String(event.data)); } catch { return; }
       if (message?.type === "JOINED") {
+        if (message.roomId !== roomId ||
+            typeof message.peerId !== "string" ||
+            !/^[A-Za-z0-9_-]{1,96}$/.test(message.peerId)) {
+          cleanupTimer();
+          if (!settled) {
+            settled = true;
+            reject(new Error("INVALID_SIGNALING_JOIN_ACK"));
+            socket.close(1008, "invalid join acknowledgement");
+          }
+          return;
+        }
+        assignedPeerId = message.peerId;
         cleanupTimer();
         if (!settled) {
           settled = true;
@@ -58,6 +71,8 @@ export async function createWebSocketSignalingTransport({
         }
         return;
       }
+      if (message?.type !== "ERROR" && message?.roomId !== roomId) return;
+      if (message?.peerId === assignedPeerId) return;
       if (message?.type === "ERROR" && !settled) {
         cleanupTimer();
         settled = true;
@@ -94,6 +109,7 @@ export async function createWebSocketSignalingTransport({
 
   return {
     ready,
+    get peerId() { return assignedPeerId; },
     send(message) {
       if (closed || socket.readyState !== WebSocketImpl.OPEN) {
         throw new Error("SIGNALING_SOCKET_NOT_OPEN");
