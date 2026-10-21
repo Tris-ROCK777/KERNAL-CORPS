@@ -54,6 +54,13 @@ export async function runMqttSignalingVerification() {
   client.emit("message", topic, Buffer.from("{bad-json"));
   assert.equal(received.length, 1);
 
+  // Addressed signaling for a different peer must never reach local listeners.
+  client.emit("message", topic, Buffer.from(JSON.stringify({
+    type: "OFFER", roomId, peerId: "peer-B", targetPeerId: "peer-C",
+    sdp: { type: "offer", sdp: "not-for-peer-A" }
+  })));
+  assert.equal(received.length, 1, "misaddressed signaling must be dropped");
+
   a.close();
   assert.deepEqual(client.unsubscriptions, [topic]);
   await assert.rejects(a.send({ type: "ICE", candidate: {} }), /MQTT_SIGNALING_CLOSED/);
