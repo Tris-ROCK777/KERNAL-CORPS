@@ -8,9 +8,16 @@
  * WebSocket path: /kernel-signal
  * Protocol: { type: "JOIN", roomId, peerId? }, then OFFER / ANSWER / ICE messages.
  *
+ * Security: room IDs are routing tokens, NOT authentication. This relay
+ * generates an opaque per-connection sender ID and overwrites any client
+ * supplied peerId before forwarding signaling. It does not authenticate
+ * who the connection belongs to; use an authenticated HTTP upgrade hook or
+ * an application-level signed handshake for that.
+ *
  * This relays signaling only. It never receives shard payloads or private keys.
  */
 import { WebSocket, WebSocketServer } from "ws";
+import { randomUUID } from "node:crypto";
 
 const MAX_ROOM_ID_LENGTH = 96;
 const MAX_PEER_ID_LENGTH = 96;
@@ -60,6 +67,8 @@ export function attachSignalingRelay(server, { path = "/kernel-signal" } = {}) {
 
   wss.on("connection", ws => {
     let joined = false;
+    // Never trust a sender identity supplied in a signaling payload.
+    const senderId = randomUUID();
     ws.on("message", raw => {
       if (raw.length > MAX_MESSAGE_BYTES) {
         ws.close(1009, "message too large");
@@ -96,9 +105,9 @@ export function attachSignalingRelay(server, { path = "/kernel-signal" } = {}) {
         room.add(ws);
         membership.set(ws, roomId);
         joined = true;
-        safeSend(ws, { type: "JOINED", roomId, peers: room.size - 1 });
+        safeSend(ws, { type: "JOINED", roomId, peerId: senderId, peers: room.size - 1 });
         for (const peer of room) {
-          if (peer !== ws) safeSend(peer, { type: "PEER_JOINED" });
+          if (peer !== ws) safeSend(peer, { type: "PEER_JOINED", peerId: senderId });
         }
         return;
       }
@@ -115,8 +124,11 @@ export function attachSignalingRelay(server, { path = "/kernel-signal" } = {}) {
       const room = rooms.get(membership.get(ws));
       if (!room) return;
       // Server relays signaling only; SDP and ICE are not treated as trusted.
+      // Stamp the transport-assigned sender ID after spreading client data,
+      // so spoofed peerId values can never override it.
+      const forwarded = { ...message, roomId: membership.get(ws), peerId: senderId };
       for (const peer of room) {
-        if (peer !== ws) safeSend(peer, message);
+        if (peer !== ws) safeSend(peer, forwarded);
       }
     });
 
