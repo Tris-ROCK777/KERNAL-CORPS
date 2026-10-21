@@ -37,8 +37,8 @@
   </section>
   <script type="module">
     import mqtt from "https://unpkg.com/mqtt@5.10.4/dist/mqtt.esm.js";
-    import { createMqttSignaling } from "./overseer-signaling-bootstrap.mjs";
-    import { createRealPeerNode } from "./overseer-real-peer.mjs";
+    import { createMqttSignaling } from "./overseer-signaling-bootstrap.mjs?v=ee900a9";
+    import { createRealPeerNode } from "./overseer-real-peer.mjs?v=ee900a9";
 
     const $ = id => document.getElementById(id);
     const logBox = $("log");
