@@ -692,5 +692,31 @@ export async function runOverseerMeshVerification() {
     results.push("WAL commit failure preserves active LKG and restart recovery");
   }
 
+  // TEST 24: canonical seven-app IDs replicate; persisted legacy identifiers remain accepted.
+  {
+    const canonicalApps = ["X-Kom’s", "Planet-K", "KashKorner", "X-Koin’s", "Kernelodie’s", "KernelVision", "X-Shield"];
+    const legacyApps = ["PlanetApeX", "KoinKobs", "Kernelodiez", "Kernelodie", "XShield", "Apex Studio"];
+    const f = await makePair();
+    for (const podId of canonicalApps) {
+      const code = 'export function mountPod() { return ' + JSON.stringify("canonical:" + podId) + '; }';
+      const hash = await broadcast(f.senderMesh, f.senderEngine, f.sign, podId, code);
+      await waitUntil(() => f.receiverEngine.activePods.get(podId)?.hash === hash);
+      assert(f.receiverEngine.activePods.get(podId)?.hash === hash, "TEST_24_FAILED: canonical pod not replicated: " + podId);
+    }
+    for (const podId of legacyApps) {
+      const code = 'export function mountPod() { return ' + JSON.stringify("legacy:" + podId) + '; }';
+      const result = await f.senderEngine.mutatePod(podId, code, {signature:await f.sign(code)});
+      assert(result.podId === podId, "TEST_24_FAILED: legacy pod ID rejected: " + podId);
+    }
+    let invalidRejected = false;
+    try {
+      await f.senderMesh.broadcastPodMutation({podId:"NotAKernelApp", hash:"a".repeat(64),
+        codeString:"export function mountPod() {}", signature:"00", algorithm:"ECDSA-P256"});
+    } catch (error) { invalidRejected = /INVALID_POD/.test(String(error?.message)); }
+    assert(invalidRejected, "TEST_24_FAILED: unsupported pod ID was not rejected");
+    f.senderMesh.dispose(); f.receiverMesh.dispose();
+    results.push("all seven canonical app IDs replicate; legacy IDs remain accepted; unknown IDs rejected");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }

@@ -98,11 +98,13 @@ jobs:
         with:
           enablement: true
 
-      - name: Assemble mobile verifier
+      - name: Assemble mobile verifier and seven-app command center
         run: |
           mkdir -p _site/overseer
           cp -R overseer/. _site/overseer/
           cp overseer/verify.html _site/overseer/index.html
+          test -s _site/overseer/pod-command-drawer.html
+          test -s _site/overseer/non-exportable-vault-verify.html
 
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3

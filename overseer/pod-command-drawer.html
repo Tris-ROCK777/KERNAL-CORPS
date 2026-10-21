@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080b16">
+<title>KERNEL CORP. — Pod Command Drawer</title>
+<style>
+:root{color-scheme:dark;--bg:#080b16;--panel:rgba(19,25,45,.72);--line:rgba(178,198,255,.17);--text:#edf2ff;--muted:#a1acc8;--cyan:#75e5ff;--violet:#b7a0ff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 10% 0%,#18284a 0,transparent 40%),radial-gradient(ellipse at 100% 15%,#2a1745 0,transparent 38%),var(--bg);color:var(--text);font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:clamp(12px,3vw,30px)}
+header,.glass,.app,.metric{background:var(--panel);border:1px solid var(--line);box-shadow:0 18px 60px #0005;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:18px}
+header{padding:20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}h1{font-size:clamp(18px,4vw,26px);margin:0;letter-spacing:.08em}h2{font-size:13px;letter-spacing:.09em;text-transform:uppercase;margin:0 0 12px;color:#dce6ff}.sub,.muted{color:var(--muted);font-size:12px}.status{border:1px solid var(--line);padding:7px 10px;border-radius:99px;color:var(--cyan);font-size:11px}
+main{max-width:1100px;margin:0 auto}section{margin-top:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}.app{padding:16px;min-height:120px}.app strong{display:block;font-size:14px;margin-bottom:6px}.app p{color:var(--muted);font-size:12px;margin:0 0 12px}.app .tag{font-size:10px;color:var(--cyan);letter-spacing:.08em}
+.glass{padding:18px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}button{border:1px solid #a9c5ff45;background:#a9c5ff12;color:var(--text);padding:10px 13px;border-radius:10px;font:inherit;font-size:12px;cursor:pointer}button.primary{background:linear-gradient(110deg,#6de4ff30,#b7a0ff30);border-color:#91e8ff70}button:disabled{opacity:.5;cursor:wait}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px}.metric{padding:12px}.metric span{display:block;color:var(--muted);font-size:11px}.metric strong{font-size:21px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;background:#050711a8;border:1px solid var(--line);border-radius:12px;padding:13px;font-size:11px;color:#dce6ff}a{color:var(--cyan)}.warning{color:#ffd98b}.footer{margin:18px 2px;color:var(--muted);font-size:11px}
+</style>
+</head>
+<body><main>
+<header><div><h1>KERNEL CORP. / POD COMMAND</h1><div class="sub">Mobile-first app switchboard · local storage diagnostics · read-only mode</div></div><div class="status" id="state">LOCAL DIAGNOSTICS READY</div></header>
+<section><h2>Seven-app ecosystem · X-Kom’s command center + six specialized apps</h2><div class="grid" id="apps"></div></section>
+<section class="glass"><h2>OPFS shard inspector</h2><div class="sub">Reads browser Origin Private File System metadata and selected text previews. It does not write, move, or delete shards.</div>
+<div class="actions"><button class="primary" id="scan">SCAN OPFS</button><button id="export">EXPORT REPORT JSON</button></div>
+<div class="metrics"><div class="metric"><span>Files discovered</span><strong id="files">—</strong></div><div class="metric"><span>Bytes discovered</span><strong id="bytes">—</strong></div><div class="metric"><span>Shard-like files</span><strong id="shards">—</strong></div><div class="metric"><span>WAL/log-like files</span><strong id="wals">—</strong></div></div>
+<pre id="report">No scan run yet.</pre></section>
+<section class="glass"><h2>Ring-WAL log view</h2><div class="sub">Shows excerpts only from readable text files whose names suggest WAL, journal, log, receipt, or manifest data. Binary files are listed by metadata only.</div><pre id="wal">Waiting for OPFS scan…</pre></section>
+<div class="footer">Security boundary: this page is a read-only diagnostic surface, not a trusted authority console. It does not activate worker execution or change the enrolled authority key.</div>
+</main>
+<script>
+const apps=[
+["X-Kom’s","CENTRAL COMMAND CENTER / coordinates all six specialized apps"],
+["Planet-K","Specialized app pod / ecosystem discovery"],
+["KashKorner","Specialized app pod / exchange and commerce"],
+["X-Koin’s","Specialized app pod / digital economy"],
+["Kernelodie’s","Specialized app pod / audio and media"],
+["KernelVision","Specialized app pod / visual intelligence"],
+["X-Shield","Specialized app pod / security controls"]
+];
+document.getElementById("apps").innerHTML=apps.map(([name,desc])=>'<article class="app"><strong>'+name+'</strong><p>'+desc+'</p><span class="tag">POD SLOT · INTEGRATION READY</span></article>').join("");
+let lastReport=null;
+const state=document.getElementById("state");
+const fmt=n=>Number(n).toLocaleString();
+async function scan(){
+ const btn=document.getElementById("scan");btn.disabled=true;state.textContent="SCANNING LOCAL OPFS";
+ const entries=[];let totalBytes=0;
+ try{
+  if(!navigator.storage?.getDirectory)throw new Error("OPFS_UNAVAILABLE: open this page on HTTPS in a supported browser.");
+  const root=await navigator.storage.getDirectory();
+  async function walk(dir,path,depth){
+   if(depth>7)return;
+   for await(const [name,handle] of dir.entries()){
+    const full=path?path+"/"+name:name;
+    if(handle.kind==="directory"){entries.push({path:full,kind:"directory"});try{await walk(handle,full,depth+1)}catch(e){entries.push({path:full,kind:"directory-error",error:e.message})}}
+    else{
+     try{const file=await handle.getFile();totalBytes+=file.size;const item={path:full,kind:"file",size:file.size,lastModified:file.lastModified,type:file.type||"unknown"};entries.push(item);
+      if(/wal|journal|ring|log|receipt|manifest|shard|chunk/i.test(name)&&file.size>0&&file.size<=262144&&(/text|json|javascript|xml|unknown/i.test(file.type)||/\.(json|txt|log|wal|ndjson|manifest|mjs|js)$/i.test(name))){try{item.preview=(await file.slice(0,4096).text()).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,"�")}catch{}}
+     }catch(e){entries.push({path:full,kind:"file-error",error:e.message})}
+    }
+   }
+  }
+  await walk(root,"",0);
+  const files=entries.filter(x=>x.kind==="file");
+  const shardLike=files.filter(x=>/shard|chunk/i.test(x.path));
+  const walLike=files.filter(x=>/wal|journal|ring|log|receipt|manifest/i.test(x.path));
+  lastReport={generatedAt:new Date().toISOString(),mode:"read-only",root:"OPFS origin-private root",fileCount:files.length,totalBytes,shardLikeCount:shardLike.length,walLikeCount:walLike.length,entries};
+  document.getElementById("files").textContent=fmt(files.length);document.getElementById("bytes").textContent=fmt(totalBytes);document.getElementById("shards").textContent=fmt(shardLike.length);document.getElementById("wals").textContent=fmt(walLike.length);
+  document.getElementById("report").textContent=JSON.stringify({generatedAt:lastReport.generatedAt,root:lastReport.root,fileCount:files.length,totalBytes,shardLikeCount:shardLike.length,walLikeCount:walLike.length,entries:entries.map(({preview,...meta})=>meta)},null,2);
+  const excerpts=entries.filter(x=>x.preview!==undefined);
+  document.getElementById("wal").textContent=excerpts.length?excerpts.map(x=>"--- "+x.path+" ("+x.size+" bytes) ---\n"+x.preview).join("\n\n"):"No readable WAL/log/shard text files found in OPFS. This can mean the app has not written any, or its storage format is binary / uses different names.";
+  state.textContent="SCAN COMPLETE";
+ }catch(e){state.textContent="SCAN ERROR";document.getElementById("report").textContent=String(e.message||e);document.getElementById("wal").textContent="Scan did not complete."}
+ finally{btn.disabled=false}
+}
+document.getElementById("scan").addEventListener("click",scan);
+document.getElementById("export").addEventListener("click",()=>{if(!lastReport){state.textContent="RUN SCAN FIRST";return}const blob=new Blob([JSON.stringify(lastReport,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="kernel-opfs-report.json";a.click();URL.revokeObjectURL(url);});
+</script></body></html>
