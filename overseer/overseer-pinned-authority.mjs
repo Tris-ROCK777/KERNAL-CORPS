@@ -5,7 +5,8 @@
  * compiled into the trusted application bundle or delivered out-of-band.
  * Never use a receipt hash or an example placeholder as the authority public key.
  */
-const SYSTEM_TRUSTED_AUTHORITY_PUBKEY = globalThis.KERNEL_AUTHORITY_PUBKEY_HEX || "";
+// Trust anchor from the enrolled production authority identity.
+const SYSTEM_TRUSTED_AUTHORITY_PUBKEY = "dc66faf0e8cf6de4a1cce5872c146b7e1ec5f92b184c791a47219c71da038333";
 
 function decodeHex(hex) {
   if (typeof hex !== "string" || !/^[a-f0-9]{64}$/i.test(hex)) {
