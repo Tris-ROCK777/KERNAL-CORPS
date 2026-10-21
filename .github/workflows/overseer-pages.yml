@@ -34,6 +34,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Syntax-check real-browser OPFS verification module
+        run: node --check overseer/overseer-opfs-persistence.test.mjs
+
       - name: Run mesh, storage-recovery and signaling invariants
         run: node overseer/run-verify.mjs
 
