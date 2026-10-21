@@ -215,7 +215,7 @@ export class OverseerHotSwap {
         const code = await this.loadVerified(row.hash);
         // Persisted bytes are not trusted just because their digest matches.
         // Recovery must authenticate them against the independently configured trust root.
-        if (row.algorithm && row.algorithm !== this.signatureAlgorithm) {
+        if (row.algorithm !== this.signatureAlgorithm) {
           throw new Error("RECOVERY_SIGNATURE_ALGORITHM_MISMATCH");
         }
         await this.verifySignature(code, row.signature, this.publicKey);
