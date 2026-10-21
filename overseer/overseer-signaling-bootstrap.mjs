@@ -84,7 +84,7 @@ export function createEphemeralSignaling({
       if (closed || ws.readyState !== WebSocketImpl.OPEN) {
         throw new Error("SIGNALING_SOCKET_NOT_OPEN");
       }
-      if (!payload || !["OFFER", "ANSWER", "ICE"].includes(payload.type)) {
+      if (!payload || !["READY", "OFFER", "ANSWER", "ICE"].includes(payload.type)) {
         throw new Error("UNSUPPORTED_SIGNAL_TYPE");
       }
       ws.send(JSON.stringify({ ...payload, roomId, peerId }));
@@ -161,7 +161,7 @@ export function createBroadcastSignaling({
       let message;
       try { message = JSON.parse(String(event.data)); } catch { return; }
       if (!message || message.roomId !== roomId || message.peerId === peerId) return;
-      if (!["OFFER", "ANSWER", "ICE", "ERROR"].includes(message.type)) return;
+      if (!["READY", "OFFER", "ANSWER", "ICE", "ERROR"].includes(message.type)) return;
       for (const listener of listeners) {
         try { listener(message); } catch {}
       }

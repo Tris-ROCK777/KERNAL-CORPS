@@ -31,6 +31,8 @@ export async function createRealPeerNode(
   let dataChannel = null;
   let closed = false;
   let makingOffer = false;
+  let offerStarted = false;
+  let readyTimer = null;
   const pendingIce = [];
   const send = message => signalingTransport.send({ peerId, ...message });
 
@@ -61,8 +63,20 @@ export async function createRealPeerNode(
     if (closed || !message || typeof message.type !== "string") return;
     try {
       switch (message.type) {
+        case "READY": {
+          if (!isInitiator || offerStarted) break;
+          offerStarted = true;
+          makingOffer = true;
+          try {
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            await send({ type: "OFFER", sdp: pc.localDescription });
+          } finally { makingOffer = false; }
+          break;
+        }
         case "OFFER": {
           if (!message.sdp) throw new Error("OFFER_SDP_REQUIRED");
+          if (readyTimer !== null) { clearInterval(readyTimer); readyTimer = null; }
           await pc.setRemoteDescription(message.sdp);
           await drainIce();
           const answer = await pc.createAnswer();
@@ -92,19 +106,13 @@ export async function createRealPeerNode(
   }
 
   const unsubscribe = signalingTransport.subscribe(handleSignal);
-  if (isInitiator) {
-    try {
-      makingOffer = true;
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      await send({ type: "OFFER", sdp: pc.localDescription });
-    } catch (error) {
-      unsubscribe?.();
-      pc.close();
-      throw error;
-    } finally {
-      makingOffer = false;
-    }
+  if (!isInitiator) {
+    // Repeat READY until the offer arrives; MQTT QoS 0 can lose early messages
+    // while the other peer is still subscribing or registering its listener.
+    const announceReady = () => Promise.resolve(send({ type: "READY" }))
+      .catch(error => onStateChange({ type: "signaling-error", error: String(error) }));
+    await announceReady();
+    readyTimer = setInterval(announceReady, 1500);
   }
 
   return {
@@ -115,6 +123,7 @@ export async function createRealPeerNode(
       if (closed) return;
       closed = true;
       unsubscribe?.();
+      if (readyTimer !== null) { clearInterval(readyTimer); readyTimer = null; }
       meshReplicator.detachPeerChannel(peerId);
       dataChannel?.close();
       pc.close();
