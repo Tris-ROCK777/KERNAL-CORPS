@@ -54,6 +54,11 @@ globalThis.Worker = class KernelWorkerShim {
 };
 
 const { runOverseerMeshVerification } = await import("./overseer-mesh-sync.test.mjs");
-const receipt = await runOverseerMeshVerification();
-console.log("OVERSEER_VERIFY_RECEIPT:", JSON.stringify(receipt, null, 2));
-if (receipt?.status !== "ALL_INVARIANTS_PASSED") process.exitCode = 1;
+const meshReceipt = await runOverseerMeshVerification();
+console.log("OVERSEER_MESH_VERIFY_RECEIPT:", JSON.stringify(meshReceipt, null, 2));
+if (meshReceipt?.status !== "ALL_INVARIANTS_PASSED") process.exitCode = 1;
+
+const { runMqttSignalingVerification } = await import("./overseer-mqtt-signaling.test.mjs");
+const mqttReceipt = await runMqttSignalingVerification();
+console.log("OVERSEER_MQTT_SIGNALING_RECEIPT:", JSON.stringify(mqttReceipt, null, 2));
+if (mqttReceipt?.status !== "ALL_MQTT_SIGNALING_INVARIANTS_PASSED") process.exitCode = 1;
