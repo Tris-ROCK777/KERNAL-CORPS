@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import {webcrypto} from "node:crypto";
-import {OverseerKeyVault} from "./overseer-key-vault.mjs";
-import {initializeTrustedAuthority} from "./overseer-authority-bootstrap.mjs";
+import {initializeTrustedAuthority, provisionAuthorityIdentity} from "./overseer-authority-bootstrap.mjs";
 
 if (!globalThis.crypto?.subtle) globalThis.crypto = webcrypto;
 
@@ -42,12 +41,17 @@ await assert.rejects(
   () => initializeTrustedAuthority({vaultOptions:{root}}),
   /AUTHORITY_PIN_NOT_CONFIGURED/
 );
+await assert.rejects(
+  () => provisionAuthorityIdentity({vaultOptions:{root}}),
+  /EXPLICIT_FIRST_BOOT_PROVISIONING_REQUIRED/
+);
 
-// Explicit provisioning step: create the identity first, then pin its actual
-// public key in the trusted application configuration before normal startup.
-const provisioner = new OverseerKeyVault({root});
-await provisioner.initOrRestore();
-const pin = provisioner.getPublicKeyHex();
+const provisioned = await provisionAuthorityIdentity({
+  vaultOptions:{root},
+  allowFirstBootProvisioning:true
+});
+assert.equal(provisioned.status, "NEW_IDENTITY_CREATED_REQUIRES_TRUSTED_PIN");
+const pin = provisioned.publicKeyHex;
 
 const restored = await initializeTrustedAuthority({publicKeyHex:pin, vaultOptions:{root}});
 assert.equal(restored.status, "TRUSTED_AUTHORITY_INITIALIZED");
@@ -60,6 +64,6 @@ await assert.rejects(
 );
 
 console.log(JSON.stringify({status:"AUTHORITY_BOOTSTRAP_TESTS_PASSED",checks:[
-  "missing-trust-pin-rejected","provisioned-key-must-be-pinned-explicitly",
-  "matching-pin-restores-identity","mismatched-pin-rejected"
+  "missing-trust-pin-rejected","implicit-first-boot-provisioning-rejected",
+  "explicit-first-boot-identity-created","matching-pin-restores-identity","mismatched-pin-rejected"
 ]}));
