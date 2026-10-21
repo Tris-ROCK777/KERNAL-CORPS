@@ -478,5 +478,34 @@ export async function runOverseerMeshVerification() {
     results.push("wrong-peer EOF rejected; legitimate transfer state preserved");
   }
 
+
+  // TEST 16: a storage write failure must not replace the active last-known-good shard.
+  {
+    const fixture = await createSignedFixture();
+    const engine = createEngine(fixture.keyPair.publicKey);
+    engine.root = createMockOPFS();
+    const good = 'export function mountPod() { return "preserve-this-active-version"; }';
+    const goodSignature = await fixture.sign(good);
+    const first = await engine.mutatePod("KashKorner", good, {signature:goodSignature});
+    const beforeWal = await (await (await engine.root.getFileHandle("ring-wal.jsonl")).getFile()).text();
+    const originalWrite = engine.writeVerifiedShard.bind(engine);
+    engine.writeVerifiedShard = async () => { throw new Error("SIMULATED_OPFS_WRITE_FAILURE"); };
+    const badAttempt = 'export function mountPod() { return "must-not-become-active"; }';
+    const badSignature = await fixture.sign(badAttempt);
+    let rejected = false;
+    try { await engine.mutatePod("KashKorner", badAttempt, {signature:badSignature}); }
+    catch (error) { rejected = /SIMULATED_OPFS_WRITE_FAILURE/.test(String(error?.message)); }
+    engine.writeVerifiedShard = originalWrite;
+    assert(rejected, "TEST_16_FAILED: simulated storage failure was not surfaced");
+    assert(engine.activePods.get("KashKorner")?.hash === first.hash,
+      "TEST_16_FAILED: failed storage write replaced active last-known-good shard");
+    const afterWal = await (await (await engine.root.getFileHandle("ring-wal.jsonl")).getFile()).text();
+    const commits = afterWal.split("\\n").filter(Boolean).map(line => JSON.parse(line)).filter(row => row.op === "HOTSWAP_COMMIT");
+    assert(commits.length === 1 && afterWal.includes("HOTSWAP_MOUNT_FAILED"),
+      "TEST_16_FAILED: failed write unexpectedly committed or was not recorded");
+    assert(beforeWal.includes(first.hash), "TEST_16_SETUP_FAILED: initial commit not recorded");
+    results.push("storage write failure preserves active LKG and records no new commit");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
