@@ -9,6 +9,7 @@ on:
       - "overseer/overseer-mesh-sync.mjs"
       - "overseer/overseer-real-peer.mjs"
       - "overseer/overseer-websocket-signaling.mjs"
+      - "overseer/overseer-signaling-bootstrap.mjs"
       - "overseer/overseer-mesh-sync.test.mjs"
       - ".github/workflows/overseer-pages.yml"
   workflow_dispatch:
@@ -47,6 +48,7 @@ jobs:
           cp overseer/overseer-mesh-sync.mjs _site/overseer/
           cp overseer/overseer-real-peer.mjs _site/overseer/
           cp overseer/overseer-websocket-signaling.mjs _site/overseer/
+          cp overseer/overseer-signaling-bootstrap.mjs _site/overseer/
           cp overseer/overseer-mesh-sync.test.mjs _site/overseer/
 
       - name: Upload static site
