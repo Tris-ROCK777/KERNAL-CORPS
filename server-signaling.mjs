@@ -53,15 +53,18 @@ export function attachSignalingRelay(server, { path = "/kernel-signal" } = {}) {
   });
   const rooms = new Map();
   const membership = new Map();
+  const connectionIds = new Map();
 
   function leave(ws) {
     const roomId = membership.get(ws);
+    const peerId = connectionIds.get(ws);
     membership.delete(ws);
+    connectionIds.delete(ws);
     if (!roomId) return;
     const room = rooms.get(roomId);
     if (!room) return;
     room.delete(ws);
-    for (const peer of room) safeSend(peer, { type: "PEER_LEFT" });
+    for (const peer of room) safeSend(peer, { type: "PEER_LEFT", roomId, peerId });
     if (room.size === 0) rooms.delete(roomId);
   }
 
@@ -69,6 +72,7 @@ export function attachSignalingRelay(server, { path = "/kernel-signal" } = {}) {
     let joined = false;
     // Never trust a sender identity supplied in a signaling payload.
     const senderId = randomUUID();
+    connectionIds.set(ws, senderId);
     ws.on("message", raw => {
       if (raw.length > MAX_MESSAGE_BYTES) {
         ws.close(1009, "message too large");
