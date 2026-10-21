@@ -21,6 +21,7 @@
 <body>
   <h1>KERNEL CORP. / OVERSEER — LIVE PEER TRANSFER</h1>
   <p>This is a real-device smoke test, not a production signaling service. The public MQTT broker is untrusted and shared. Use only a random room ID and non-sensitive test data. No private keys or application secrets are sent.</p>
+  <p class="warning">SCOPE: this page currently verifies WebRTC byte transfer and SHA-256 only. It does not verify an authority signature, install a module, or persist a shard to OPFS. A PASS below is not an authenticated-storage pass.</p>
   <p class="warning">Both devices must use the same room ID and different peer roles. Keep this page open until the test finishes. Public broker availability and network/NAT conditions can affect connection success.</p>
   <section class="card">
     <label for="room">Random room ID (copy the same value to both devices)</label>
@@ -28,7 +29,7 @@
     <label for="role">This device</label>
     <select id="role"><option value="sender">Sender (initiates offer)</option><option value="receiver">Receiver (answers offer)</option></select>
     <button id="connect">CONNECT & START WEBRTC</button>
-    <button id="send" disabled>SEND TEST SHARD (32 KiB)</button>
+    <button id="send" disabled>SEND UNAUTHENTICATED TEST BYTES (32 KiB)</button>
     <button id="close" disabled>CLOSE SESSION</button>
   </section>
   <section class="card">
@@ -107,7 +108,7 @@
                 const bytes = new Uint8Array(packet.bytes);
                 const actualHash = await digest(bytes);
                 const passed = bytes.byteLength === packet.byteLength && actualHash === packet.sha256;
-                log(passed ? "PASS: SHARD_LENGTH_AND_SHA256_MATCH" : "FAIL: SHARD_INTEGRITY_MISMATCH", {
+                log(passed ? "PASS: BYTE_LENGTH_AND_SHA256_ONLY (NO SIGNATURE OR STORAGE)" : "FAIL: BYTE_INTEGRITY_MISMATCH", {
                   receivedBytes: bytes.byteLength, expectedBytes: packet.byteLength, expectedSha256: packet.sha256, actualSha256: actualHash
                 });
               } catch (error) { log("Received message parse failed", { error: String(error) }); }
