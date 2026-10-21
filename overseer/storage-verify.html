@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050507">
+  <title>KERNEL CORP. // REAL OPFS STORAGE CHECK</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; padding: 20px; background: #050507; color: #e4e4e7; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    main { max-width: 720px; margin: 0 auto; padding: 18px; background: #121218; border: 1px solid #30303b; border-radius: 14px; }
+    h1 { font-size: 16px; line-height: 1.4; }
+    p { color: #a1a1aa; font-size: 12px; line-height: 1.6; }
+    button { width: 100%; padding: 14px; margin: 12px 0; border: 0; border-radius: 9px; background: #10b981; color: #04130d; font: 800 13px ui-monospace, monospace; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px; background: #09090d; border: 1px solid #30303b; border-radius: 8px; font-size: 11px; line-height: 1.6; }
+    a { color: #a5b4fc; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>KERNEL CORP. // REAL OPFS STORAGE + RESTART RECOVERY</h1>
+    <p>This separate browser check uses the device's actual Origin Private File System (OPFS), not the in-memory storage mock used by the automated mesh suite. It creates a temporary test folder, writes a signed shard and WAL commit, starts a fresh engine, verifies recovery, then removes the temporary folder.</p>
+    <button id="run">RUN REAL DEVICE STORAGE CHECK</button>
+    <pre id="out">Ready. Tap the button to test this browser's OPFS.</pre>
+    <p><a href="./index.html">Back to mesh and hot-swap verification</a></p>
+  </main>
+  <script type="module">
+    import { runRealOPFSPersistenceVerification } from "./overseer-opfs-persistence.test.mjs";
+    const button = document.getElementById("run");
+    const output = document.getElementById("out");
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      output.textContent = "Testing signed write → OPFS read-back → WAL commit → fresh-engine recovery...";
+      try {
+        const receipt = await runRealOPFSPersistenceVerification();
+        output.textContent = JSON.stringify(receipt, null, 2);
+      } catch (error) {
+        output.textContent = "REAL_OPFS_VERIFICATION_FAILED\n" + (error?.stack || error?.message || String(error));
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
