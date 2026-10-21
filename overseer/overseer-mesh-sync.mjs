@@ -117,11 +117,17 @@ export class OverseerMeshReplicator {
     });
   }
 
-  async broadcastPodMutation({podId, hash, codeString, signature, algorithm = "Ed25519"}) {
+  async broadcastPodMutation({podId, hash, codeString, signature, algorithm = this.engine.signatureAlgorithm || "ECDSA-P256"}) {
     if (!PODS.has(podId)) throw new Error("INVALID_POD");
     if (typeof codeString !== "string" || !signature || !/^[a-f0-9]{64}$/i.test(hash || "")) throw new Error("INVALID_SIGNED_SHARD_METADATA");
     const bytes = new TextEncoder().encode(codeString);
     if (!bytes.byteLength || bytes.byteLength > MAX_PAYLOAD_BYTES) throw new Error("PAYLOAD_OUT_OF_BOUNDS");
+    if (algorithm !== (this.engine.signatureAlgorithm || "ECDSA-P256")) throw new Error("SIGNATURE_ALGORITHM_POLICY_MISMATCH");
+    if (typeof this.engine.verifySignature === "function") {
+      await this.engine.verifySignature(codeString, signature, this.authorityPublicKey);
+    } else {
+      throw new Error("ENGINE_SIGNATURE_VERIFIER_REQUIRED");
+    }
     const hashFn = this.engine.sha256 || this.engine.computeSHA256;
     if (typeof hashFn !== "function" || (await hashFn.call(this.engine, codeString)).toLowerCase() !== hash.toLowerCase()) throw new Error("OUTBOUND_HASH_MISMATCH");
     const totalChunks = Math.ceil(bytes.byteLength / CHUNK_SIZE);
