@@ -374,5 +374,18 @@ export async function runOverseerMeshVerification() {
     results.push("mesh rejects authority key mismatch with engine trust root");
   }
 
+  // TEST 11: storage initialization must fail before recovery when no pinned authority exists.
+  {
+    const engine = createEngine(null);
+    let rejected = false;
+    try {
+      await engine.init();
+    } catch (error) {
+      rejected = /PINNED_AUTHORITY_PUBLIC_KEY_REQUIRED/.test(String(error?.message));
+    }
+    assert(rejected, "TEST_11_FAILED: engine initialized without a pinned authority key");
+    results.push("initialization fails closed without pinned authority");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
