@@ -30,6 +30,7 @@ export function createEphemeralSignaling({
   const listeners = new Set();
   let closed = false;
   let joined = false;
+  let assignedPeerId;
   let joinTimer;
 
   const ready = new Promise((resolve, reject) => {
@@ -49,15 +50,24 @@ export function createEphemeralSignaling({
       try { message = JSON.parse(String(event.data)); } catch { return; }
       if (message.roomId !== roomId) return;
 
-      if (message.type === "JOINED" && message.peerId === peerId) {
+      if (message.type === "JOINED") {
+        if (message.roomId !== roomId ||
+            typeof message.peerId !== "string" ||
+            !/^[A-Za-z0-9_-]{1,96}$/.test(message.peerId)) {
+          clearTimeout(joinTimer);
+          reject(new Error("INVALID_SIGNALING_JOIN_ACK"));
+          ws.close(1008, "invalid join acknowledgement");
+          return;
+        }
+        assignedPeerId = message.peerId;
         joined = true;
         clearTimeout(joinTimer);
         resolve();
         return;
       }
 
-      // Never feed our own reflected messages back into the peer connector.
-      if (message.peerId === peerId) return;
+      // Ignore relayed messages from this connection's server-assigned identity.
+      if (message.peerId === assignedPeerId) return;
       for (const listener of listeners) {
         try { listener(message); } catch {}
       }
@@ -79,6 +89,7 @@ export function createEphemeralSignaling({
 
   return {
     ready,
+    get assignedPeerId() { return assignedPeerId; },
     async send(payload) {
       await ready;
       if (closed || ws.readyState !== WebSocketImpl.OPEN) {
