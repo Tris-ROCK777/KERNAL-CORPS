@@ -59,7 +59,9 @@ export async function runMqttSignalingVerification() {
   await assert.rejects(a.send({ type: "ICE", candidate: {} }), /MQTT_SIGNALING_CLOSED/);
 
   assert.throws(() => createMqttSignaling({ client, roomId: "short", peerId: "peer-A" }), /RANDOM_ROOM_ID/);
-  assert.throws(() => createMqttSignaling({ client, roomId, peerId: "peer-A" }).send({ type: "JOIN" }), /UNSUPPORTED_SIGNAL_TYPE/);
+  const invalid = createMqttSignaling({ client, roomId, peerId: "peer-A" });
+  await assert.rejects(invalid.send({ type: "JOIN" }), /UNSUPPORTED_SIGNAL_TYPE/);
+  invalid.close();
 
   return { status: "ALL_MQTT_SIGNALING_INVARIANTS_PASSED", assertions: 12 };
 }
