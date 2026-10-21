@@ -57,8 +57,31 @@ export async function runRealPeerVerification() {
     signaling.emit({ type: "ANSWER", peerId: "remote-actual-id", sdp: { type: "answer", sdp: "fake-answer" } });
     await new Promise(resolve => setTimeout(resolve, 0));
     assert.equal(node.pc.remoteDescription?.type, "answer");
+
+    const states = [];
+    const signaling2 = fakeSignaling();
+    const node2 = await createRealPeerNode(mesh, {
+      peerId: "local-alias-2", isInitiator: true, signalingTransport: signaling2,
+      onStateChange: state => states.push(state)
+    });
+    signaling2.emit({ type: "READY", peerId: "trusted-peer" });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    signaling2.emit({ type: "ANSWER", peerId: "attacker-peer", sdp: { type: "answer", sdp: "attacker" } });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(node2.pc.remoteDescription, null, "answer from a different peer identity must not be applied");
+    assert.ok(states.some(state => state.type === "signaling-error" && state.error.includes("SIGNAL_SENDER_IDENTITY_MISMATCH")),
+      "mismatched answer must be reported");
+
+    signaling2.emit({ type: "ICE", peerId: "attacker-peer", candidate: { candidate: "attacker-ice" } });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(node2.pc.addedIce.length, 0, "ICE from a different peer identity must not be applied");
+
+    signaling2.emit({ type: "ICE", peerId: "trusted-peer", candidate: { candidate: "trusted-ice" } });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(node2.pc.addedIce.length, 1, "ICE from the bound peer should be accepted");
     node.close();
-    return { status: "ALL_REAL_PEER_SIGNALING_INVARIANTS_PASSED", assertions: 4 };
+    node2.close();
+    return { status: "ALL_REAL_PEER_SIGNALING_INVARIANTS_PASSED", assertions: 8 };
   } finally {
     if (Original === undefined) delete globalThis.RTCPeerConnection;
     else globalThis.RTCPeerConnection = Original;
