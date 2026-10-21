@@ -35,6 +35,14 @@ jobs:
       - name: Checkout KERNELCORP
         uses: actions/checkout@v4
 
+      - name: Set up Node.js for zero-dependency verification
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run mesh, storage-recovery and signaling invariants
+        run: node overseer/run-verify.mjs
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
