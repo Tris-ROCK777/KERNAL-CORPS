@@ -22,6 +22,8 @@ export class OverseerHotSwap {
     this.activePods = new Map();
     this.lkgPointers = new Map();
     this.commitListeners = new Set();
+    // Serialize read-modify-write WAL appends so concurrent peer commits cannot overwrite each other.
+    this.walQueue = Promise.resolve();
   }
 
   async init() {
@@ -119,13 +121,19 @@ export class OverseerHotSwap {
   }
 
   async appendRingWAL(entry) {
-    const handle = await this.root.getFileHandle("ring-wal.jsonl", {create:true});
-    const previous = await (await handle.getFile()).text();
-    const writer = await handle.createWritable();
-    try {
-      await writer.write(previous + JSON.stringify({...entry, ts:Date.now()}) + "\n");
-      await writer.close();
-    } catch (e) { try { await writer.abort(); } catch {} throw e; }
+    const append = async () => {
+      const handle = await this.root.getFileHandle("ring-wal.jsonl", {create:true});
+      const previous = await (await handle.getFile()).text();
+      const writer = await handle.createWritable();
+      try {
+        await writer.write(previous + JSON.stringify({...entry, ts:Date.now()}) + "\n");
+        await writer.close();
+      } catch (e) { try { await writer.abort(); } catch {} throw e; }
+    };
+    const pending = this.walQueue.then(append, append);
+    // Keep the queue usable after a failed append while still surfacing that failure to its caller.
+    this.walQueue = pending.catch(() => {});
+    return pending;
   }
 
   async loadVerified(hash) {
