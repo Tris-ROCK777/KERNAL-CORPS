@@ -35,7 +35,9 @@ try {
   const receipts = rows.filter(row => row.op === "HOTSWAP_DURABILITY_RECEIPT");
   assert.equal(receipts.length, 2);
   assert.equal(receipts[0].previousReceiptHash, null);
-  assert.equal(receipts[1].previousReceiptHash, receipts[0].receiptHash);
+  const terminalReceipts = rows.filter(row => row.op === "HOTSWAP_COMMIT_RECEIPT" || row.op === "HOTSWAP_ABORT_RECEIPT" || row.op === "HOTSWAP_FORCED_ABORT_RECEIPT");
+  assert.equal(terminalReceipts.length, 2);
+  assert.equal(receipts[1].previousReceiptHash, terminalReceipts[0].receiptHash);
   assert.equal(receipts[0].shardHash, shardHashA);
   assert.equal(receipts[1].shardHash, shardHashB);
   assert.equal(receipts[1].peerId, "peer-01");
