@@ -568,5 +568,58 @@ export async function runOverseerMeshVerification() {
     results.push("rollback skips corrupt WAL rows and restores signed LKG");
   }
 
+
+  // TEST 20: incomplete EOF must preserve the active last-known-good shard.
+  {
+    const f = await makePair();
+    const good = 'export function mountPod() { return "incomplete-transfer-keeps-LKG"; }';
+    const goodHash = await broadcast(f.senderMesh, f.senderEngine, f.sign, "KashKorner", good);
+    await waitUntil(() => f.receiverEngine.activePods.has("KashKorner"));
+    const transferId = "c0ffee123456";
+    f.receiverMesh.startTransfer("sender", {
+      protocol:1, transferId, podId:"KashKorner", hash:"a".repeat(64),
+      signature:"00", algorithm:"ECDSA-P256", totalBytes:32, totalChunks:1
+    });
+    let rejected = false;
+    try {
+      await f.receiverMesh.finishTransfer("sender", {
+        type:"OVERSEER_SHARD_EOF", transferId, expectedHash:"a".repeat(64)
+      });
+    } catch (error) {
+      rejected = /INCOMPLETE_OR_INCONSISTENT_TRANSFER/.test(String(error?.message));
+    }
+    assert(rejected, "TEST_20_FAILED: incomplete transfer was accepted at EOF");
+    assert(f.receiverEngine.activePods.get("KashKorner")?.hash === goodHash,
+      "TEST_20_FAILED: incomplete transfer replaced active last-known-good shard");
+    assert(!f.receiverMesh.inboundBuffers.has(transferId),
+      "TEST_20_FAILED: rejected incomplete transfer state was not cleared");
+    f.senderMesh.dispose();
+    f.receiverMesh.dispose();
+    results.push("incomplete EOF rejected; active last-known-good shard preserved");
+  }
+
+  // TEST 21: duplicate chunk indices must abort the transfer rather than overwrite bytes.
+  {
+    const f = await makePair();
+    const transferId = "d00d12345678";
+    f.receiverMesh.startTransfer("sender", {
+      protocol:1, transferId, podId:"KashKorner", hash:"b".repeat(64),
+      signature:"00", algorithm:"ECDSA-P256", totalBytes:32, totalChunks:1
+    });
+    const frame = f.senderMesh.packBinaryChunk(transferId, 0, new Uint8Array(32).fill(7));
+    await f.receiverMesh.handleInboundFrame("sender", frame);
+    let rejected = false;
+    try { await f.receiverMesh.handleInboundFrame("sender", frame); }
+    catch (error) { rejected = /CHUNK_BOUNDS_OR_DUPLICATE/.test(String(error?.message)); }
+    assert(rejected, "TEST_21_FAILED: duplicate chunk index was accepted");
+    assert(!f.receiverMesh.inboundBuffers.has(transferId),
+      "TEST_21_FAILED: duplicate chunk did not clear rejected transfer state");
+    assert(!f.receiverEngine.activePods.has("KashKorner"),
+      "TEST_21_FAILED: duplicate chunk caused a shard to become active");
+    f.senderMesh.dispose();
+    f.receiverMesh.dispose();
+    results.push("duplicate chunk rejected and transfer state discarded");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
