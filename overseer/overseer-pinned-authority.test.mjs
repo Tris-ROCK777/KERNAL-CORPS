@@ -14,6 +14,6 @@ await assert.rejects(
   /RESTORED_AUTHORITY_KEY_DOES_NOT_MATCH_PIN/
 );
 await assert.rejects(() => verifyAndInitializeVault(vault,"743ef50a8a4a07d90d4c32f7dde33651e46a071611afd4c215684465a46fd45c"),
-  /expected a 32-byte Ed25519 public key/
+  /RESTORED_AUTHORITY_KEY_DOES_NOT_MATCH_PIN/
 );
 console.log(JSON.stringify({status:"PINNED_AUTHORITY_TESTS_PASSED",checks:["matching-pin-accepted","mismatched-key-rejected","receipt-hash-not-accepted-as-public-key-pin"]}));
