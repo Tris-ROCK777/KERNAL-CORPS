@@ -14,39 +14,56 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f4f6;padding:1rem;
 <p>This test uses real browser IndexedDB and WebCrypto. It creates a separate experimental key and does not touch the enrolled production authority vault.</p>
 <button id="run">Run tests</button>
 <pre id="result">READY</pre>
-<script type="module">
-import { NonExportableAuthorityVault } from "./overseer-non-exportable-authority-vault.mjs";
-const output = document.querySelector("#result");
-document.querySelector("#run").addEventListener("click", async () => {
-  output.textContent = "RUNNING";
-  const checks = [];
-  try {
-    if (!globalThis.crypto?.subtle || !globalThis.indexedDB) throw new Error("REQUIRED_BROWSER_APIS_UNAVAILABLE");
-    const databaseName = "kernel-authority-vault-test-" + crypto.randomUUID();
-    // The module's store uses a stable DB name, so tests use the actual isolated test DB
-    // by running against the default vault; only the dedicated experimental key slot is touched.
-    const first = new NonExportableAuthorityVault({databaseName});
-    const pair = await first.initOrRestore({allowFirstBootProvisioning:true});
-    checks.push(["first boot creates key", !!pair.privateKey]);
-    checks.push(["private key is non-exportable", pair.privateKey.extractable === false]);
-    checks.push(["public key is 32-byte Ed25519 hex", /^[a-f0-9]{64}$/.test(first.getPublicKeyHex())]);
-    const challenge = new TextEncoder().encode("KERNEL_NON_EXPORTABLE_VAULT_TEST_V1");
-    const signature = await crypto.subtle.sign("Ed25519", pair.privateKey, challenge);
-    checks.push(["private key can sign", await crypto.subtle.verify("Ed25519", pair.publicKey, signature, challenge)]);
-    const restored = new NonExportableAuthorityVault({expectedPublicKeyHex:first.getPublicKeyHex(), databaseName});
-    await restored.initOrRestore();
-    checks.push(["IndexedDB restores same pinned identity", restored.getPublicKeyHex() === first.getPublicKeyHex() && restored.getStatus().restored]);
-    checks.push(["restored private key remains non-exportable", restored.keyPair.privateKey.extractable === false]);
-    const mismatch = new NonExportableAuthorityVault({expectedPublicKeyHex:"ab".repeat(32), databaseName});
-    let mismatchRejected = false;
-    try { await mismatch.initOrRestore(); } catch (e) { mismatchRejected = e.message === "AUTHORITY_PUBLIC_KEY_PIN_MISMATCH"; }
-    checks.push(["wrong pin is rejected", mismatchRejected]);
-    const failed = checks.filter(([,ok])=>!ok);
-    output.textContent = JSON.stringify({status:failed.length ? "FAILED" : "ALL_CHECKS_PASSED", checks:checks.map(([name,passed])=>({name,passed})), note:"Experimental IndexedDB key slot only; production OPFS vault unchanged."}, null, 2);
-  } catch (error) {
-    output.textContent = JSON.stringify({status:"ERROR",message:error?.message||String(error),checks},null,2);
-  }
-});
+<script>
+(() => {
+  const out = document.getElementById("result");
+  const button = document.getElementById("run");
+  const paint = (label, detail) => {
+    out.textContent = label + (detail ? "\n" + detail : "");
+  };
+  window.addEventListener("error", event => {
+    paint("SCRIPT ERROR", event.message || "A script failed to load.");
+  });
+  window.addEventListener("unhandledrejection", event => {
+    paint("ASYNC ERROR", event.reason && event.reason.message ? event.reason.message : String(event.reason));
+  });
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    paint("RUNNING", "Loading verification module…");
+    try {
+      const url = new URL("./overseer-non-exportable-authority-vault.mjs", location.href).href;
+      const loaded = await import(url);
+      paint("RUNNING", "Module loaded. Running checks…");
+      const Vault = loaded.NonExportableAuthorityVault;
+      if (!Vault) throw new Error("MODULE_EXPORT_MISSING: NonExportableAuthorityVault");
+      if (!crypto.subtle || !indexedDB) throw new Error("REQUIRED_BROWSER_APIS_UNAVAILABLE");
+      const databaseName = "kernel-authority-vault-test-" + crypto.randomUUID();
+      const first = new Vault({ databaseName });
+      const pair = await first.initOrRestore({ allowFirstBootProvisioning: true });
+      const checks = [];
+      checks.push(["first boot creates key", !!pair.privateKey]);
+      checks.push(["private key is non-exportable", pair.privateKey.extractable === false]);
+      checks.push(["public key is 32-byte Ed25519 hex", /^[a-f0-9]{64}$/.test(first.getPublicKeyHex())]);
+      const challenge = new TextEncoder().encode("KERNEL_NON_EXPORTABLE_VAULT_TEST_V1");
+      const signature = await crypto.subtle.sign("Ed25519", pair.privateKey, challenge);
+      checks.push(["private key can sign", await crypto.subtle.verify("Ed25519", pair.publicKey, signature, challenge)]);
+      const restored = new Vault({ expectedPublicKeyHex: first.getPublicKeyHex(), databaseName });
+      await restored.initOrRestore();
+      checks.push(["IndexedDB restores same identity", restored.getPublicKeyHex() === first.getPublicKeyHex() && restored.getStatus().restored]);
+      checks.push(["restored private key remains non-exportable", restored.keyPair.privateKey.extractable === false]);
+      const mismatch = new Vault({ expectedPublicKeyHex: "ab".repeat(32), databaseName });
+      let rejected = false;
+      try { await mismatch.initOrRestore(); } catch (error) { rejected = error.message === "AUTHORITY_PUBLIC_KEY_PIN_MISMATCH"; }
+      checks.push(["wrong pin is rejected", rejected]);
+      const failed = checks.filter(([, passed]) => !passed);
+      paint(failed.length ? "FAILED" : "ALL_CHECKS_PASSED", JSON.stringify(checks.map(([name, passed]) => ({ name, passed })), null, 2));
+    } catch (error) {
+      paint("ERROR", (error && error.message ? error.message : String(error)) + (error && error.stack ? "\n" + error.stack : ""));
+    } finally {
+      button.disabled = false;
+    }
+  });
+})();
 </script>
 </body>
 </html>
