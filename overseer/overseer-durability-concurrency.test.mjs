@@ -37,6 +37,28 @@ try {
   assert.equal(chainBefore.valid, true, JSON.stringify(chainBefore));
   assert.equal(chainBefore.records, 2);
 
+  // TEST 2 — receipt persists, but the engine WAL fails afterward.
+  const originalEngineAppend = engine.appendRingWAL.bind(engine);
+  engine.appendRingWAL = async entry => {
+    if (entry?.op === "HOTSWAP_COMMIT") throw new Error("SIMULATED_ENGINE_WAL_FAILURE");
+    return originalEngineAppend(entry);
+  };
+  let engineFailureRejected = false;
+  try {
+    await pipeline.commitMutation("XShield", 'export function mountPod() { return "Engine-Fault"; }',
+      {signature:"engine-fault", source:"LOCAL"});
+  } catch (e) {
+    engineFailureRejected = String(e?.message).includes("SIMULATED_ENGINE_WAL_FAILURE");
+  } finally {
+    engine.appendRingWAL = originalEngineAppend;
+  }
+  assert.equal(engineFailureRejected, true, "engine WAL failure must reject commit");
+  assert.equal(pods.has("XShield"), false, "failed engine commit must not publish pod state");
+  const afterAbort = await pipeline.verifyReceiptChain();
+  assert.equal(afterAbort.valid, true, JSON.stringify(afterAbort));
+  assert.equal(afterAbort.records, 3, "failed engine write must append a linked abort receipt");
+
+  // TEST 3 — a receipt-store failure must stop before engine WAL and pod state.
   const logBefore = engineLog.length;
   const priorPod = pods.get("KashKorner");
   const originalAppend = bridge.appendCommitReceipt.bind(bridge);
@@ -59,6 +81,6 @@ try {
   assert.equal(final.lastReceiptHash, chainBefore.lastReceiptHash);
   pipeline.dispose();
   console.log(JSON.stringify({status:"CONCURRENCY_AND_FAULT_INVARIANTS_PASSED",
-    checks:["same-pod-race","receipt-write-failure-aborts","pod-state-unchanged","chain-head-preserved"],
+    checks:["same-pod-race","engine-wal-failure-adds-abort-receipt","receipt-write-failure-aborts-before-engine-wal","pod-state-unchanged","chain-head-preserved"],
     totalRecords:final.records}));
 } finally { await rm(dir, {recursive:true, force:true}); }
