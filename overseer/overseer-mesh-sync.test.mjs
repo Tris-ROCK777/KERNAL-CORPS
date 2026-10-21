@@ -649,5 +649,48 @@ export async function runOverseerMeshVerification() {
     results.push("peer-received shard persists to OPFS/WAL and survives restart recovery");
   }
 
+  // TEST 23: a WAL commit failure must preserve the active last-known-good shard.
+  {
+    const fixture = await createSignedFixture();
+    const root = createMockOPFS();
+    const engine = createEngine(fixture.keyPair.publicKey);
+    engine.root = root;
+    const good = 'export function mountPod() { return "preserve-active-on-wal-failure"; }';
+    const goodResult = await engine.mutatePod("KashKorner", good, {signature:await fixture.sign(good)});
+    const originalAppend = engine.appendRingWAL.bind(engine);
+    engine.appendRingWAL = async entry => {
+      if (entry.op === "HOTSWAP_COMMIT" && entry.hash !== goodResult.hash) {
+        throw new Error("SIMULATED_WAL_COMMIT_FAILURE");
+      }
+      return originalAppend(entry);
+    };
+
+    const candidate = 'export function mountPod() { return "must-not-activate-without-wal"; }';
+    let rejected = false;
+    try {
+      await engine.mutatePod("KashKorner", candidate, {signature:await fixture.sign(candidate)});
+    } catch (error) {
+      rejected = /SIMULATED_WAL_COMMIT_FAILURE/.test(String(error?.message));
+    }
+    engine.appendRingWAL = originalAppend;
+    assert(rejected, "TEST_23_FAILED: failed WAL commit was not surfaced");
+    assert(engine.activePods.get("KashKorner")?.hash === goodResult.hash,
+      "TEST_23_FAILED: candidate became active before its WAL commit succeeded");
+
+    const wal = await (await root.getFileHandle("ring-wal.jsonl")).getFile();
+    const rows = (await wal.text()).split("\n").filter(Boolean).map(line => JSON.parse(line));
+    assert(rows.filter(row => row.op === "HOTSWAP_COMMIT").length === 1,
+      "TEST_23_FAILED: failed candidate was recorded as a committed shard");
+    assert(rows.some(row => row.op === "HOTSWAP_MOUNT_FAILED" && /SIMULATED_WAL_COMMIT_FAILURE/.test(row.reason)),
+      "TEST_23_FAILED: WAL commit failure was not recorded");
+
+    const recovered = createEngine(fixture.keyPair.publicKey);
+    recovered.root = root;
+    await recovered.recoverFromRestart();
+    assert(recovered.activePods.get("KashKorner")?.hash === goodResult.hash,
+      "TEST_23_FAILED: restart recovery did not restore last-known-good shard after WAL failure");
+    results.push("WAL commit failure preserves active LKG and restart recovery");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
