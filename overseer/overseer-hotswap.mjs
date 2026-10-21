@@ -21,6 +21,7 @@ export class OverseerHotSwap {
     this.root = null;
     this.activePods = new Map();
     this.lkgPointers = new Map();
+    this.commitListeners = new Set();
   }
 
   async init() {
@@ -30,6 +31,20 @@ export class OverseerHotSwap {
     this.root = await navigator.storage.getDirectory();
     await this.recoverFromRestart();
     return this;
+  }
+
+  onCommit(listener) {
+    if (typeof listener !== "function") throw new Error("COMMIT_LISTENER_REQUIRED");
+    this.commitListeners.add(listener);
+    return () => this.commitListeners.delete(listener);
+  }
+
+  emitCommit(event) {
+    for (const listener of this.commitListeners) {
+      try {
+        Promise.resolve(listener(event)).catch(() => {});
+      } catch { /* observers must not invalidate a durable local commit */ }
+    }
   }
 
   async sha256(text) {
@@ -130,7 +145,7 @@ export class OverseerHotSwap {
     }
   }
 
-  async mutatePod(podId, code, {signature, publicKey} = {}) {
+  async mutatePod(podId, code, {signature, publicKey, origin = "local"} = {}) {
     if (!PODS.has(podId)) throw new Error("INVALID_POD: " + podId);
     await this.verifySignature(code, signature, publicKey || this.publicKey);
     await this.runSandboxGate(code);
@@ -148,7 +163,12 @@ export class OverseerHotSwap {
       this.activePods.set(podId, {hash, ...candidate});
       if (oldHash) this.lkgPointers.set(podId, oldHash);
       if (previous?.objectUrl) URL.revokeObjectURL(previous.objectUrl);
-      return {status:"HOTSWAP_LIVE", podId, hash, rollbackAvailable:!!oldHash};
+      const result = {status:"HOTSWAP_LIVE", podId, hash, rollbackAvailable:!!oldHash};
+      this.emitCommit({
+        ...result, codeString:code, signature,
+        algorithm:this.signatureAlgorithm, origin
+      });
+      return result;
     } catch (e) {
       await this.appendRingWAL({op:"HOTSWAP_MOUNT_FAILED", podId, hash, retainedHash:oldHash, reason:String(e)});
       throw e;
