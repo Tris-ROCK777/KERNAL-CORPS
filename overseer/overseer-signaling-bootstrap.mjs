@@ -188,7 +188,7 @@ export function createBroadcastSignaling({
       if (closed || ws.readyState !== WebSocketImpl.OPEN) {
         throw new Error("BROADCAST_RELAY_NOT_OPEN");
       }
-      if (!payload || !["OFFER", "ANSWER", "ICE"].includes(payload.type)) {
+      if (!payload || !["READY", "OFFER", "ANSWER", "ICE"].includes(payload.type)) {
         throw new Error("UNSUPPORTED_SIGNAL_TYPE");
       }
       ws.send(JSON.stringify({ ...payload, roomId, peerId }));
@@ -260,7 +260,7 @@ export function createMqttSignaling({
       message = JSON.parse(raw);
     } catch { return; }
     if (!message || message.roomId !== roomId || message.peerId === peerId) return;
-    if (!["OFFER", "ANSWER", "ICE", "ERROR"].includes(message.type)) return;
+    if (!["READY", "OFFER", "ANSWER", "ICE", "ERROR"].includes(message.type)) return;
     for (const listener of listeners) {
       try { listener(message); } catch {}
     }
