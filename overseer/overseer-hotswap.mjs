@@ -196,8 +196,12 @@ export class OverseerHotSwap {
         const wal = await this.root.getFileHandle("ring-wal.jsonl");
         const lines = (await (await wal.getFile()).text()).split("\n").filter(Boolean);
         for (let i = lines.length - 1; i >= 0; i--) {
-          const row = JSON.parse(lines[i]);
-          if (row.op === "HOTSWAP_COMMIT" && row.podId === podId && row.hash === hash && row.signature) {
+          // A torn/corrupt newer WAL row must not prevent finding an older signed LKG.
+          let row;
+          try { row = JSON.parse(lines[i]); } catch { continue; }
+          if (row.op === "HOTSWAP_COMMIT" && row.podId === podId &&
+              row.hash === hash && row.signature &&
+              row.algorithm === this.signatureAlgorithm) {
             signature = row.signature; break;
           }
         }
