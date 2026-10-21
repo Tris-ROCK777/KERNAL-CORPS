@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050507">
+  <title>KERNEL CORP. // AUTHORITY ENROLLMENT</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; padding:20px; background:#050507; color:#e4e4e7; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+    main { max-width:720px; margin:0 auto; padding:18px; background:#121218; border:1px solid #30303b; border-radius:14px; }
+    h1 { font-size:16px; line-height:1.4; }
+    p { color:#a1a1aa; font-size:12px; line-height:1.65; }
+    button { width:100%; padding:14px; margin:12px 0; border:0; border-radius:9px; background:#10b981; color:#04130d; font:800 13px ui-monospace,monospace; }
+    pre { white-space:pre-wrap; overflow-wrap:anywhere; padding:12px; background:#09090d; border:1px solid #30303b; border-radius:8px; font-size:11px; line-height:1.6; }
+    a { color:#a5b4fc; }
+    .warning { color:#fbbf24; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>KERNEL CORP. // EXPLICIT AUTHORITY ENROLLMENT</h1>
+    <p class="warning">This is a deliberate key-provisioning action. Tap only on the device intended to hold the authority identity. The private key stays in this browser's OPFS vault; the public key shown here is safe to copy but must be pinned in a reviewed trusted application release before pinned startup is enabled.</p>
+    <p>This does not silently enable authority operations or configure a trust pin. It uses the production vault folder (<code>kernel_vault</code>), not the isolated diagnostic folder.</p>
+    <button id="run">PROVISION / READ AUTHORITY IDENTITY</button>
+    <pre id="out">No key action has been performed. Tap the button to continue.</pre>
+    <p><a href="./index.html">Back to Overseer verifier</a></p>
+  </main>
+  <script type="module">
+    import { provisionAuthorityIdentity } from "./overseer-authority-bootstrap.mjs";
+    const button = document.getElementById("run");
+    const output = document.getElementById("out");
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      output.textContent = "Checking secure context and opening the production authority vault...";
+      try {
+        if (!globalThis.isSecureContext || !navigator.storage?.getDirectory || !crypto?.subtle) {
+          throw new Error("SECURE_OPFS_UNAVAILABLE: use HTTPS in a supported browser");
+        }
+        const result = await provisionAuthorityIdentity({allowFirstBootProvisioning:true});
+        output.textContent = JSON.stringify({
+          status: result.status,
+          publicKeyHex: result.publicKeyHex,
+          vault: "OPFS / kernel_vault / authority.vault.json",
+          next: result.status === "NEW_IDENTITY_CREATED_REQUIRES_TRUSTED_PIN"
+            ? "Copy the publicKeyHex into a reviewed trusted app release as KERNEL_AUTHORITY_PUBKEY_HEX. Do not lose this device's site data before the trusted pin is released."
+            : "An existing identity was read. Confirm this public key against the separately trusted pin before enabling authority operations."
+        }, null, 2);
+      } catch (error) {
+        output.textContent = "AUTHORITY_ENROLLMENT_FAILED\n" + (error?.stack || error?.message || String(error));
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
