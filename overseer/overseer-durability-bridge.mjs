@@ -217,7 +217,9 @@ export class OverseerDurabilityBridge {
         ts:Date.now()
       };
       const receiptHash = await digest(canonicalJSON(payload));
-      const record = {...payload, receiptHash};
+      let record = {...payload, receiptHash};
+      if (this.authoritySignatureEngine) record = await this.authoritySignatureEngine.signReceipt(record);
+      else if (this.requireAuthoritySignature) throw new Error("AUTHORITY_SIGNATURE_ENGINE_REQUIRED");
       await this.appendLine(record);
       return {status:"TERMINAL_RECEIPT_PERSISTED", op, receiptHash, previousReceiptHash, sequence:record.sequence};
     });
