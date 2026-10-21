@@ -328,5 +328,36 @@ export async function runOverseerMeshVerification() {
     results.push("caller-supplied public key cannot override pinned authority");
   }
 
+  // TEST 9: a corrupt newest commit must fall back to the last verified commit for that pod.
+  {
+    const fixture = await createSignedFixture();
+    const root = createMockOPFS();
+    const engine = createEngine(fixture.keyPair.publicKey);
+    engine.root = root;
+    const good = 'export function mountPod() { return "known-good-before-corruption"; }';
+    const newer = 'export function mountPod() { return "newer-commit-with-corrupt-signature"; }';
+    const goodSignature = await fixture.sign(good);
+    const newerSignature = await fixture.sign(newer);
+    const goodResult = await engine.mutatePod("KernelVision", good, {signature:goodSignature});
+    await engine.mutatePod("KernelVision", newer, {signature:newerSignature});
+
+    const walHandle = await root.getFileHandle("ring-wal.jsonl");
+    const walFile = await walHandle.getFile();
+    const rows = (await walFile.text()).split("\n").filter(Boolean).map(line => JSON.parse(line));
+    const commits = rows.filter(row => row.op === "HOTSWAP_COMMIT");
+    assert(commits.length === 2, "TEST_9_SETUP_FAILED: expected two commits");
+    commits[1].signature = "00";
+    const writer = await walHandle.createWritable();
+    await writer.write(rows.map(row => JSON.stringify(row)).join("\n") + "\n");
+    await writer.close();
+
+    const recovered = createEngine(fixture.keyPair.publicKey);
+    recovered.root = root;
+    await recovered.recoverFromRestart();
+    assert(recovered.activePods.get("KernelVision")?.hash === goodResult.hash,
+      "TEST_9_FAILED: recovery did not restore last verified commit");
+    results.push("recovery falls back to last verified commit after corrupt newest commit");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
