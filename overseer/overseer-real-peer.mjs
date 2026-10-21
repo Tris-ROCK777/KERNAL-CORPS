@@ -34,7 +34,16 @@ export async function createRealPeerNode(
   let offerStarted = false;
   let readyTimer = null;
   const pendingIce = [];
-  const send = message => signalingTransport.send({ ...message, peerId });
+  let remotePeerId = null;
+  const send = message => {
+    if (["OFFER", "ANSWER", "ICE"].includes(message.type) && !remotePeerId) {
+      throw new Error("REMOTE_PEER_ID_NOT_ESTABLISHED");
+    }
+    return signalingTransport.send({
+      ...message,
+      ...(remotePeerId ? { targetPeerId: remotePeerId } : {})
+    });
+  }
 
   const attach = channel => {
     if (closed) { channel.close(); return; }
@@ -65,6 +74,10 @@ export async function createRealPeerNode(
       switch (message.type) {
         case "READY": {
           if (!isInitiator || offerStarted) break;
+          if (typeof message.peerId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/.test(message.peerId)) {
+            throw new Error("INVALID_REMOTE_PEER_ID");
+          }
+          remotePeerId = message.peerId;
           offerStarted = true;
           makingOffer = true;
           try {
@@ -76,6 +89,10 @@ export async function createRealPeerNode(
         }
         case "OFFER": {
           if (!message.sdp) throw new Error("OFFER_SDP_REQUIRED");
+          if (typeof message.peerId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/.test(message.peerId)) {
+            throw new Error("INVALID_REMOTE_PEER_ID");
+          }
+          remotePeerId = message.peerId;
           if (readyTimer !== null) { clearInterval(readyTimer); readyTimer = null; }
           await pc.setRemoteDescription(message.sdp);
           await drainIce();
