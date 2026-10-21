@@ -145,9 +145,9 @@ export class OverseerHotSwap {
     }
   }
 
-  async mutatePod(podId, code, {signature, publicKey, origin = "local"} = {}) {
+  async mutatePod(podId, code, {signature, origin = "local"} = {}) {
     if (!PODS.has(podId)) throw new Error("INVALID_POD: " + podId);
-    await this.verifySignature(code, signature, publicKey || this.publicKey);
+    await this.verifySignature(code, signature, this.publicKey);
     await this.runSandboxGate(code);
     const hash = await this.sha256(code);
     await this.writeVerifiedShard(hash, code);
