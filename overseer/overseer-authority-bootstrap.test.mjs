@@ -39,7 +39,7 @@ function makeRoot() {
 const root = makeRoot();
 await assert.rejects(
   () => initializeTrustedAuthority({vaultOptions:{root}}),
-  /AUTHORITY_PIN_NOT_CONFIGURED/
+  /PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT/
 );
 await assert.rejects(
   () => provisionAuthorityIdentity({vaultOptions:{root}}),
@@ -64,6 +64,6 @@ await assert.rejects(
 );
 
 console.log(JSON.stringify({status:"AUTHORITY_BOOTSTRAP_TESTS_PASSED",checks:[
-  "missing-trust-pin-rejected","implicit-first-boot-provisioning-rejected",
+  "missing-pinned-vault-rejected","implicit-first-boot-provisioning-rejected",
   "explicit-first-boot-identity-created","matching-pin-restores-identity","mismatched-pin-rejected"
 ]}));
