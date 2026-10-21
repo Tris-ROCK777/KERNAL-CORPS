@@ -27,8 +27,10 @@ jobs:
       - name: Checkout KERNELCORP
         uses: actions/checkout@v4
 
-      - name: Configure GitHub Pages
+      - name: Enable and configure GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Package Overseer verification site
         uses: actions/upload-pages-artifact@v3
