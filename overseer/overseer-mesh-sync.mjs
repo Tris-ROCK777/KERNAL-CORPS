@@ -10,7 +10,7 @@ const MAX_BUFFERED_AMOUNT = 256 * 1024;
 const BACKPRESSURE_TIMEOUT_MS = 5_000;
 const TRANSFER_TTL_MS = 15_000;
 const MAX_INBOUND_TRANSFERS = 8;
-const PODS = new Set(["KernelVision", "PlanetApeX", "KashKorner", "KoinKobs", "Kernelodiez", "XShield"]);
+import { isSupportedPodId } from "./overseer-pod-identifiers.mjs";
 
 export class OverseerMeshReplicator {
   constructor(hotSwapEngine, authorityPublicKey) {
@@ -150,7 +150,7 @@ export class OverseerMeshReplicator {
   }
 
   async broadcastPodMutation({podId, hash, codeString, signature, algorithm = this.engine.signatureAlgorithm || "ECDSA-P256"}) {
-    if (!PODS.has(podId)) throw new Error("INVALID_POD");
+    if (!isSupportedPodId(podId)) throw new Error("INVALID_POD");
     if (typeof codeString !== "string" || !signature || !/^[a-f0-9]{64}$/i.test(hash || "")) throw new Error("INVALID_SIGNED_SHARD_METADATA");
     const bytes = new TextEncoder().encode(codeString);
     if (!bytes.byteLength || bytes.byteLength > MAX_PAYLOAD_BYTES) throw new Error("PAYLOAD_OUT_OF_BOUNDS");
@@ -214,7 +214,7 @@ export class OverseerMeshReplicator {
 
   startTransfer(peerId, meta) {
     if (meta.protocol !== 1 || typeof meta.transferId !== "string" || !/^[a-f0-9]{12}$/.test(meta.transferId) ||
-        !PODS.has(meta.podId) || !/^[a-f0-9]{64}$/i.test(meta.hash || "") ||
+        !isSupportedPodId(meta.podId) || !/^[a-f0-9]{64}$/i.test(meta.hash || "") ||
         typeof meta.signature !== "string" || !meta.signature || !["Ed25519", "ECDSA-P256"].includes(meta.algorithm)) throw new Error("INVALID_TRANSFER_HEADER");
     if (!Number.isSafeInteger(meta.totalBytes) || meta.totalBytes < 1 || meta.totalBytes > MAX_PAYLOAD_BYTES ||
         !Number.isSafeInteger(meta.totalChunks) || meta.totalChunks < 1 || meta.totalChunks > MAX_CHUNKS ||

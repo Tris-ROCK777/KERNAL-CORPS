@@ -5,10 +5,7 @@
  * Security boundary: the Worker gate is a smoke-test/isolation from the UI thread,
  * NOT a hostile-code sandbox. Only install code from a trusted signing authority.
  */
-const PODS = new Set([
-  "KernelVision", "PlanetApeX", "KashKorner",
-  "KoinKobs", "Kernelodiez", "XShield"
-]);
+import { isSupportedPodId } from "./overseer-pod-identifiers.mjs";
 
 const hex = bytes => [...new Uint8Array(bytes)]
   .map(b => b.toString(16).padStart(2, "0")).join("");
@@ -156,7 +153,7 @@ export class OverseerHotSwap {
   }
 
   async mutatePod(podId, code, {signature, origin = "local"} = {}) {
-    if (!PODS.has(podId)) throw new Error("INVALID_POD: " + podId);
+    if (!isSupportedPodId(podId)) throw new Error("INVALID_POD: " + podId);
     await this.verifySignature(code, signature, this.publicKey);
     await this.runSandboxGate(code);
     const hash = await this.sha256(code);
@@ -188,7 +185,7 @@ export class OverseerHotSwap {
   }
 
   async rollbackPod(podId, {signature} = {}) {
-    if (!PODS.has(podId)) throw new Error("INVALID_POD: " + podId);
+    if (!isSupportedPodId(podId)) throw new Error("INVALID_POD: " + podId);
     const hash = this.lkgPointers.get(podId);
     if (!hash) throw new Error("NO_LKG_TARGET");
     if (!signature) {
@@ -226,7 +223,7 @@ export class OverseerHotSwap {
     for (const line of text.split("\n").filter(Boolean)) {
       try {
         const row = JSON.parse(line);
-        if (row.op !== "HOTSWAP_COMMIT" || !PODS.has(row.podId)) continue;
+        if (row.op !== "HOTSWAP_COMMIT" || !isSupportedPodId(row.podId)) continue;
         if (!commitsByPod.has(row.podId)) commitsByPod.set(row.podId, []);
         commitsByPod.get(row.podId).push(row);
       } catch { /* ignore torn/corrupt WAL lines */ }
