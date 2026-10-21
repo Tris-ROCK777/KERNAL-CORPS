@@ -32,6 +32,8 @@ function isNodeRuntime() {
 export class OverseerDurabilityBridge {
   constructor(hotSwapEngine, options = {}) {
     this.engine = hotSwapEngine;
+    this.authoritySignatureEngine = options.authoritySignatureEngine || null;
+    this.requireAuthoritySignature = options.requireAuthoritySignature ?? Boolean(this.authoritySignatureEngine);
     this.target = options.target || (isNodeRuntime() ? "node" : "opfs");
     this.walPath = options.walPath || (typeof process !== "undefined"
       ? process.env?.RING_WAL_PATH || DEFAULT_NODE_PATH : DEFAULT_NODE_PATH);
@@ -128,7 +130,7 @@ export class OverseerDurabilityBridge {
         durability: ["PRE_COMMIT_RECEIPT_ACK", "WRITE_PENDING"],
         podId: commit.podId ?? null,
         shardHash: commit.hash,
-        signature: commit.signature ?? null,
+        commitSignature: commit.signature ?? null,
         algorithm: commit.algorithm ?? null,
         origin: metadata.origin || commit.origin || "unknown",
         peerId: metadata.peerId || commit.peerId || null,
@@ -138,7 +140,9 @@ export class OverseerDurabilityBridge {
         committedAt: Number.isFinite(commit.ts) ? commit.ts : Date.now()
       };
       const receiptHash = await digest(canonicalJSON(payload));
-      const record = {...payload, receiptHash};
+      let record = {...payload, receiptHash};
+      if (this.authoritySignatureEngine) record = await this.authoritySignatureEngine.signReceipt(record);
+      else if (this.requireAuthoritySignature) throw new Error("AUTHORITY_SIGNATURE_ENGINE_REQUIRED");
       await this.appendLine(record);
       return {status:"DURABILITY_RECEIPT_PERSISTED", target:this.target,
         sequence:record.sequence, shardHash:record.shardHash, receiptHash,
@@ -177,7 +181,9 @@ export class OverseerDurabilityBridge {
         abortedAt:Date.now()
       };
       const receiptHash = await digest(canonicalJSON(payload));
-      const record = {...payload, receiptHash};
+      let record = {...payload, receiptHash};
+      if (this.authoritySignatureEngine) record = await this.authoritySignatureEngine.signReceipt(record);
+      else if (this.requireAuthoritySignature) throw new Error("AUTHORITY_SIGNATURE_ENGINE_REQUIRED");
       await this.appendLine(record);
       return {status:"DURABILITY_ABORT_RECEIPT_PERSISTED", receiptHash, previousReceiptHash};
     });
@@ -227,12 +233,16 @@ export class OverseerDurabilityBridge {
       let row;
       try { row = JSON.parse(line); } catch { continue; }
       if (![RECEIPT_OP, "HOTSWAP_COMMIT_RECEIPT", "HOTSWAP_ABORT_RECEIPT", "HOTSWAP_FORCED_ABORT_RECEIPT"].includes(row.op)) continue;
-      const {receiptHash, ...payload} = row;
+      const {receiptHash, signature:authoritySignature, signerPubKey, ...payload} = row;
       if (!HEX_256.test(receiptHash || "") || row.previousReceiptHash !== previous) {
         return {valid:false, records:count, reason:"PREVIOUS_HASH_OR_FORMAT_MISMATCH"};
       }
       if (await digest(canonicalJSON(payload)) !== receiptHash) {
         return {valid:false, records:count, reason:"RECEIPT_HASH_MISMATCH", badReceiptHash:receiptHash};
+      }
+      if (this.requireAuthoritySignature && (!authoritySignature || !signerPubKey ||
+          !await this.authoritySignatureEngine?.verifyReceipt(row))) {
+        return {valid:false, records:count, reason:"AUTHORITY_SIGNATURE_INVALID_OR_UNTRUSTED", badReceiptHash:receiptHash};
       }
       previous = receiptHash;
       count++;
