@@ -48,7 +48,7 @@ try {
   assert.equal(recovered.records, 2);
 
   // Tampering with a receipt must invalidate the chain.
-  rows[1].podId = "tampered";
+  rows.find(row => row.op === "HOTSWAP_DURABILITY_RECEIPT").podId = "tampered";
   await (await import("node:fs/promises")).writeFile(walPath, rows.map(row => JSON.stringify(row)).join("\n") + "\n");
   const tampered = await restarted.verifyReceiptChain();
   assert.equal(tampered.valid, false);
