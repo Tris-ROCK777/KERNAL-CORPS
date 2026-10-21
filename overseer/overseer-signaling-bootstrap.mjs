@@ -260,6 +260,7 @@ export function createMqttSignaling({
       message = JSON.parse(raw);
     } catch { return; }
     if (!message || message.roomId !== roomId || message.peerId === peerId) return;
+    if (message.targetPeerId !== undefined && message.targetPeerId !== peerId) return;
     if (!["READY", "OFFER", "ANSWER", "ICE", "ERROR"].includes(message.type)) return;
     for (const listener of listeners) {
       try { listener(message); } catch {}
