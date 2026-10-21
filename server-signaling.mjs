@@ -116,7 +116,7 @@ export function attachSignalingRelay(server, { path = "/kernel-signal" } = {}) {
         safeSend(ws, { type: "ERROR", message: "JOIN_REQUIRED" });
         return;
       }
-      if (!["OFFER", "ANSWER", "ICE"].includes(message.type)) {
+      if (!["READY", "OFFER", "ANSWER", "ICE"].includes(message.type)) {
         safeSend(ws, { type: "ERROR", message: "UNSUPPORTED_SIGNAL_TYPE" });
         return;
       }
