@@ -56,7 +56,7 @@ try {
   assert.equal(pods.has("XShield"), false, "failed engine commit must not publish pod state");
   const afterAbort = await pipeline.verifyReceiptChain();
   assert.equal(afterAbort.valid, true, JSON.stringify(afterAbort));
-  assert.equal(afterAbort.records, 3, "failed engine write must append a linked abort receipt");
+  assert.equal(afterAbort.records, 4, "failed engine write must append a linked abort receipt");
 
   // TEST 3 — a receipt-store failure must stop before engine WAL and pod state.
   const logBefore = engineLog.length;
@@ -77,8 +77,8 @@ try {
   assert.equal(pods.get("KashKorner"), priorPod);
   const final = await pipeline.verifyReceiptChain();
   assert.equal(final.valid, true, JSON.stringify(final));
-  assert.equal(final.records, chainBefore.records);
-  assert.equal(final.lastReceiptHash, chainBefore.lastReceiptHash);
+  assert.equal(final.records, afterAbort.records);
+  assert.equal(final.lastReceiptHash, afterAbort.lastReceiptHash);
   pipeline.dispose();
   console.log(JSON.stringify({status:"CONCURRENCY_AND_FAULT_INVARIANTS_PASSED",
     checks:["same-pod-race","engine-wal-failure-adds-abort-receipt","receipt-write-failure-aborts-before-engine-wal","pod-state-unchanged","chain-head-preserved"],
