@@ -72,6 +72,10 @@ export async function runRealPeerVerification() {
     assert.ok(states.some(state => state.type === "signaling-error" && state.error.includes("SIGNAL_SENDER_IDENTITY_MISMATCH")),
       "mismatched answer must be reported");
 
+    signaling2.emit({ type: "ANSWER", peerId: "trusted-peer", sdp: { type: "answer", sdp: "trusted-answer" } });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(node2.pc.remoteDescription?.type, "answer", "trusted answer should establish remote description");
+
     signaling2.emit({ type: "ICE", peerId: "attacker-peer", candidate: { candidate: "attacker-ice" } });
     await new Promise(resolve => setTimeout(resolve, 0));
     assert.equal(node2.pc.addedIce.length, 0, "ICE from a different peer identity must not be applied");
