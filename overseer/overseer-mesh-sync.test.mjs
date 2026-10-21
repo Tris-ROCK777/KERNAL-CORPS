@@ -527,5 +527,21 @@ export async function runOverseerMeshVerification() {
     results.push("rollback resolves prior signature from newline-delimited WAL");
   }
 
+  // TEST 18: concurrent WAL appends are serialized and no record is lost.
+  {
+    const fixture = await createSignedFixture();
+    const engine = createEngine(fixture.keyPair.publicKey);
+    engine.root = createMockOPFS();
+    await Promise.all(Array.from({length:24}, (_, index) =>
+      engine.appendRingWAL({op:"CONCURRENT_APPEND_TEST", index})
+    ));
+    const wal = await (await engine.root.getFileHandle("ring-wal.jsonl")).getFile();
+    const rows = (await wal.text()).split("\n").filter(Boolean).map(line => JSON.parse(line));
+    const recorded = rows.filter(row => row.op === "CONCURRENT_APPEND_TEST").map(row => row.index).sort((a,b) => a-b);
+    assert(recorded.length === 24 && recorded.every((value, index) => value === index),
+      "TEST_18_FAILED: concurrent WAL append lost or duplicated records");
+    results.push("concurrent WAL append serialization preserves every record");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
