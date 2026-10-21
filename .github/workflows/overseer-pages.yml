@@ -44,12 +44,17 @@ jobs:
           node --check overseer/overseer-mesh-sync.mjs
           node --check overseer/overseer-durability-bridge.test.mjs
           node --check overseer/overseer-durability-concurrency.test.mjs
+          node --check overseer/overseer-recovery-inspector.mjs
+          node --check overseer/overseer-recovery-inspector.test.mjs
 
       - name: Run dual-target durability E2E test
         run: node overseer/overseer-durability-bridge.test.mjs
 
       - name: Run concurrency and failure-injection suite
         run: node overseer/overseer-durability-concurrency.test.mjs
+
+      - name: Run dangling pre-commit recovery test
+        run: node overseer/overseer-recovery-inspector.test.mjs
 
       - name: Run mesh, storage-recovery and signaling invariants
         run: node overseer/run-verify.mjs
