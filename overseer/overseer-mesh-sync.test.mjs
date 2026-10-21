@@ -500,7 +500,7 @@ export async function runOverseerMeshVerification() {
     assert(engine.activePods.get("KashKorner")?.hash === first.hash,
       "TEST_16_FAILED: failed storage write replaced active last-known-good shard");
     const afterWal = await (await (await engine.root.getFileHandle("ring-wal.jsonl")).getFile()).text();
-    const commits = afterWal.split("\\n").filter(Boolean).map(line => JSON.parse(line)).filter(row => row.op === "HOTSWAP_COMMIT");
+    const commits = afterWal.split("\n").filter(Boolean).map(line => JSON.parse(line)).filter(row => row.op === "HOTSWAP_COMMIT");
     assert(commits.length === 1 && afterWal.includes("HOTSWAP_MOUNT_FAILED"),
       "TEST_16_FAILED: failed write unexpectedly committed or was not recorded");
     assert(beforeWal.includes(first.hash), "TEST_16_SETUP_FAILED: initial commit not recorded");
