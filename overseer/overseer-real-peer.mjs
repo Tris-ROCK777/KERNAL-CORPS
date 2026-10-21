@@ -65,7 +65,24 @@ export async function createRealPeerNode(
   if (isInitiator) attach(pc.createDataChannel("kernel-mesh", { ordered: true }));
 
   async function drainIce() {
-    while (pendingIce.length) await pc.addIceCandidate(pendingIce.shift());
+    while (pendingIce.length) {
+      const queued = pendingIce.shift();
+      // ICE received before peer identity is established is accepted only if it
+      // belongs to the peer subsequently bound by READY/OFFER.
+      if (queued.peerId !== remotePeerId) {
+        onStateChange({ type: "signaling-rejected", reason: "ICE_SENDER_IDENTITY_MISMATCH" });
+        continue;
+      }
+      await pc.addIceCandidate(queued.candidate);
+    }
+  }
+
+  function requireBoundRemote(message) {
+    if (typeof message.peerId !== "string" ||
+        !/^[A-Za-z0-9_-]{1,96}$/.test(message.peerId) ||
+        !remotePeerId || message.peerId !== remotePeerId) {
+      throw new Error("SIGNAL_SENDER_IDENTITY_MISMATCH");
+    }
   }
 
   async function handleSignal(message) {
@@ -92,6 +109,9 @@ export async function createRealPeerNode(
           if (typeof message.peerId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/.test(message.peerId)) {
             throw new Error("INVALID_REMOTE_PEER_ID");
           }
+          if (remotePeerId && remotePeerId !== message.peerId) {
+            throw new Error("OFFER_SENDER_IDENTITY_MISMATCH");
+          }
           remotePeerId = message.peerId;
           if (readyTimer !== null) { clearInterval(readyTimer); readyTimer = null; }
           await pc.setRemoteDescription(message.sdp);
@@ -103,13 +123,24 @@ export async function createRealPeerNode(
         }
         case "ANSWER":
           if (!isInitiator || !message.sdp) throw new Error("UNEXPECTED_OR_INVALID_ANSWER");
+          requireBoundRemote(message);
           await pc.setRemoteDescription(message.sdp);
           await drainIce();
           break;
         case "ICE":
           if (!message.candidate) throw new Error("ICE_CANDIDATE_REQUIRED");
-          if (!pc.remoteDescription) pendingIce.push(message.candidate);
-          else await pc.addIceCandidate(message.candidate);
+          if (typeof message.peerId !== "string" ||
+              !/^[A-Za-z0-9_-]{1,96}$/.test(message.peerId)) {
+            throw new Error("INVALID_ICE_SENDER_ID");
+          }
+          if (remotePeerId && message.peerId !== remotePeerId) {
+            throw new Error("ICE_SENDER_IDENTITY_MISMATCH");
+          }
+          if (!pc.remoteDescription) pendingIce.push({ candidate: message.candidate, peerId: message.peerId });
+          else {
+            requireBoundRemote(message);
+            await pc.addIceCandidate(message.candidate);
+          }
           break;
         case "ERROR":
           onStateChange({ type: "signaling-error", error: message.message || "REMOTE_SIGNALING_ERROR" });
