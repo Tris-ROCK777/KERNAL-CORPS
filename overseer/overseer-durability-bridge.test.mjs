@@ -30,7 +30,7 @@ try {
 
   const status = await bridge.verifyReceiptChain();
   assert.equal(status.valid, true, JSON.stringify(status));
-  assert.equal(status.records, 2);
+  assert.equal(status.records, 4); // two commits each produce a pre-commit and terminal receipt
   const rows = (await readFile(walPath, "utf8")).trim().split("\n").map(JSON.parse);
   const receipts = rows.filter(row => row.op === "HOTSWAP_DURABILITY_RECEIPT");
   assert.equal(receipts.length, 2);
@@ -45,7 +45,7 @@ try {
   await restarted.init();
   const recovered = await restarted.verifyReceiptChain();
   assert.equal(recovered.valid, true);
-  assert.equal(recovered.records, 2);
+  assert.equal(recovered.records, 4); // persisted pre-commit and terminal receipts survive restart
 
   // Tampering with a receipt must invalidate the chain.
   rows.find(row => row.op === "HOTSWAP_DURABILITY_RECEIPT").podId = "tampered";
