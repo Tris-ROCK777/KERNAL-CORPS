@@ -37,6 +37,16 @@ jobs:
       - name: Syntax-check real-browser OPFS verification module
         run: node --check overseer/overseer-opfs-persistence.test.mjs
 
+      - name: Syntax-check authoritative durability modules
+        run: |
+          node --check overseer/overseer-durability-bridge.mjs
+          node --check overseer/overseer-authoritative-commit-pipeline.mjs
+          node --check overseer/overseer-mesh-sync.mjs
+          node --check overseer/overseer-durability-bridge.test.mjs
+
+      - name: Run dual-target durability E2E test
+        run: node overseer/overseer-durability-bridge.test.mjs
+
       - name: Run mesh, storage-recovery and signaling invariants
         run: node overseer/run-verify.mjs
 
