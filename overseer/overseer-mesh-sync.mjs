@@ -2,8 +2,6 @@
  * KERNEL CORP. — OVERSEER WEBRTC MESH REPLICATOR (v2 HARDENED)
  * 16-byte binary framing, bounded payloads, guarded backpressure.
  */
-import { installRingWalDurabilityReceipts } from "./overseer-ring-wal-receipts.mjs";
-
 const CHUNK_SIZE = 32 * 1024;
 const HEADER_BYTES = 16;
 const MAX_PAYLOAD_BYTES = 1_048_576;
@@ -22,9 +20,7 @@ export class OverseerMeshReplicator {
       throw new Error("AUTHORITY_KEY_MISMATCH: mesh verifier must use the engine's pinned trust root");
     }
     this.engine = hotSwapEngine;
-    // Install once at the shared engine boundary so both local and peer HOTSWAP_COMMITs
-    // receive an append-only, hash-linked durability receipt automatically.
-    this.durabilityReceipts = installRingWalDurabilityReceipts(this.engine);
+    // Durability is installed once by OverseerAuthoritativeCommitPipeline before peers attach.
     // Keep one trust root: outbound verification and inbound installation must agree.
     this.authorityPublicKey = hotSwapEngine.publicKey;
     this.peers = new Map();
