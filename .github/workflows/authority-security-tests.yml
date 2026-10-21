@@ -1,0 +1,32 @@
+name: Authority Security Tests
+
+on:
+  pull_request:
+    paths:
+      - "overseer/**"
+      - ".github/workflows/authority-security-tests.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "overseer/**"
+      - ".github/workflows/authority-security-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  authority-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run authority key vault tests
+        run: node overseer/overseer-key-vault.test.mjs
+      - name: Run pinned authority tests
+        run: node overseer/overseer-pinned-authority.test.mjs
+      - name: Run authority bootstrap tests
+        run: node overseer/overseer-authority-bootstrap.test.mjs
