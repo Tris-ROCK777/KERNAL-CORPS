@@ -15,9 +15,13 @@ const PODS = new Set(["KernelVision", "PlanetApeX", "KashKorner", "KoinKobs", "K
 export class OverseerMeshReplicator {
   constructor(hotSwapEngine, authorityPublicKey) {
     if (!hotSwapEngine) throw new Error("MISSING_ENGINE");
-    if (!authorityPublicKey) throw new Error("MISSING_AUTHORITY_KEY");
+    if (!hotSwapEngine.publicKey) throw new Error("MISSING_PINNED_ENGINE_AUTHORITY_KEY");
+    if (!authorityPublicKey || authorityPublicKey !== hotSwapEngine.publicKey) {
+      throw new Error("AUTHORITY_KEY_MISMATCH: mesh verifier must use the engine's pinned trust root");
+    }
     this.engine = hotSwapEngine;
-    this.authorityPublicKey = authorityPublicKey;
+    // Keep one trust root: outbound verification and inbound installation must agree.
+    this.authorityPublicKey = hotSwapEngine.publicKey;
     this.peers = new Map();
     this.inboundBuffers = new Map();
     this.seenTransferIds = new Map();
