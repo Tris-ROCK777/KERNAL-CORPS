@@ -1,11 +1,8 @@
 name: Deploy Overseer Verification Page
 
 on:
-  push:
-    branches: [main, master]
-    paths:
-      - "overseer/**"
-      - ".github/workflows/deploy-overseer-pages.yml"
+  # Manual fallback only. Automatic deployments are owned by overseer-pages.yml
+  # so two workflows cannot cancel or race each other on the same Pages site.
   workflow_dispatch:
 
 permissions:
