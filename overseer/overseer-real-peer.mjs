@@ -34,7 +34,7 @@ export async function createRealPeerNode(
   let offerStarted = false;
   let readyTimer = null;
   const pendingIce = [];
-  const send = message => signalingTransport.send({ peerId, ...message });
+  const send = message => signalingTransport.send({ ...message, peerId });
 
   const attach = channel => {
     if (closed) { channel.close(); return; }
@@ -46,7 +46,7 @@ export async function createRealPeerNode(
 
   pc.addEventListener("icecandidate", event => {
     if (event.candidate) {
-      Promise.resolve(send({ type: "ICE", candidate: event.candidate.toJSON?.() ?? event.candidate }))
+      Promise.resolve(send({ type: "ICE", candidate: event.candidate.toJSON?.() ?? event.candidate, targetPeerId: remotePeerId }))
         .catch(error => onStateChange({ type: "signaling-error", error: String(error) }));
     }
   });
@@ -70,7 +70,7 @@ export async function createRealPeerNode(
           try {
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
-            await send({ type: "OFFER", sdp: pc.localDescription });
+            await send({ type: "OFFER", sdp: pc.localDescription, targetPeerId: remotePeerId });
           } finally { makingOffer = false; }
           break;
         }
@@ -81,7 +81,7 @@ export async function createRealPeerNode(
           await drainIce();
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
-          await send({ type: "ANSWER", sdp: pc.localDescription });
+          await send({ type: "ANSWER", sdp: pc.localDescription, targetPeerId: remotePeerId });
           break;
         }
         case "ANSWER":
