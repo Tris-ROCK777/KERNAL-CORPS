@@ -184,11 +184,11 @@ export function installDurabilityBridge(engine, bridge) {
   let queue = Promise.resolve();
   engine.appendRingWAL = entry => {
     const task = queue.then(async () => {
-      const result = await original(entry);
+      // Receipt failure must abort before the canonical engine WAL is advanced.
       if (entry?.op === COMMIT_OP) {
         await bridge.appendCommitReceipt(entry, {origin:entry.origin, peerId:entry.peerId, transferId:entry.transferId});
       }
-      return result;
+      return original(entry);
     });
     queue = task.catch(() => {});
     return task;
