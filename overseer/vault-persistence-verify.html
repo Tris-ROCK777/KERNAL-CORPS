@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050507">
+  <title>KERNEL CORP. // AUTHORITY VAULT PERSISTENCE CHECK</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; padding: 20px; background: #050507; color: #e4e4e7; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    main { max-width: 720px; margin: 0 auto; padding: 18px; background: #121218; border: 1px solid #30303b; border-radius: 14px; }
+    h1 { font-size: 16px; line-height: 1.4; }
+    p { color: #a1a1aa; font-size: 12px; line-height: 1.6; }
+    button { width: 100%; padding: 14px; margin: 12px 0; border: 0; border-radius: 9px; background: #10b981; color: #04130d; font: 800 13px ui-monospace, monospace; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px; background: #09090d; border: 1px solid #30303b; border-radius: 8px; font-size: 11px; line-height: 1.6; }
+    a { color: #a5b4fc; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>KERNEL CORP. // ED25519 VAULT PERSISTENCE</h1>
+    <p>This checks the real browser OPFS using a dedicated diagnostic vault folder. It does not touch the production authority-vault folder or provision the production trust pin. First run creates a test identity; a later run in a new normal Safari tab should restore the same public key.</p>
+    <button id="run">INITIALIZE / RESTORE TEST IDENTITY</button>
+    <pre id="out">Ready. Run once, record the public key, then reopen this page in a new normal Safari tab and run again.</pre>
+    <p><strong>Expected:</strong> first run reports <code>restored: false</code>; the next session reports <code>restored: true</code> and the identical public key.</p>
+    <p><a href="./storage-verify.html">Open the separate shard and WAL storage check</a></p>
+  </main>
+  <script type="module">
+    import { OverseerKeyVault } from "./overseer-key-vault.mjs";
+    const button = document.getElementById("run");
+    const output = document.getElementById("out");
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      output.textContent = "Checking secure context, OPFS, and Ed25519 key restoration...";
+      try {
+        if (!globalThis.isSecureContext || !navigator.storage?.getDirectory || !crypto?.subtle) {
+          throw new Error("REAL_OPFS_OR_WEBCRYPTO_UNAVAILABLE: open this page on HTTPS in Safari");
+        }
+        const originRoot = await navigator.storage.getDirectory();
+        const probeRoot = await originRoot.getDirectoryHandle("kernel_vault_persistence_probe", { create: true });
+        const vault = new OverseerKeyVault({ root: probeRoot });
+        await vault.initOrRestore();
+        output.textContent = JSON.stringify({
+          status: vault.restored ? "EXISTING_IDENTITY_RESTORED" : "NEW_TEST_IDENTITY_CREATED",
+          restored: vault.restored,
+          publicKeyHex: vault.getPublicKeyHex(),
+          origin: location.origin,
+          storage: "OPFS / kernel_vault_persistence_probe / kernel_vault / authority.vault.json",
+          nextStep: vault.restored
+            ? "Compare publicKeyHex with the value from your previous session. Matching values confirm this diagnostic vault restored the same identity."
+            : "Record publicKeyHex. Close this tab, open a new normal Safari tab to this exact URL, and run again."
+        }, null, 2);
+      } catch (error) {
+        output.textContent = "VAULT_PERSISTENCE_CHECK_FAILED\n" + (error?.stack || error?.message || String(error));
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
