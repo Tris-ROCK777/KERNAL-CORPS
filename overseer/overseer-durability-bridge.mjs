@@ -192,7 +192,7 @@ export class OverseerDurabilityBridge {
       const existingText = await this.readWalText();
       let previousReceiptHash = null;
       let sequence = 0;
-      for (const line of existingText.split("\\n")) {
+      for (const line of existingText.split("\n")) {
         if (!line.trim()) continue;
         let row;
         try { row = JSON.parse(line); } catch { continue; }
@@ -238,7 +238,7 @@ export class OverseerDurabilityBridge {
       count++;
     }
     const rows = [];
-    for (const line of text.split("\\n").filter(Boolean)) {
+    for (const line of text.split("\n").filter(Boolean)) {
       try {
         const row = JSON.parse(line);
         if ([RECEIPT_OP, "HOTSWAP_COMMIT_RECEIPT", "HOTSWAP_ABORT_RECEIPT", "HOTSWAP_FORCED_ABORT_RECEIPT"].includes(row.op)) rows.push(row);
