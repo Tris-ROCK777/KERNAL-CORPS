@@ -186,7 +186,7 @@ export class OverseerHotSwap {
     if (!signature) {
       try {
         const wal = await this.root.getFileHandle("ring-wal.jsonl");
-        const lines = (await (await wal.getFile()).text()).split("\\n").filter(Boolean);
+        const lines = (await (await wal.getFile()).text()).split("\n").filter(Boolean);
         for (let i = lines.length - 1; i >= 0; i--) {
           const row = JSON.parse(lines[i]);
           if (row.op === "HOTSWAP_COMMIT" && row.podId === podId && row.hash === hash && row.signature) {
