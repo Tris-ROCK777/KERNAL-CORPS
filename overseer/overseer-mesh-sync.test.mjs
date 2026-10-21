@@ -543,5 +543,30 @@ export async function runOverseerMeshVerification() {
     results.push("concurrent WAL append serialization preserves every record");
   }
 
+  // TEST 19: a corrupt newer WAL line must not block authenticated LKG rollback.
+  {
+    const fixture = await createSignedFixture();
+    const root = createMockOPFS();
+    const engine = createEngine(fixture.keyPair.publicKey);
+    engine.root = root;
+    const knownGood = 'export function mountPod() { return "rollback-after-torn-wal"; }';
+    const newer = 'export function mountPod() { return "rollback-newer-with-torn-wal"; }';
+    const goodSignature = await fixture.sign(knownGood);
+    const newerSignature = await fixture.sign(newer);
+    const first = await engine.mutatePod("KashKorner", knownGood, {signature:goodSignature});
+    await engine.mutatePod("KashKorner", newer, {signature:newerSignature});
+    const walHandle = await root.getFileHandle("ring-wal.jsonl");
+    const walText = await (await walHandle.getFile()).text();
+    const writer = await walHandle.createWritable();
+    await writer.write(walText + '{"op":"TORN_CORRUPT_ROW"\n');
+    await writer.close();
+    const rolledBack = await engine.rollbackPod("KashKorner");
+    assert(rolledBack.hash === first.hash,
+      "TEST_19_FAILED: corrupt trailing WAL row blocked rollback to signed LKG");
+    assert(engine.activePods.get("KashKorner")?.hash === first.hash,
+      "TEST_19_FAILED: authenticated LKG was not restored after corrupt WAL row");
+    results.push("rollback skips corrupt WAL rows and restores signed LKG");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
