@@ -159,6 +159,7 @@ export class OverseerHotSwap {
     try {
       candidate = await this.mount(code);
       await this.appendRingWAL({op:"HOTSWAP_COMMIT", podId, hash, lkgHash:oldHash, signature,
+        algorithm:this.signatureAlgorithm,
         durability:["WRITE_ACK","READ_BACK_SHA256_PASS","RESTART_READY"]});
       this.activePods.set(podId, {hash, ...candidate});
       if (oldHash) this.lkgPointers.set(podId, oldHash);
@@ -212,6 +213,12 @@ export class OverseerHotSwap {
     for (const [podId, row] of latest) {
       try {
         const code = await this.loadVerified(row.hash);
+        // Persisted bytes are not trusted just because their digest matches.
+        // Recovery must authenticate them against the independently configured trust root.
+        if (row.algorithm !== this.signatureAlgorithm) {
+          throw new Error("RECOVERY_SIGNATURE_ALGORITHM_MISMATCH");
+        }
+        await this.verifySignature(code, row.signature, this.publicKey);
         await this.runSandboxGate(code);
         const mounted = await this.mount(code);
         this.activePods.set(podId, {hash:row.hash, ...mounted});

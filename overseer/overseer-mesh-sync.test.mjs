@@ -279,5 +279,32 @@ export async function runOverseerMeshVerification() {
     f.receiverMesh.dispose();
   }
 
+  // TEST 7: restart recovery must reject a shard whose persisted signature was tampered with.
+  {
+    const { keyPair, sign } = await createSignedFixture();
+    const root = createMockOPFS();
+    const engine = createEngine(keyPair.publicKey);
+    engine.root = root;
+    const code = 'export function mountPod() { return "recovery-signature-check"; }';
+    const signature = await sign(code);
+    await engine.mutatePod("KernelVision", code, {signature});
+    const walHandle = await root.getFileHandle("ring-wal.jsonl");
+    const walFile = await walHandle.getFile();
+    const rows = (await walFile.text()).split("\n").filter(Boolean).map(line => JSON.parse(line));
+    const commit = rows.find(row => row.op === "HOTSWAP_COMMIT");
+    assert(commit, "TEST_7_SETUP_FAILED: missing commit record");
+    commit.signature = "00";
+    const writer = await walHandle.createWritable();
+    await writer.write(rows.map(row => JSON.stringify(row)).join("\n") + "\n");
+    await writer.close();
+
+    const recovered = createEngine(keyPair.publicKey);
+    recovered.root = root;
+    await recovered.recoverFromRestart();
+    assert(!recovered.activePods.has("KernelVision"),
+      "TEST_7_FAILED: recovery mounted a shard with an invalid persisted signature");
+    results.push("restart recovery rejects invalid persisted signature");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
