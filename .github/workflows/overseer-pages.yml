@@ -46,6 +46,7 @@ jobs:
         run: |
           mkdir -p _site/overseer
           cp -R overseer/. _site/overseer/
+          cp overseer/verify.html _site/overseer/index.html
 
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
