@@ -621,5 +621,33 @@ export async function runOverseerMeshVerification() {
     results.push("duplicate chunk rejected and transfer state discarded");
   }
 
+  // TEST 22: a peer-received shard is durably stored and survives engine restart.
+  {
+    const f = await makePair();
+    const code = 'export function mountPod() { return "peer-shard-survives-restart"; }';
+    const hash = await broadcast(f.senderMesh, f.senderEngine, f.sign, "KashKorner", code);
+    await waitUntil(() => f.receiverEngine.activePods.get("KashKorner")?.hash === hash);
+
+    const receiverRoot = f.receiverEngine.root;
+    const walFile = await (await receiverRoot.getFileHandle("ring-wal.jsonl")).getFile();
+    const walRows = (await walFile.text()).split("\n").filter(Boolean).map(line => JSON.parse(line));
+    assert(walRows.some(row => row.op === "HOTSWAP_COMMIT" && row.hash === hash),
+      "TEST_22_FAILED: peer-received shard was not committed to the receiver WAL");
+
+    const shardDir = await receiverRoot.getDirectoryHandle("shards");
+    const stored = await (await shardDir.getFileHandle(hash + ".mjs")).getFile();
+    assert(await stored.text() === code,
+      "TEST_22_FAILED: peer-received shard did not persist byte-for-byte");
+
+    const recovered = createEngine(f.keyPair.publicKey);
+    recovered.root = receiverRoot;
+    await recovered.recoverFromRestart();
+    assert(recovered.activePods.get("KashKorner")?.hash === hash,
+      "TEST_22_FAILED: restart recovery did not restore peer-received shard");
+    f.senderMesh.dispose();
+    f.receiverMesh.dispose();
+    results.push("peer-received shard persists to OPFS/WAL and survives restart recovery");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
