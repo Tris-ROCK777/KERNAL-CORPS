@@ -20,9 +20,9 @@ import { WebSocket, WebSocketServer } from "ws";
 import { randomUUID } from "node:crypto";
 
 const MAX_ROOM_ID_LENGTH = 96;
-const MAX_PEER_ID_LENGTH = 96;
 const MAX_MESSAGE_BYTES = 128 * 1024;
 const MAX_CLIENTS_PER_ROOM = 8;
+const SIGNAL_TYPES = new Set(["READY", "OFFER", "ANSWER", "ICE"]);
 
 function validToken(value, maxLength) {
   return typeof value === "string" &&
@@ -116,7 +116,7 @@ export function attachSignalingRelay(server, { path = "/kernel-signal" } = {}) {
         safeSend(ws, { type: "ERROR", message: "JOIN_REQUIRED" });
         return;
       }
-      if (!["READY", "OFFER", "ANSWER", "ICE"].includes(message.type)) {
+      if (!SIGNAL_TYPES.has(message.type)) {
         safeSend(ws, { type: "ERROR", message: "UNSUPPORTED_SIGNAL_TYPE" });
         return;
       }
