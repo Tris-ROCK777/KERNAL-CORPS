@@ -258,7 +258,7 @@ export class OverseerMeshReplicator {
     const configuredAlgorithm = this.engine.signatureAlgorithm || "ECDSA-P256";
     if (meta.algorithm !== configuredAlgorithm) throw new Error("SIGNATURE_ALGORITHM_POLICY_MISMATCH");
     return this.engine.mutatePod(meta.podId, code, {
-      publicKey:this.authorityPublicKey, signature:meta.signature, origin:"peer"
+      signature:meta.signature, origin:"peer"
     });
   }
 }
