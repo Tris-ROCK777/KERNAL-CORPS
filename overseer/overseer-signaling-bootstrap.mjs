@@ -274,7 +274,7 @@ export function createMqttSignaling({
     ready: Promise.resolve(),
     async send(payload) {
       if (closed) throw new Error("MQTT_SIGNALING_CLOSED");
-      if (!payload || !["OFFER", "ANSWER", "ICE"].includes(payload.type)) {
+      if (!payload || !["READY", "OFFER", "ANSWER", "ICE"].includes(payload.type)) {
         throw new Error("UNSUPPORTED_SIGNAL_TYPE");
       }
       const packet = JSON.stringify({ ...payload, roomId, peerId });
