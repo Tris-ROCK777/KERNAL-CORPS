@@ -121,6 +121,6 @@ try {
   console.log("SIGNALING_RELAY_TESTS: ALL_INVARIANTS_PASSED");
 } finally {
   for (const peer of peers) peer.close();
-  await new Promise(resolve => relay.close(resolve));
+  await new Promise(resolve => relay.wss.close(resolve));
   await new Promise(resolve => server.close(resolve));
 }
