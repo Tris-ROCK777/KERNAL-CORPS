@@ -15,13 +15,29 @@ export class OverseerAuthoritativeCommitPipeline {
   constructor(hotSwapEngine, options = {}) {
     if (!hotSwapEngine) throw new Error("HOTSWAP_ENGINE_REQUIRED");
     this.engine = hotSwapEngine;
-    this.bridge = options.bridge || new OverseerDurabilityBridge(hotSwapEngine, options.storage || {});
+    this.keyVault = options.keyVault || null;
+    this.authoritySignatureEngine = options.authoritySignatureEngine || null;
+    this.bridge = options.bridge || new OverseerDurabilityBridge(hotSwapEngine, {
+      ...(options.storage || {}),
+      ...(this.authoritySignatureEngine ? {authoritySignatureEngine:this.authoritySignatureEngine, requireAuthoritySignature:true} : {})
+    });
     this.hook = null;
     this.initialized = false;
   }
 
   async init() {
     if (this.initialized) return this;
+    // Restore the persistent authority before any signed WAL is verified.
+    if (this.keyVault) {
+      const keyPair = await this.keyVault.initOrRestore();
+      if (!this.authoritySignatureEngine) {
+        throw new Error("AUTHORITY_SIGNATURE_ENGINE_REQUIRED_FOR_KEY_VAULT");
+      }
+      this.authoritySignatureEngine.keyPair = keyPair;
+      this.authoritySignatureEngine.expectedPublicKeyHex = this.keyVault.getPublicKeyHex();
+      this.bridge.authoritySignatureEngine = this.authoritySignatureEngine;
+      this.bridge.requireAuthoritySignature = true;
+    }
     await this.bridge.init();
     const chain = await this.bridge.verifyReceiptChain();
     if (!chain.valid) throw new Error("DURABILITY_CHAIN_INVALID: " + chain.reason);
