@@ -107,3 +107,107 @@ export function createEphemeralSignaling({
     get readyState() { return ws.readyState; }
   };
 }
+
+
+/**
+ * TEST-ONLY BROADCAST RELAY ADAPTER (e.g. SocketsBay demo endpoint).
+ *
+ * Unlike createEphemeralSignaling(), this mode does not send JOIN or wait for
+ * JOINED: generic broadcast relays usually do not implement room membership.
+ * Room filtering is client-side only. Every client on the public relay may see
+ * signaling packets, so use only for non-sensitive smoke tests with a random
+ * room ID. Do not treat this as an authenticated/private production broker.
+ *
+ * This adapter is suitable for a two-peer handshake test. A true multi-peer
+ * mesh still needs recipient-targeted signaling in the peer connector.
+ */
+export function createBroadcastSignaling({
+  url = "wss://socketsbay.com/wss/v2/2/demo/",
+  roomId,
+  peerId,
+  WebSocketImpl = globalThis.WebSocket,
+  timeoutMs = 10000
+} = {}) {
+  if (typeof url !== "string" || !/^wss:\/\//.test(url)) {
+    throw new Error("SECURE_PUBLIC_RELAY_URL_REQUIRED");
+  }
+  if (typeof roomId !== "string" || !/^[A-Za-z0-9_-]{16,128}$/.test(roomId)) {
+    throw new Error("USE_RANDOM_ROOM_ID_FOR_PUBLIC_RELAY");
+  }
+  if (typeof peerId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/.test(peerId)) {
+    throw new Error("VALID_PEER_ID_REQUIRED");
+  }
+  if (typeof WebSocketImpl !== "function") throw new Error("WEBSOCKET_UNAVAILABLE");
+
+  const ws = new WebSocketImpl(url);
+  const listeners = new Set();
+  let closed = false;
+  let connectionTimer;
+
+  const ready = new Promise((resolve, reject) => {
+    connectionTimer = setTimeout(() => {
+      if (ws.readyState !== WebSocketImpl.OPEN) {
+        reject(new Error("BROADCAST_RELAY_CONNECT_TIMEOUT"));
+        ws.close();
+      }
+    }, timeoutMs);
+
+    ws.addEventListener("open", () => {
+      clearTimeout(connectionTimer);
+      resolve();
+    });
+
+    ws.addEventListener("message", event => {
+      let message;
+      try { message = JSON.parse(String(event.data)); } catch { return; }
+      if (!message || message.roomId !== roomId || message.peerId === peerId) return;
+      if (!["OFFER", "ANSWER", "ICE", "ERROR"].includes(message.type)) return;
+      for (const listener of listeners) {
+        try { listener(message); } catch {}
+      }
+    });
+
+    ws.addEventListener("error", () => {
+      clearTimeout(connectionTimer);
+      reject(new Error("BROADCAST_RELAY_SOCKET_ERROR"));
+    });
+
+    ws.addEventListener("close", () => {
+      closed = true;
+      clearTimeout(connectionTimer);
+      for (const listener of listeners) {
+        try { listener({ type: "ERROR", message: "BROADCAST_RELAY_CLOSED" }); } catch {}
+      }
+    });
+  });
+
+  return {
+    ready,
+    async send(payload) {
+      await ready;
+      if (closed || ws.readyState !== WebSocketImpl.OPEN) {
+        throw new Error("BROADCAST_RELAY_NOT_OPEN");
+      }
+      if (!payload || !["OFFER", "ANSWER", "ICE"].includes(payload.type)) {
+        throw new Error("UNSUPPORTED_SIGNAL_TYPE");
+      }
+      ws.send(JSON.stringify({ ...payload, roomId, peerId }));
+    },
+    subscribe(listener) {
+      if (typeof listener !== "function") throw new Error("SIGNALING_LISTENER_REQUIRED");
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    onMessage(listener) {
+      return this.subscribe(listener);
+    },
+    close() {
+      if (closed) return;
+      closed = true;
+      clearTimeout(connectionTimer);
+      listeners.clear();
+      ws.close(1000, "signaling bootstrap closed");
+    },
+    get readyState() { return ws.readyState; }
+  };
+}
