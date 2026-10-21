@@ -62,3 +62,8 @@ const { runMqttSignalingVerification } = await import("./overseer-mqtt-signaling
 const mqttReceipt = await runMqttSignalingVerification();
 console.log("OVERSEER_MQTT_SIGNALING_RECEIPT:", JSON.stringify(mqttReceipt, null, 2));
 if (mqttReceipt?.status !== "ALL_MQTT_SIGNALING_INVARIANTS_PASSED") process.exitCode = 1;
+
+const { runRealPeerVerification } = await import("./overseer-real-peer.test.mjs");
+const peerReceipt = await runRealPeerVerification();
+console.log("OVERSEER_REAL_PEER_RECEIPT:", JSON.stringify(peerReceipt, null, 2));
+if (peerReceipt?.status !== "ALL_REAL_PEER_SIGNALING_INVARIANTS_PASSED") process.exitCode = 1;
