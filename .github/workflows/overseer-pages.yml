@@ -1,0 +1,55 @@
+name: Deploy Overseer Mobile Verifier
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "overseer/verify.html"
+      - "overseer/overseer-hotswap.mjs"
+      - "overseer/overseer-mesh-sync.mjs"
+      - "overseer/overseer-mesh-sync.test.mjs"
+      - ".github/workflows/overseer-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "github-pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout KERNELCORP
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Assemble mobile verifier
+        run: |
+          mkdir -p _site/overseer
+          cp overseer/verify.html _site/overseer/index.html
+          cp overseer/overseer-hotswap.mjs _site/overseer/
+          cp overseer/overseer-mesh-sync.mjs _site/overseer/
+          cp overseer/overseer-mesh-sync.test.mjs _site/overseer/
+
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy static site
+        id: deployment
+        uses: actions/deploy-pages@v4
