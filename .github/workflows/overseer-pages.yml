@@ -46,6 +46,8 @@ jobs:
           node --check overseer/overseer-durability-concurrency.test.mjs
           node --check overseer/overseer-recovery-inspector.mjs
           node --check overseer/overseer-recovery-inspector.test.mjs
+          node --check overseer/overseer-authority-signatures.mjs
+          node --check overseer/overseer-authority-signatures.test.mjs
 
       - name: Run dual-target durability E2E test
         run: node overseer/overseer-durability-bridge.test.mjs
@@ -55,6 +57,9 @@ jobs:
 
       - name: Run dangling pre-commit recovery test
         run: node overseer/overseer-recovery-inspector.test.mjs
+
+      - name: Run Ed25519 authority signature tests
+        run: node overseer/overseer-authority-signatures.test.mjs
 
       - name: Run mesh, storage-recovery and signaling invariants
         run: node overseer/run-verify.mjs
