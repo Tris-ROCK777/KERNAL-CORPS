@@ -306,5 +306,27 @@ export async function runOverseerMeshVerification() {
     results.push("restart recovery rejects invalid persisted signature");
   }
 
+  // TEST 8: a caller-supplied public key must never override the engine's pinned authority.
+  {
+    const pinned = await createSignedFixture();
+    const attacker = await createSignedFixture();
+    const engine = createEngine(pinned.keyPair.publicKey);
+    engine.root = createMockOPFS();
+    const code = 'export function mountPod() { return "untrusted-key-substitution"; }';
+    const signature = await attacker.sign(code);
+    let rejected = false;
+    try {
+      await engine.mutatePod("KernelVision", code, {
+        signature,
+        publicKey: attacker.keyPair.publicKey
+      });
+    } catch (error) {
+      rejected = /AUTH_FAILED/.test(String(error?.message));
+    }
+    assert(rejected, "TEST_8_FAILED: caller-supplied key overrode pinned authority");
+    assert(!engine.activePods.has("KernelVision"), "TEST_8_FAILED: untrusted module became active");
+    results.push("caller-supplied public key cannot override pinned authority");
+  }
+
   return {status:"ALL_INVARIANTS_PASSED", tests:results};
 }
