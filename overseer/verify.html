@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#050507" />
+  <title>KERNEL CORP. // OVERSEER E2E VERIFIER</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; padding: 20px; background: #050507; color: #e4e4e7; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .card { background: rgba(18,18,24,.85); border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 18px; box-shadow: 0 12px 32px rgba(0,0,0,.6); }
+    h1 { font-size: 15px; letter-spacing: .08em; color: #fff; margin: 0 0 12px; }
+    p { font-size: 11px; line-height: 1.5; color: #a1a1aa; }
+    button { width: 100%; padding: 14px; background: #10b981; color: #04130d; font-weight: 800; font-family: inherit; font-size: 13px; border: 0; border-radius: 10px; letter-spacing: .06em; }
+    button:disabled { opacity: .6; }
+    pre { margin-top: 16px; padding: 12px; background: #09090d; border: 1px solid #1f1f29; border-radius: 8px; font-size: 11px; line-height: 1.5; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>OVERSEER HOT-SWAP + MESH E2E GATE</h1>
+    <p>This browser harness verifies signed multi-chunk replication using an in-memory OPFS test double and loopback data-channel double. It does not test real OPFS persistence, real WebRTC peers, or the production Worker gate.</p>
+    <button id="runBtn">EXECUTE BROWSER VERIFICATION</button>
+    <pre id="out">Awaiting execution...</pre>
+  </main>
+  <script type="module">
+    import { runOverseerMeshVerification } from "./overseer-mesh-sync.test.mjs";
+    const out = document.getElementById("out");
+    const btn = document.getElementById("runBtn");
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      out.textContent = "Running signed multi-chunk mesh + hash + WAL test suite...";
+      try {
+        const start = performance.now();
+        const receipt = await runOverseerMeshVerification();
+        out.textContent = JSON.stringify({
+          ...receipt,
+          elapsedMs: Number((performance.now() - start).toFixed(1)),
+          userAgent: navigator.userAgent
+        }, null, 2);
+        if (receipt?.status !== "ALL_INVARIANTS_PASSED") throw new Error("Verification status was not green");
+      } catch (error) {
+        out.textContent = "VERIFICATION_FAILED:\n" + (error?.stack || error?.message || String(error));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

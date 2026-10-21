@@ -1,0 +1,26 @@
+name: Overseer Hot-Swap & Mesh Verification
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-overseer-mesh:
+    name: Node E2E mesh verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout KERNELCORP
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Execute Overseer E2E Mesh & Hot-Swap Suite
+        run: node overseer/run-verify.mjs
