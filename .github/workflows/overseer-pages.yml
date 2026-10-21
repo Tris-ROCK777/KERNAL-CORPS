@@ -53,6 +53,8 @@ jobs:
           node --check overseer/overseer-signed-durability.test.mjs
           node --check overseer/overseer-canonical-signer.mjs
           node --check overseer/overseer-canonical-signer.test.mjs
+          node --check overseer/overseer-pinned-authority.mjs
+          node --check overseer/overseer-pinned-authority.test.mjs
 
       - name: Run dual-target durability E2E test
         run: node overseer/overseer-durability-bridge.test.mjs
@@ -74,6 +76,9 @@ jobs:
 
       - name: Run canonical signer cryptography tests
         run: node overseer/overseer-canonical-signer.test.mjs
+
+      - name: Run pinned authority startup tests
+        run: node overseer/overseer-pinned-authority.test.mjs
 
       - name: Run mesh, storage-recovery and signaling invariants
         run: node overseer/run-verify.mjs
