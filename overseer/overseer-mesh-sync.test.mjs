@@ -255,7 +255,7 @@ export async function runOverseerMeshVerification() {
   // TEST 5: Missing authority key is rejected at construction.
   let missingKeyRejected = false;
   try { new OverseerMeshReplicator(createEngine(null), null); }
-  catch (error) { missingKeyRejected = error.message === "MISSING_AUTHORITY_KEY"; }
+  catch (error) { missingKeyRejected = error.message === "MISSING_PINNED_ENGINE_AUTHORITY_KEY"; }
   assert(missingKeyRejected, "TEST_5_FAILED: missing authority key accepted");
   results.push("mandatory authority key");
 
