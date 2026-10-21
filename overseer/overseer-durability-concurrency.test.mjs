@@ -12,8 +12,12 @@ const walPath = join(dir, "receipts.jsonl");
 try {
   const engineLog = [];
   const pods = new Map();
+  let failEngineAppend = false;
   const engine = {
-    async appendRingWAL(entry) { engineLog.push(structuredClone(entry)); },
+    async appendRingWAL(entry) {
+      if (failEngineAppend && entry?.op === "HOTSWAP_COMMIT") throw new Error("SIMULATED_ENGINE_WAL_FAILURE");
+      engineLog.push(structuredClone(entry));
+    },
     async mutatePod(podId, codeString, {signature, origin}) {
       const entry = {op:"HOTSWAP_COMMIT", podId, hash:sha(codeString), signature,
         algorithm:"TEST-ONLY", origin, ts:Date.now()};
@@ -38,11 +42,7 @@ try {
   assert.equal(chainBefore.records, 2);
 
   // TEST 2 — receipt persists, but the engine WAL fails afterward.
-  const originalEngineAppend = engine.appendRingWAL.bind(engine);
-  engine.appendRingWAL = async entry => {
-    if (entry?.op === "HOTSWAP_COMMIT") throw new Error("SIMULATED_ENGINE_WAL_FAILURE");
-    return originalEngineAppend(entry);
-  };
+  failEngineAppend = true;
   let engineFailureRejected = false;
   try {
     await pipeline.commitMutation("XShield", 'export function mountPod() { return "Engine-Fault"; }',
@@ -50,7 +50,7 @@ try {
   } catch (e) {
     engineFailureRejected = String(e?.message).includes("SIMULATED_ENGINE_WAL_FAILURE");
   } finally {
-    engine.appendRingWAL = originalEngineAppend;
+    failEngineAppend = false;
   }
   assert.equal(engineFailureRejected, true, "engine WAL failure must reject commit");
   assert.equal(pods.has("XShield"), false, "failed engine commit must not publish pod state");
