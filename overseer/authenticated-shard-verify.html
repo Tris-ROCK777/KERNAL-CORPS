@@ -3,91 +3,129 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>KERNEL CORP. — Authenticated Shard Acceptance Test</title>
+<title>KERNEL CORP. — Authenticated Shard Test Matrix</title>
 <style>
-body{font:16px system-ui,sans-serif;max-width:760px;margin:1.5rem auto;padding:0 1rem;line-height:1.5}
-pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f4f6;padding:1rem;border-radius:8px}
-button{font:inherit;padding:.75rem 1rem}
+:root{color-scheme:dark;font:16px system-ui,sans-serif}body{max-width:800px;margin:1.5rem auto;padding:0 1rem;line-height:1.5;background:#101014;color:#eee}button{font:inherit;padding:.8rem 1rem;border:0;border-radius:8px;background:#76e0b5;color:#101014;font-weight:700}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#050507;border:1px solid #444;padding:1rem;border-radius:8px}.note{color:#f2cb72}
 </style>
 </head>
 <body>
-<h1>Overseer authenticated shard acceptance</h1>
-<p>This is an isolated browser test. It creates a temporary test authority key, signs a 32 KiB test shard, verifies the signature before OPFS write, and checks the stored bytes by reading them back. It does not enroll or replace the production authority key.</p>
-<p><strong>Security boundary:</strong> the test's public key is generated locally only to test the code path. Production use requires a separately provisioned, independently pinned authority public key.</p>
-<button id="run">Run authenticated-storage tests</button>
+<h1>Overseer authenticated-shard test matrix</h1>
+<p>Isolated browser test: uses a fresh temporary Ed25519 authority key and uniquely named temporary OPFS directories. It never enrolls or replaces the production authority key and does not write to the normal authenticated-shards directory.</p>
+<p class="note">Production integration still requires an independently provisioned authority public-key pin. A test key generated on this page proves the code path, not production identity.</p>
+<button id="run">Run complete test matrix</button>
 <pre id="log">READY</pre>
 <script type="module">
 const button = document.querySelector("#run");
-const logBox = document.querySelector("#log");
-const log = (name, data) => { logBox.textContent += "\n" + name + (data ? " " + JSON.stringify(data) : ""); };
+const out = document.querySelector("#log");
+const log = (name, data) => { out.textContent += "\n" + name + (data === undefined ? "" : " " + JSON.stringify(data)); };
 const hex = bytes => Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2,"0")).join("");
 const digest = async bytes => hex(await crypto.subtle.digest("SHA-256", bytes));
+const assert = (condition, message) => { if (!condition) throw new Error("ASSERTION_FAILED: " + message); };
 button.addEventListener("click", async () => {
-  button.disabled = true;
-  logBox.textContent = "RUNNING";
-  let testDirName = null;
+  button.disabled = true; out.textContent = "RUNNING";
   try {
-    if (!crypto?.subtle || !navigator.storage?.getDirectory) throw new Error("REQUIRED_BROWSER_APIS_UNAVAILABLE");
-    const { acceptAuthenticatedShard } = await import("./overseer-authenticated-shard.mjs");
-    const pair = await crypto.subtle.generateKey({name:"Ed25519"}, true, ["sign","verify"]);
-    const rawPublic = new Uint8Array(await crypto.subtle.exportKey("raw", pair.publicKey));
-    const publicHex = hex(rawPublic);
-    const bytes = new Uint8Array(32 * 1024);
-    for (let i = 0; i < bytes.length; i++) bytes[i] = (i * 31 + 17) & 255;
-    const shardHash = await digest(bytes);
-    const signedMessage = new TextEncoder().encode(`KERNEL_SHARD_V1\n${shardHash}\n${bytes.byteLength}\nKernelVision`);
-    const signatureHex = hex(await crypto.subtle.sign("Ed25519", pair.privateKey, signedMessage));
+    assert(!!crypto?.subtle && !!navigator.storage?.getDirectory, "WebCrypto and OPFS required");
+    const {acceptAuthenticatedShard} = await import("./overseer-authenticated-shard.mjs");
     const root = await navigator.storage.getDirectory();
-    testDirName = "authenticated-shard-test-" + crypto.randomUUID().replaceAll("-","");
-    // Supply an isolated OPFS root adapter so this test never writes into the real shard store.
-    const isolatedStorage = { getDirectory: async () => {
-      const dir = await root.getDirectoryHandle(testDirName, {create:true});
-      return dir;
-    }};
-    const result = await acceptAuthenticatedShard({
-      bytes, signatureHex, publicKey:pair.publicKey,
-      pinnedPublicKeyHex:publicHex, signerPublicKeyHex:publicHex,
-      podId:"KernelVision", storage:isolatedStorage
+    const tempName = "auth-shard-matrix-" + crypto.randomUUID().replaceAll("-","");
+    const tempRoot = await root.getDirectoryHandle(tempName, {create:true});
+    const storage = {getDirectory: async () => tempRoot};
+    const keyA = await crypto.subtle.generateKey({name:"Ed25519"}, true, ["sign","verify"]);
+    const keyB = await crypto.subtle.generateKey({name:"Ed25519"}, true, ["sign","verify"]);
+    const pubHex = async key => hex(await crypto.subtle.exportKey("raw", key));
+    const publicHexA = await pubHex(keyA.publicKey), publicHexB = await pubHex(keyB.publicKey);
+    const bytes = new Uint8Array(32 * 1024);
+    for (let i=0; i<bytes.length; i++) bytes[i] = (i * 31 + 17) & 255;
+    const hash = await digest(bytes);
+    const signPayload = async (payload, podId, privateKey) => {
+      const h = await digest(payload);
+      const message = new TextEncoder().encode(`KERNEL_SHARD_V1\n${h}\n${payload.byteLength}\n${podId}`);
+      return hex(await crypto.subtle.sign("Ed25519", privateKey, message));
+    };
+    const validSig = await signPayload(bytes, "KernelVision", keyA.privateKey);
+    const call = (overrides={}) => acceptAuthenticatedShard({
+      bytes, signatureHex:validSig, publicKey:keyA.publicKey,
+      pinnedPublicKeyHex:publicHexA, signerPublicKeyHex:publicHexA,
+      podId:"KernelVision", storage, ...overrides
     });
-    log("VALID_SIGNATURE_STORED_AND_READ_BACK", result);
-    if (result.status !== "AUTHENTICATED_SHARD_STORED" || result.byteLength !== bytes.byteLength ||
-        result.sha256 !== shardHash || !result.signatureVerified || !result.readBackVerified) {
-      throw new Error("VALID_SHARD_ACCEPTANCE_ASSERTION_FAILED");
-    }
-    log("PASS: valid signature + authority pin + OPFS read-back");
-    const tampered = bytes.slice();
-    tampered[0] ^= 0xff;
-    let rejected = false;
+    const mustReject = async (name, expected, fn) => {
+      let actual = "";
+      try { await fn(); } catch (error) { actual = String(error?.message || error); }
+      assert(actual === expected, name + ": expected " + expected + ", got " + (actual || "no error"));
+      log("PASS: " + name, {rejectedWith:actual});
+    };
+
+    // 1. Valid signature and pin; confirm function result and independently read OPFS bytes.
+    const accepted = await call();
+    assert(accepted.status === "AUTHENTICATED_SHARD_STORED", "valid shard status");
+    assert(accepted.byteLength === bytes.byteLength && accepted.sha256 === hash, "result length/hash");
+    assert(accepted.signatureVerified && accepted.authorityPinMatched && accepted.readBackVerified, "acceptance flags");
+    const storedDir = await tempRoot.getDirectoryHandle("authenticated-shards");
+    const storedHandle = await storedDir.getFileHandle(`KernelVision-${hash}.shard`);
+    const storedBytes = new Uint8Array(await (await storedHandle.getFile()).arrayBuffer());
+    assert(storedBytes.length === bytes.length && await digest(storedBytes) === hash, "independent OPFS read-back");
+    log("PASS: valid signature + correct pin + OPFS read-back", {bytes:storedBytes.length,sha256:hash});
+
+    // 2. Mutated bytes with original signature must fail before any write.
+    const tampered = bytes.slice(); tampered[0] ^= 0xff;
+    const tamperedHash = await digest(tampered);
+    await mustReject("tampered bytes", "SHARD_SIGNATURE_INVALID", () => call({bytes:tampered}));
+    let tamperedExists = true;
+    try { await storedDir.getFileHandle(`KernelVision-${tamperedHash}.shard`); } catch { tamperedExists = false; }
+    assert(!tamperedExists, "tampered shard was persisted");
+    log("PASS: tampered payload rejected before persistent write");
+
+    // 3. Validly formed signature from another key must not verify against key A.
+    const wrongKeySignature = await signPayload(bytes, "KernelVision", keyB.privateKey);
+    await mustReject("signature from untrusted key", "SHARD_SIGNATURE_INVALID",
+      () => call({signatureHex:wrongKeySignature}));
+    log("PASS: untrusted signer signature rejected");
+
+    // 4. Authority pin mismatches rejected.
+    await mustReject("wrong pinned authority key", "AUTHORITY_PUBLIC_KEY_PIN_MISMATCH",
+      () => call({pinnedPublicKeyHex:publicHexB}));
+    await mustReject("signer key differs from pin", "AUTHORITY_PUBLIC_KEY_PIN_MISMATCH",
+      () => call({signerPublicKeyHex:publicHexB}));
+    log("PASS: wrong authority-key pins rejected");
+
+    // 5. Simulate corrupted bytes on read-back and ensure the bad file is removed.
+    const corruptRoot = await root.getDirectoryHandle(tempName + "-corrupt", {create:true});
+    const corruptStorage = {getDirectory: async () => ({
+      getDirectoryHandle: async (name, options) => {
+        const realDir = await corruptRoot.getDirectoryHandle(name, options);
+        return {
+          getFileHandle: async (fileName, fileOptions) => {
+            const realHandle = await realDir.getFileHandle(fileName, fileOptions);
+            return {
+              createWritable: (...args) => realHandle.createWritable(...args),
+              getFile: async () => {
+                const actual = new Uint8Array(await (await realHandle.getFile()).arrayBuffer());
+                if (actual.length) actual[0] ^= 0xff;
+                return new File([actual], fileName);
+              }
+            };
+          },
+          removeEntry: (...args) => realDir.removeEntry(...args)
+        };
+      }
+    })};
+    await mustReject("corrupt read-back", "OPFS_READBACK_INTEGRITY_FAILED",
+      () => call({storage:corruptStorage}));
+    let corruptExists = true;
     try {
-      await acceptAuthenticatedShard({
-        bytes:tampered, signatureHex, publicKey:pair.publicKey,
-        pinnedPublicKeyHex:publicHex, signerPublicKeyHex:publicHex,
-        podId:"KernelVision", storage:isolatedStorage
-      });
-    } catch (error) {
-      rejected = String(error?.message || error) === "SHARD_SIGNATURE_INVALID";
-      log("TAMPER_REJECTION", {error:String(error?.message || error)});
-    }
-    if (!rejected) throw new Error("TAMPERED_SHARD_WAS_NOT_REJECTED");
-    log("PASS: tampered shard rejected before storage");
-    let pinRejected = false;
-    try {
-      await acceptAuthenticatedShard({
-        bytes, signatureHex, publicKey:pair.publicKey,
-        pinnedPublicKeyHex:"0".repeat(64), signerPublicKeyHex:publicHex,
-        podId:"KernelVision", storage:isolatedStorage
-      });
-    } catch (error) {
-      pinRejected = String(error?.message || error) === "AUTHORITY_PUBLIC_KEY_PIN_MISMATCH";
-      log("WRONG_PIN_REJECTION", {error:String(error?.message || error)});
-    }
-    if (!pinRejected) throw new Error("WRONG_AUTHORITY_PIN_WAS_NOT_REJECTED");
-    log("ALL_AUTHENTICATED_SHARD_TESTS_PASSED");
+      const dir = await corruptRoot.getDirectoryHandle("authenticated-shards");
+      await dir.getFileHandle(`KernelVision-${hash}.shard`);
+    } catch { corruptExists = false; }
+    assert(!corruptExists, "corrupt file was not removed");
+    log("PASS: read-back corruption detected and bad file removed");
+
+    log("ALL_AUTHENTICATED_SHARD_MATRIX_TESTS_PASSED", {
+      cases:["valid signature and pin","independent OPFS read-back","tampered bytes rejected before write",
+      "wrong signer signature","wrong pinned authority","signer/pin mismatch","corrupt read-back rejected and removed"]
+    });
   } catch (error) {
-    log("TEST_FAILED", {error:String(error?.stack || error)});
-  } finally {
-    button.disabled = false;
-  }
+    log("TEST_MATRIX_FAILED", {error:String(error?.stack || error)});
+  } finally { button.disabled = false; }
 });
 </script>
 </body>
