@@ -137,6 +137,32 @@ async function createSignedFixture() {
   return { keyPair, sign };
 }
 
+async function createSignedTestTransfer(payloadBytes, authorityKeyPair, podId) {
+  if (!(payloadBytes instanceof Uint8Array) || payloadBytes.byteLength < 1) {
+    throw new Error("TEST_TRANSFER_PAYLOAD_REQUIRED");
+  }
+  if (!podId) throw new Error("TEST_TRANSFER_POD_REQUIRED");
+  const encoder = new TextEncoder();
+  const digest = await crypto.subtle.digest("SHA-256", payloadBytes);
+  const hashHex = Array.from(new Uint8Array(digest),
+    b => b.toString(16).padStart(2, "0")).join("");
+  const manifestBody = `KERNEL_SHARD_V1\n${hashHex}\n${payloadBytes.byteLength}\n${podId}`;
+  const signatureBytes = await crypto.subtle.sign(
+    { name: "Ed25519" },
+    authorityKeyPair.privateKey,
+    encoder.encode(manifestBody)
+  );
+  return {
+    manifest: manifestBody,
+    signature: Array.from(new Uint8Array(signatureBytes),
+      b => b.toString(16).padStart(2, "0")).join(""),
+    hash: hashHex,
+    totalBytes: payloadBytes.byteLength,
+    podId,
+    payload: payloadBytes
+  };
+}
+
 function createEngine(publicKey) {
   const engine = new OverseerHotSwap({ publicKey, signatureAlgorithm: "ECDSA-P256" });
   engine.root = null;
@@ -165,11 +191,9 @@ async function makePair() {
     new TextEncoder().encode(`KERNEL_SHARD_V1\n${hash}\n${bytes.byteLength}\n${podId}`);
 
   const signShardManifest = async ({bytes, podId, hash}) => {
-    const actualHash = toHex(await crypto.subtle.digest("SHA-256", bytes));
-    if (actualHash !== hash.toLowerCase()) throw new Error("TEST_MANIFEST_HASH_MISMATCH");
-    return toHex(await crypto.subtle.sign(
-      "Ed25519", manifestKeys.privateKey, manifestBytes(bytes, podId, actualHash)
-    ));
+    const signedTransfer = await createSignedTestTransfer(bytes, manifestKeys, podId);
+    if (signedTransfer.hash !== hash.toLowerCase()) throw new Error("TEST_MANIFEST_HASH_MISMATCH");
+    return signedTransfer.signature;
   };
 
   const authenticateInboundShard = async ({bytes, podId, hash, signatureHex, codeSignature, algorithm}) => {
