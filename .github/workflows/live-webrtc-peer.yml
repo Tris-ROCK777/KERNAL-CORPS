@@ -21,7 +21,7 @@ jobs:
       - name: Install browser test dependency
         run: |
           npm install --no-save playwright
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
       - name: Send test shard over live WebRTC
         env:
           KERNEL_PEER_ROLE: sender
