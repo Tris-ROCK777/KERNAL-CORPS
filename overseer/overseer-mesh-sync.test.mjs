@@ -162,7 +162,7 @@ async function makePair() {
   const toHex = bytes => Array.from(new Uint8Array(bytes),
     b => b.toString(16).padStart(2, "0")).join("");
   const manifestBytes = (bytes, podId, hash) =>
-    new TextEncoder().encode(`KERNEL_SHARD_V1\\n${hash}\\n${bytes.byteLength}\\n${podId}`);
+    new TextEncoder().encode(`KERNEL_SHARD_V1\n${hash}\n${bytes.byteLength}\n${podId}`);
 
   const signShardManifest = async ({bytes, podId, hash}) => {
     const actualHash = toHex(await crypto.subtle.digest("SHA-256", bytes));
