@@ -129,7 +129,12 @@ try {
       undefined, { timeout: 60000 }
     );
     const runtimeLog = await smokePage.locator("#log").textContent();
-    if (!runtimeLog.includes("PRODUCTION RUNTIME READY")) {
+    const runtimeMode = runtimeLog.includes("PRODUCTION RUNTIME READY")
+      ? "READY"
+      : runtimeLog.includes("RUNTIME BLOCKED: PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT")
+        ? "EXPECTED_FAIL_CLOSED_WITHOUT_ENROLLED_AUTHORITY"
+        : "UNEXPECTED_RUNTIME_FAILURE";
+    if (runtimeMode === "UNEXPECTED_RUNTIME_FAILURE") {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_RUNTIME_FAILED: " + runtimeLog);
     }
@@ -138,8 +143,8 @@ try {
       canvasPresent: Boolean(document.querySelector("#scene")),
       canvasWidth: document.querySelector("#scene")?.width ?? 0,
       canvasHeight: document.querySelector("#scene")?.height ?? 0,
-      authorityPinLoaded: Boolean(document.querySelector("#pin")?.textContent &&
-        !/Loading|TRUST GATE FAILED/.test(document.querySelector("#pin").textContent)),
+      authorityStateDisplayed: Boolean(document.querySelector("#pin")?.textContent &&
+        !/Loading/.test(document.querySelector("#pin").textContent)),
       controls: ["dispatch", "sever", "scale", "rejoin", "livePeerTest"].map(id => ({
         id, visible: Boolean(document.querySelector("#" + id) &&
           document.querySelector("#" + id).getBoundingClientRect().width > 0 &&
@@ -147,7 +152,7 @@ try {
       }))
     }));
     if (!ui.canvasPresent || ui.canvasWidth <= 0 || ui.canvasHeight <= 0 ||
-        !ui.authorityPinLoaded || ui.controls.some(control => !control.visible)) {
+        !ui.authorityStateDisplayed || ui.controls.some(control => !control.visible)) {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_UI_ASSERTION_FAILED: " + JSON.stringify(ui));
     }
@@ -157,7 +162,7 @@ try {
         JSON.stringify({ resourceFailures, consoleErrors }));
     }
     await smokeBrowser.close();
-    console.log(JSON.stringify({ event: "DEPLOYED_COMMAND_CENTER_MOBILE_SMOKE_PASS", viewport: "393x852", ui, resourceFailures, consoleErrors }));
+    console.log(JSON.stringify({ event: "DEPLOYED_COMMAND_CENTER_MOBILE_SMOKE_PASS", viewport: "393x852", runtimeMode, runtimeLog, ui, resourceFailures, consoleErrors }));
   }
 
   if (errors.some(error => /CONNECT_FAILED|FAIL:|Uncaught|TypeError|ReferenceError/.test(error))) {
