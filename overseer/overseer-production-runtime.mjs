@@ -99,7 +99,7 @@ export async function initializeProductionOverseer({
           if (!/^[A-Za-z0-9._-]{1,80}$/.test(podId || "")) throw new Error("INVALID_POD_ID");
           const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), b => b.toString(16).padStart(2,"0")).join("");
           if (digest !== String(hash || "").toLowerCase()) throw new Error("SHARD_HASH_MISMATCH");
-          const manifest = new TextEncoder().encode("KERNEL_SHARD_V1\\n" + digest + "\\n" + bytes.byteLength + "\\n" + podId);
+          const manifest = new TextEncoder().encode("KERNEL_SHARD_V1\n" + digest + "\n" + bytes.byteLength + "\n" + podId);
           return Array.from(new Uint8Array(await crypto.subtle.sign("Ed25519", authority.vault.keyPair.privateKey, manifest)), b => b.toString(16).padStart(2,"0")).join("");
         },
 
