@@ -10,13 +10,13 @@
 <body>
 <canvas id="scene" aria-label="Interactive Ring-WAL peer mesh"></canvas><div id="shade"></div>
 <header><div><h1>RINGWAL <span style="color:var(--cyan)">//</span> KERNEL CORP OVERSEER</h1><small>LOCAL-FIRST PEER STORAGE CONSOLE</small></div><div class="status"><span class="dot"></span><span id="connection">LOCAL NODE READY</span><br><small>ZERO CLOUD FAILOVER</small></div></header>
-<div class="topstats">PEERS <span id="peerCount">24</span><br>WORKERS <span id="workerCount">64</span><br>RING-WAL <span id="walCount">0</span> ROWS</div>
+<div class="topstats">RING SLOTS <span id="peerCount">24</span><br>WORKERS <span id="workerCount">64</span><br>RING-WAL <span id="walCount">0</span> ROWS</div>
 <div class="rightstats">REPLICATION TARGET N+2<br><span style="color:var(--cyan)">OPFS / SHA-256 / Ed25519</span><br>TOUCH: ROTATE · TILT · INSPECT</div>
-<section id="inspect" class="panel"><div style="display:flex;justify-content:space-between;gap:12px"><strong id="inspectTitle">PEER INSPECTOR</strong><button id="closeInspect" style="min-height:28px;width:56px">CLOSE</button></div><p id="inspectBody">Tap a diamond node to inspect its local status.</p></section>
+<section id="inspect" class="panel"><div style="display:flex;justify-content:space-between;gap:12px"><strong id="inspectTitle">PEER INSPECTOR</strong><button id="closeInspect" style="min-height:28px;width:56px">CLOSE</button></div><p id="inspectBody">Visual ring slots are local simulation. Real remote peers appear only after a WebRTC data channel connects.</p></section>
 <div class="hud">
 <div class="panel readout"><div>AUTHORITY PIN<span id="pin" class="value">Loading…</span></div><div>WAL HEAD<span id="head" class="value">—</span></div><div>LAST SHA-256<span id="hash" class="value">—</span></div><div>LOCAL POOL SHARE<span id="share" class="value">4.17%</span></div><div>SHARD PERSISTENCE<span id="shardStatus" class="value">WAITING</span></div><div>READ-BACK SHA-256<span id="readbackStatus" class="value">NOT YET VERIFIED</span></div><div>LIVE DATA PEERS<span id="livePeers" class="value">0 CONNECTED</span></div></div>
 <div id="lens" class="panel" style="padding:6px"><button class="active" data-lens="Mesh">MESH</button><button data-lens="WAL">WAL</button><button data-lens="Cell">CELL</button><button data-lens="Key">KEY</button></div>
-<div class="panel controls"><button id="dispatch" class="primary">DISPATCH TASK</button><button id="sever" class="danger">SEVER PEER</button><button id="scale">WORKERS 64</button><button id="rejoin">REJOIN PEER</button></div>
+<div class="panel controls"><button id="dispatch" class="primary">DISPATCH TASK</button><button id="sever" class="danger">SEVER PEER</button><button id="scale">WORKERS 64</button><button id="rejoin">REJOIN SLOT</button><button id="livePeerTest" onclick="location.href='./live-peer-verify.html'">LIVE PEER TEST</button></div>
 <div id="log">BOOTING LOCAL CONSOLE…</div>
 </div>
 <script type="module">
