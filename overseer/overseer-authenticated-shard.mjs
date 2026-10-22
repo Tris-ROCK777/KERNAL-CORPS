@@ -46,7 +46,7 @@ export async function acceptAuthenticatedShard({
 
   const digest = await sha256(bytes, cryptoProvider);
   const message = new TextEncoder().encode(
-    `KERNEL_SHARD_V1\\n${digest}\\n${bytes.byteLength}\\n${podId}`);
+    `KERNEL_SHARD_V1\n${digest}\n${bytes.byteLength}\n${podId}`);
   const signature = fromHex(signatureHex);
   const valid = await cryptoProvider.subtle.verify("Ed25519", publicKey, signature, message);
   if (!valid) throw new Error("SHARD_SIGNATURE_INVALID");
