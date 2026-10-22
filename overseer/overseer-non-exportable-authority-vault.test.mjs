@@ -24,22 +24,35 @@ function makeIndexedDB() {
           createObjectStore(store) { db.stores.set(store, new Map()); },
           transaction(storeName) {
             const data = db.stores.get(storeName);
-            return {
+            const transaction = {
+              oncomplete: null,
+              onerror: null,
+              onabort: null,
               objectStore() {
                 return {
                   get(key) {
                     const req = {};
-                    queueMicrotask(() => { req.result = data.get(key); req.onsuccess?.(); });
+                    queueMicrotask(() => {
+                      req.result = data.get(key);
+                      req.onsuccess?.();
+                      queueMicrotask(() => transaction.oncomplete?.());
+                    });
                     return req;
                   },
                   put(value, key) {
                     const req = {};
-                    queueMicrotask(() => { data.set(key, value); req.result = key; req.onsuccess?.(); });
+                    queueMicrotask(() => {
+                      data.set(key, value);
+                      req.result = key;
+                      req.onsuccess?.();
+                      queueMicrotask(() => transaction.oncomplete?.());
+                    });
                     return req;
                   }
                 };
               }
             };
+            return transaction;
           }
         };
         if (request.onupgradeneeded && !db.stores.has("keys")) request.onupgradeneeded();
