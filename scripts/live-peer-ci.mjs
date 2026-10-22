@@ -106,6 +106,50 @@ try {
       throw new Error("PERSISTENCE_RECOVERY_RECEIPT_ASSERTION_FAILED: " + (passLine ?? "PASS line missing"));
     }
     console.log(JSON.stringify({ event: "LIVE_PEER_AND_RESTART_RECOVERY_PASS", transportBytes: 98304, transportChunks: 3, persistence: receipt }));
+
+    // Verify the deployed Overseer command center itself at a phone-sized viewport.
+    const consoleUrl = pageUrl.replace("live-peer-verify.html", "index.html");
+    const resourceFailures = [];
+    const consoleErrors = [];
+    page.on("requestfailed", request => resourceFailures.push({ url: request.url(), error: request.failure()?.errorText }));
+    page.on("response", response => {
+      if (response.status() >= 400) resourceFailures.push({ url: response.url(), status: response.status() });
+    });
+    page.on("pageerror", error => consoleErrors.push(String(error)));
+    page.on("console", message => { if (message.type() === "error") consoleErrors.push(message.text()); });
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.goto(consoleUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.waitForFunction(
+      () => document.querySelector("#log")?.textContent.includes("PRODUCTION RUNTIME READY") ||
+            document.querySelector("#log")?.textContent.includes("RUNTIME BLOCKED:"),
+      undefined, { timeout: 60000 }
+    );
+    const runtimeLog = await page.locator("#log").textContent();
+    if (!runtimeLog.includes("PRODUCTION RUNTIME READY")) {
+      throw new Error("DEPLOYED_COMMAND_CENTER_RUNTIME_FAILED: " + runtimeLog);
+    }
+    const ui = await page.evaluate(() => ({
+      title: document.title,
+      canvasPresent: Boolean(document.querySelector("#scene")),
+      canvasWidth: document.querySelector("#scene")?.width ?? 0,
+      canvasHeight: document.querySelector("#scene")?.height ?? 0,
+      authorityPinLoaded: Boolean(document.querySelector("#pin")?.textContent &&
+        !/Loading|TRUST GATE FAILED/.test(document.querySelector("#pin").textContent)),
+      controls: ["dispatch", "sever", "scale", "rejoin", "livePeerTest"].map(id => ({
+        id, visible: Boolean(document.querySelector("#" + id) &&
+          document.querySelector("#" + id).getBoundingClientRect().width > 0 &&
+          document.querySelector("#" + id).getBoundingClientRect().height > 0)
+      }))
+    }));
+    if (!ui.canvasPresent || ui.canvasWidth <= 0 || ui.canvasHeight <= 0 ||
+        !ui.authorityPinLoaded || ui.controls.some(control => !control.visible)) {
+      throw new Error("DEPLOYED_COMMAND_CENTER_UI_ASSERTION_FAILED: " + JSON.stringify(ui));
+    }
+    if (resourceFailures.length || consoleErrors.length) {
+      throw new Error("DEPLOYED_COMMAND_CENTER_RESOURCE_OR_CONSOLE_ERRORS: " +
+        JSON.stringify({ resourceFailures, consoleErrors }));
+    }
+    console.log(JSON.stringify({ event: "DEPLOYED_COMMAND_CENTER_MOBILE_SMOKE_PASS", viewport: "393x852", ui, resourceFailures, consoleErrors }));
   }
 
   if (errors.some(error => /CONNECT_FAILED|FAIL:|Uncaught|TypeError|ReferenceError/.test(error))) {
