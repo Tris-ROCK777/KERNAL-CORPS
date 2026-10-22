@@ -59,6 +59,8 @@ jobs:
           node --check overseer/overseer-authority-bootstrap.test.mjs
           node --check overseer/overseer-production-runtime.mjs
           node --check overseer/overseer-authenticated-shard.mjs
+          node --check overseer/ringwal-console.html
+          node --check overseer/overseer-authenticated-shard.mjs
           grep -q "RINGWAL" overseer/index.html
 
       - name: Run dual-target durability E2E test
@@ -108,6 +110,8 @@ jobs:
           grep -q "RINGWAL" _site/overseer/index.html
           test -s _site/overseer/pod-command-drawer.html
           test -s _site/overseer/non-exportable-vault-verify.html
+          test -s _site/overseer/ringwal-console.html
+          grep -q 'RINGWAL // KERNEL CORP OVERSEER' _site/index.html
 
       - name: Diagnose packaged Overseer files
         run: ls -la _site/overseer
