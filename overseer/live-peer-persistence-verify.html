@@ -38,9 +38,20 @@
       const provisioned = await provisionAuthorityIdentity({ allowFirstBootProvisioning: true });
       const vault = provisioned.vault;
       const pin = provisioned.publicKeyHex;
-      const code = 'export function mountPod(){ return {name:"KernelVision", restartRecovery:true}; }';
-      const bytes = encoder.encode(code);
+      const payloadBase64 = sessionStorage.getItem("kernel-live-peer-payload");
+      const sourceTransportHash = sessionStorage.getItem("kernel-live-peer-payload-sha256");
+      const sourceTransportBytes = Number(sessionStorage.getItem("kernel-live-peer-payload-bytes"));
+      if (!payloadBase64 || !/^[a-f0-9]{64}$/.test(sourceTransportHash || "") ||
+          !Number.isSafeInteger(sourceTransportBytes) || sourceTransportBytes !== 96 * 1024) {
+        throw new Error("VERIFIED_LIVE_PEER_PAYLOAD_NOT_AVAILABLE");
+      }
+      const binary = atob(payloadBase64);
+      const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+      const code = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
       const hash = await digest(bytes);
+      if (hash !== sourceTransportHash || bytes.byteLength !== sourceTransportBytes) {
+        throw new Error("PERSISTENCE_SOURCE_DIFFERS_FROM_TRANSFERRED_PAYLOAD");
+      }
       const manifest = encoder.encode("KERNEL_SHARD_V1\n" + hash + "\n" + bytes.byteLength + "\nKernelVision");
       const manifestSignature = toHex(await crypto.subtle.sign("Ed25519", vault.keyPair.privateKey, manifest));
       const codeSignature = toHex(await crypto.subtle.sign("Ed25519", vault.keyPair.privateKey, bytes));
@@ -64,7 +75,8 @@
           authenticated.sha256 !== hash) throw new Error("INITIAL_AUTHENTICATED_SHARD_WRITE_FAILED");
 
       localStorage.setItem(STORE_KEY, JSON.stringify({
-        pin, hash, code, manifestSignature, codeSignature, byteLength: bytes.byteLength
+        pin, hash, code, manifestSignature, codeSignature, byteLength: bytes.byteLength,
+        sourceTransportHash, sourceTransportBytes
       }));
       log("PERSISTENCE_WRITE_PASS", {
         authorityPin: pin, privateKeyExtractable: vault.keyPair.privateKey.extractable,
@@ -81,6 +93,8 @@
       const raw = localStorage.getItem(STORE_KEY);
       if (!raw) throw new Error("PERSISTENCE_TEST_STATE_MISSING_AFTER_RELOAD");
       const saved = JSON.parse(raw);
+      if (saved.sourceTransportHash !== saved.hash || saved.sourceTransportBytes !== saved.byteLength ||
+          saved.byteLength !== 96 * 1024) throw new Error("PERSISTED_PAYLOAD_IS_NOT_THE_TRANSFERRED_SHARD");
       const restored = await initializeTrustedAuthority({ publicKeyHex: saved.pin });
       if (!restored.restored) throw new Error("AUTHORITY_IDENTITY_NOT_RESTORED");
       if (restored.vault.keyPair.privateKey.extractable !== false) throw new Error("AUTHORITY_PRIVATE_KEY_BECAME_EXPORTABLE");
@@ -122,6 +136,8 @@
         privateKeyExtractable: restored.vault.keyPair.privateKey.extractable,
         signedShardRecovered: true, manifestSignatureVerified,
         opfsReadBackVerified: true, ringWalCommitRecovered: true,
+        sameTransferredPayloadRecovered: saved.sourceTransportHash === saved.hash,
+        sourceTransportHash: saved.sourceTransportHash,
         sha256: saved.hash, byteLength: storedBytes.byteLength
       });
     }
