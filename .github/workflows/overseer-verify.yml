@@ -31,5 +31,8 @@ jobs:
       - name: Run non-exportable authority vault regression tests
         run: node overseer/overseer-non-exportable-authority-vault.test.mjs
 
+      - name: Run real WebRTC peer signaling regression tests
+        run: node --input-type=module -e "import { runRealPeerVerification } from './overseer/overseer-real-peer.test.mjs'; const result = await runRealPeerVerification(); console.log(JSON.stringify(result, null, 2));"
+
       - name: Execute Overseer E2E Mesh & Hot-Swap Suite
         run: node overseer/run-verify.mjs
