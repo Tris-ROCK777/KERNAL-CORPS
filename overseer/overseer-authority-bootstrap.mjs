@@ -10,9 +10,11 @@ import { verifyAndInitializeVault } from "./overseer-pinned-authority.mjs";
 const PIN_FORMAT = /^[a-f0-9]{64}$/i;
 const DEFAULT_PIN = "dc66faf0e8cf6de4a1cce5872c146b7e1ec5f92b184c791a47219c71da038333";
 
-async function readLegacyVaultRecord(expectedPin) {
-  if (!globalThis.navigator?.storage?.getDirectory) throw new Error("OPFS_UNAVAILABLE");
-  const root = await navigator.storage.getDirectory();
+async function readLegacyVaultRecord(expectedPin, suppliedRoot = null) {
+  const root = suppliedRoot || (globalThis.navigator?.storage?.getDirectory
+    ? await navigator.storage.getDirectory()
+    : null);
+  if (!root) throw new Error("OPFS_UNAVAILABLE");
   const dir = await root.getDirectoryHandle("kernel_vault");
   const file = await dir.getFileHandle("authority.vault.json");
   const record = JSON.parse(await (await file.getFile()).text());
@@ -48,7 +50,15 @@ export async function initializeTrustedAuthority({
     // Migrate only the already-enrolled identity from its existing OPFS record.
     // The vault migration validates the pin and keypair, then persists a
     // non-exportable CryptoKey. No replacement key is generated.
-    const legacyRecord = await readLegacyVaultRecord(pin);
+    let legacyRecord;
+    try {
+      legacyRecord = await readLegacyVaultRecord(pin, vaultOptions.root || null);
+    } catch (legacyError) {
+      // Preserve the actionable missing-pinned-key error when no legacy record
+      // exists; do not mask it with OPFS/NotFound errors from the migration probe.
+      if (legacyError?.name === "NotFoundError" || legacyError?.message === "OPFS_UNAVAILABLE") throw error;
+      throw legacyError;
+    }
     await vault.migrateExistingIdentity(legacyRecord);
   }
   await verifyAndInitializeVault(vault, pin);
