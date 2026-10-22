@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {webcrypto} from "node:crypto";
+import {indexedDB} from "fake-indexeddb";
 import {initializeTrustedAuthority, provisionAuthorityIdentity} from "./overseer-authority-bootstrap.mjs";
 
 if (!globalThis.crypto?.subtle) globalThis.crypto = webcrypto;
@@ -37,8 +38,9 @@ function makeRoot() {
 }
 
 const root = makeRoot();
+const vaultOptions = {root, indexedDB};
 await assert.rejects(
-  () => initializeTrustedAuthority({vaultOptions:{root}}),
+  () => initializeTrustedAuthority({vaultOptions}),
   /PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT/
 );
 await assert.rejects(
@@ -54,7 +56,7 @@ assert.equal(provisioned.status, "NEW_IDENTITY_CREATED_REQUIRES_TRUSTED_PIN");
 const pin = provisioned.publicKeyHex;
 
 const restored = await initializeTrustedAuthority({publicKeyHex:pin, vaultOptions:{root}});
-assert.equal(restored.status, "TRUSTED_AUTHORITY_INITIALIZED");
+assert.equal(restored.status, "TRUSTED_NON_EXPORTABLE_AUTHORITY_INITIALIZED");
 assert.equal(restored.restored, true);
 assert.equal(restored.publicKeyHex, pin);
 
