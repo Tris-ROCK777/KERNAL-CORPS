@@ -91,6 +91,7 @@ body.drawer-open #drawer{transform:translateX(0)}body.drawer-open #drawerScrim{o
 import { initializeProductionOverseer } from "./overseer-production-runtime.mjs";
 import { OverseerMeshReplicator } from "./overseer-mesh-sync.mjs";
 const canvas=document.querySelector("#scene"),ctx=canvas.getContext("2d",{alpha:false});
+const $=id=>document.getElementById(id);
 const drawer=$("drawer"),statusSection=$("statusSection"),controlsSection=$("controlsSection"),logsSection=$("logsSection"),keysSection=$("keysSection");
 const originalHud=document.querySelector(".hud"),readout=originalHud.querySelector(".readout"),lens=document.querySelector("#lens"),controls=originalHud.querySelector(".controls"),logPanel=document.querySelector("#log"),inspector=document.querySelector("#inspect");
 statusSection.append(readout,inspector);
@@ -105,7 +106,6 @@ addEventListener("keydown",e=>{if(e.key==="Escape")setDrawer(false)});
 let touchStartX=null;addEventListener("touchstart",e=>{if(e.touches.length===1)touchStartX=e.touches[0].clientX},{passive:true});addEventListener("touchend",e=>{if(touchStartX!==null&&touchStartX<22&&e.changedTouches[0].clientX-touchStartX>65)setDrawer(true);touchStartX=null},{passive:true});
 let warningDismissed=false;
 const livePeerHealth=new Map();
-const $=id=>document.getElementById(id);
 const pageStartedAt=Date.now();
 const clockFormatter=new Intl.DateTimeFormat(undefined,{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true});
 function updateLiveDisplay(){const now=new Date();$("drawerClock").textContent="LOCAL CLOCK · "+clockFormatter.format(now);const count=state.mesh?.peers?.size||0;$("livePeers").textContent=String(count)+" CONNECTED";$("hudLivePeers").textContent=String(count);$("hudWorkers").textContent=String(state.workers);$("workerCountHud").textContent=String(state.workers);$("peerCountHud").textContent=String(24-state.dead.size);$("hudHash").textContent=state.lastHash&&state.lastHash!=="—"?String(state.lastHash).slice(0,10)+"…":"WAITING";$("trustBadge").textContent=state.runtime?(state.authority.startsWith("FAILED")?"TRUST · BLOCKED":"TRUST · "+(state.runtime.authorityRestored?"RESTORED":"PINNED")):"TRUST · CHECKING"}
