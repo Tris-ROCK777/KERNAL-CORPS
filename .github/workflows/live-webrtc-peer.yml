@@ -1,0 +1,45 @@
+name: Live WebRTC Peer Verification
+
+on:
+  workflow_run:
+    workflows: ["Deploy KERNEL CORP to GitHub Pages"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-webrtc-peer-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  peer:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        role: [sender, receiver]
+    timeout-minutes: 6
+    steps:
+      - name: Check out deployed commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install browser test dependency
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Join independent peer and verify live 96 KiB transfer
+        env:
+          KERNEL_PEER_ROLE: ${{ matrix.role }}
+          KERNEL_PEER_ROOM: kernelci_${{ github.event.workflow_run.id }}
+          KERNEL_PEER_URL: https://tris-rock777.github.io/KERNAL-CORPS/overseer/live-peer-verify.html
+        run: node scripts/live-peer-ci.mjs
