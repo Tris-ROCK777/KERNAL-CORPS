@@ -29,7 +29,7 @@
     <label for="role">This device</label>
     <select id="role"><option value="sender">Sender (initiates offer)</option><option value="receiver">Receiver (answers offer)</option></select>
     <button id="connect">CONNECT & START WEBRTC</button>
-    <button id="send" disabled>SEND UNAUTHENTICATED TEST BYTES (32 KiB)</button>
+    <button id="send" disabled>SEND UNAUTHENTICATED TEST BYTES (96 KiB)</button>
     <button id="close" disabled>CLOSE SESSION</button>
   </section>
   <section class="card">
@@ -38,8 +38,8 @@
   </section>
   <script type="module">
     import mqtt from "https://unpkg.com/mqtt@5.10.4/dist/mqtt.esm.js";
-    import { createMqttSignaling } from "./overseer-signaling-bootstrap.mjs?v=b2f75c5";
-    import { createRealPeerNode } from "./overseer-real-peer.mjs?v=b2f75c5";
+    import { createMqttSignaling } from "./overseer-signaling-bootstrap.mjs?v=20261022-binary96k";
+    import { createRealPeerNode } from "./overseer-real-peer.mjs?v=20261022-binary96k";
 
     const $ = id => document.getElementById(id);
     const logBox = $("log");
@@ -48,7 +48,7 @@
     const closeButton = $("close");
     let mqttClient, signaling, peer, closed = false;
     const peerId = "peer_" + crypto.randomUUID().replaceAll("-", "").slice(0, 20);
-    const testBytes = new Uint8Array(32 * 1024);
+    const testBytes = new Uint8Array(96 * 1024);
     for (let i = 0; i < testBytes.length; i++) testBytes[i] = (i * 31 + 17) & 255;
 
     function log(message, data) {
@@ -101,15 +101,27 @@
               log("WEBRTC_DATA_CHANNEL_OPEN");
               if (role === "sender") sendButton.disabled = false;
             });
+            let expectedBinaryTransfer = null;
             channel.addEventListener("message", async event => {
               try {
-                const packet = JSON.parse(typeof event.data === "string" ? event.data : new TextDecoder().decode(event.data));
-                if (packet.kind !== "KERNEL_TEST_SHARD" || !Array.isArray(packet.bytes)) return;
-                const bytes = new Uint8Array(packet.bytes);
+                if (typeof event.data === "string") {
+                  const packet = JSON.parse(event.data);
+                  if (packet.kind !== "KERNEL_TEST_SHARD_HEADER" ||
+                      !Number.isSafeInteger(packet.byteLength) || packet.byteLength < 1 ||
+                      packet.byteLength > 1024 * 1024 || !/^[a-f0-9]{64}$/.test(packet.sha256 || "")) return;
+                  expectedBinaryTransfer = packet;
+                  log("BINARY_SHARD_HEADER_RECEIVED", {byteLength: packet.byteLength, sha256: packet.sha256});
+                  return;
+                }
+                if (!(event.data instanceof ArrayBuffer) || !expectedBinaryTransfer) return;
+                const packet = expectedBinaryTransfer;
+                expectedBinaryTransfer = null;
+                const bytes = new Uint8Array(event.data);
                 const actualHash = await digest(bytes);
                 const passed = bytes.byteLength === packet.byteLength && actualHash === packet.sha256;
-                log(passed ? "PASS: BYTE_LENGTH_AND_SHA256_ONLY (NO SIGNATURE OR STORAGE)" : "FAIL: BYTE_INTEGRITY_MISMATCH", {
-                  receivedBytes: bytes.byteLength, expectedBytes: packet.byteLength, expectedSha256: packet.sha256, actualSha256: actualHash
+                log(passed ? "PASS: BINARY_LENGTH_AND_SHA256_ONLY (NO SIGNATURE OR STORAGE)" : "FAIL: BYTE_INTEGRITY_MISMATCH", {
+                  transport: "RTCDataChannel binary ArrayBuffer", receivedBytes: bytes.byteLength,
+                  expectedBytes: packet.byteLength, expectedSha256: packet.sha256, actualSha256: actualHash
                 });
               } catch (error) { log("Received message parse failed", { error: String(error) }); }
             });
@@ -142,9 +154,10 @@
       sendButton.disabled = true;
       try {
         const bytes = testBytes;
-        const packet = { kind: "KERNEL_TEST_SHARD", byteLength: bytes.byteLength, sha256: await digest(bytes), bytes: Array.from(bytes) };
+        const packet = { kind: "KERNEL_TEST_SHARD_HEADER", byteLength: bytes.byteLength, sha256: await digest(bytes) };
         channel.send(JSON.stringify(packet));
-        log("TEST_SHARD_SENT", { byteLength: bytes.byteLength, sha256: packet.sha256 });
+        channel.send(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+        log("TEST_SHARD_SENT_AS_BINARY", { transport: "RTCDataChannel binary ArrayBuffer", byteLength: bytes.byteLength, sha256: packet.sha256 });
       } catch (error) { log("SEND_FAILED", { error: String(error) }); }
       finally { if (!closed) sendButton.disabled = false; }
     });
