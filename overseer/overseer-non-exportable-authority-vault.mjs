@@ -117,12 +117,21 @@ export class NonExportableAuthorityVault {
       if (this.expectedPublicKeyHex && actual !== this.expectedPublicKeyHex) {
         throw new Error("AUTHORITY_PUBLIC_KEY_PIN_MISMATCH");
       }
+      // Public keys are not secret. Keep them exportable so callers can bind the
+      // CryptoKey to the out-of-band pin; the private signing key remains non-exportable.
+      const publicKey = await this.crypto.subtle.importKey(
+        "raw", Uint8Array.from(actual.match(/.{2}/g), byte => Number.parseInt(byte, 16)),
+        { name: "Ed25519" }, true, ["verify"]);
       const challenge = new TextEncoder().encode("KERNEL_CORP_AUTHORITY_KEYPAIR_CHECK_V1");
       const signature = await this.crypto.subtle.sign("Ed25519", record.privateKey, challenge);
-      if (!await this.crypto.subtle.verify("Ed25519", record.publicKey, signature, challenge)) {
+      if (!await this.crypto.subtle.verify("Ed25519", publicKey, signature, challenge)) {
         throw new Error("AUTHORITY_KEYPAIR_MISMATCH");
       }
-      this.keyPair = { privateKey: record.privateKey, publicKey: record.publicKey };
+      // Upgrade legacy records whose public CryptoKey was stored non-exportable.
+      if (record.publicKey?.extractable !== true) {
+        await withStore(db, "readwrite", store => store.put({ ...record, publicKey }, KEY_ID));
+      }
+      this.keyPair = { privateKey: record.privateKey, publicKey };
       this.publicKeyHex = actual;
       this.restored = true;
       return this.keyPair;
@@ -146,7 +155,7 @@ export class NonExportableAuthorityVault {
       if (key === "d" || key === "x") privateJwk[key] = "";
     }
     const publicKey = await this.crypto.subtle.importKey(
-      "raw", publicRaw, { name: "Ed25519" }, false, ["verify"]);
+      "raw", publicRaw, { name: "Ed25519" }, true, ["verify"]);
     const publicKeyHex = toHex(publicRaw);
     if (this.expectedPublicKeyHex && publicKeyHex !== this.expectedPublicKeyHex) {
       throw new Error("AUTHORITY_PUBLIC_KEY_PIN_MISMATCH");
@@ -198,7 +207,7 @@ export class NonExportableAuthorityVault {
       "jwk", legacyRecord.privateJwk, { name: "Ed25519" }, false, ["sign"]);
     const publicKey = await this.crypto.subtle.importKey(
       "raw", Uint8Array.from(legacyPin.match(/.{2}/g), byte => Number.parseInt(byte, 16)),
-      { name: "Ed25519" }, false, ["verify"]);
+      { name: "Ed25519" }, true, ["verify"]);
     const challenge = new TextEncoder().encode("KERNEL_CORP_AUTHORITY_KEYPAIR_CHECK_V1");
     const signature = await this.crypto.subtle.sign("Ed25519", privateKey, challenge);
     if (!await this.crypto.subtle.verify("Ed25519", publicKey, signature, challenge)) {
