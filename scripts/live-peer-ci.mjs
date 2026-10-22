@@ -1,4 +1,7 @@
 import { chromium } from "playwright";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const role = process.env.KERNEL_PEER_ROLE;
 const roomId = process.env.KERNEL_PEER_ROOM;
@@ -8,8 +11,9 @@ const pageUrl = process.env.KERNEL_PEER_URL ??
 if (!["sender", "receiver"].includes(role)) throw new Error("KERNEL_PEER_ROLE must be sender or receiver");
 if (!roomId || !/^[A-Za-z0-9_-]{16,128}$/.test(roomId)) throw new Error("KERNEL_PEER_ROOM is invalid");
 
-const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
-const page = await browser.newPage();
+const profileDir = await mkdtemp(join(tmpdir(), "kernel-peer-profile-"));
+let browser = await chromium.launchPersistentContext(profileDir, { headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
+let page = await browser.newPage();
 const errors = [];
 let receivedTransferSha256 = null;
 page.on("pageerror", error => errors.push(String(error)));
@@ -64,14 +68,28 @@ try {
 
   if (role === "receiver") {
     const persistenceUrl = pageUrl.replace("live-peer-verify.html", "live-peer-persistence-verify.html");
-    await page.goto(persistenceUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.goto(persistenceUrl + "?phase=write&hold=1", { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.waitForFunction(
+      () => document.querySelector("#log")?.textContent.includes("PERSISTENCE_WRITE_PASS"),
+      undefined, { timeout: 60000 }
+    );
+    const writeLog = await page.locator("#log").textContent();
+    if (!writeLog.includes("PERSISTENCE_WRITE_PASS")) throw new Error("PERSISTENCE_WRITE_PHASE_FAILED");
+    console.log(JSON.stringify({ event: "PERSISTENCE_WRITE_PHASE_PASS_BEFORE_BROWSER_RESTART" }));
+
+    // Close the entire Chromium browser context, then relaunch using the same profile
+    // so OPFS, IndexedDB authority material, and localStorage must survive the restart.
+    await browser.close();
+    browser = await chromium.launchPersistentContext(profileDir, { headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
+    page = await browser.newPage();
+    page.on("pageerror", error => errors.push(String(error)));
+    page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
+    await page.goto(persistenceUrl + "?phase=recover&hold=1", { waitUntil: "domcontentloaded", timeout: 45000 });
     await page.waitForFunction(
       () => {
         const output = document.querySelector("#log")?.textContent || "";
-        return output.includes("PERSISTENCE_RESTART_RECOVERY_PASS") ||
-          output.includes("PERSISTENCE_RESTART_RECOVERY_FAIL");
-      },
-      undefined, { timeout: 60000 }
+        return output.includes("PERSISTENCE_RESTART_RECOVERY_PASS") || output.includes("PERSISTENCE_RESTART_RECOVERY_FAIL");
+      }, undefined, { timeout: 60000 }
     );
     const persistenceLog = await page.locator("#log").textContent();
     const failureLine = persistenceLog.split("\\n").find(line => line.includes("PERSISTENCE_RESTART_RECOVERY_FAIL"));
@@ -100,5 +118,6 @@ try {
   console.error(JSON.stringify({ event: "LIVE_PEER_TEST_FAIL", role, roomId, error: String(error), log: logText, browserErrors: errors }));
   throw error;
 } finally {
-  await browser.close();
+  await browser.close().catch(() => {});
+  await rm(profileDir, { recursive: true, force: true }).catch(() => {});
 }
