@@ -79,7 +79,14 @@ export async function initializeProductionOverseer({
             signerPublicKeyHex: authority.publicKeyHex,
             podId
           });
-          const result = await pipeline.commitMutation(podId, code, options);
+          const codeSignature = options.signature || Array.from(new Uint8Array(
+            await crypto.subtle.sign("Ed25519", authority.vault.keyPair.privateKey,
+              new TextEncoder().encode(code))),
+            byte => byte.toString(16).padStart(2, "0")).join("");
+          const result = await pipeline.commitMutation(podId, code, {
+            ...options,
+            signature: codeSignature
+          });
           if (result.durability !== "RECEIPT_PERSISTED") {
             throw new Error("DURABILITY_RECEIPT_NOT_CONFIRMED");
           }
