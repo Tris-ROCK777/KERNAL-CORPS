@@ -477,22 +477,22 @@ export async function runOverseerMeshVerification() {
   }
 
 
-  // TEST 12: a near-limit payload traverses the actual framing, signature,
-  // hash, OPFS persistence and WAL commit path.
+  // TEST 12: the expanded 3 MiB limit traverses framing, signature, hash,
+  // OPFS persistence and WAL commit using 96 bounded binary chunks.
   {
     const f = await makePair();
-    const suffix = '\nexport function mountPod() { return "near-limit-transfer"; }';
-    const code = "// " + "K".repeat(1_048_300) + suffix;
-    assert(new TextEncoder().encode(code).byteLength <= 1_048_576,
-      "TEST_12_SETUP_FAILED: fixture exceeds configured payload limit");
+    const suffix = '\nexport function mountPod() { return "triple-limit-transfer"; }';
+    const code = "// " + "K".repeat(3 * 1_048_576 - 3 - suffix.length) + suffix;
+    assert(new TextEncoder().encode(code).byteLength === 3 * 1_048_576,
+      "TEST_12_SETUP_FAILED: fixture must exercise exact 3 MiB payload limit");
     const hash = await broadcast(f.senderMesh, f.senderEngine, f.sign, "KashKorner", code);
     await waitUntil(() => f.receiverEngine.activePods.has("KashKorner"), 10000);
     assert(f.receiverEngine.activePods.get("KashKorner").hash === hash,
-      "TEST_12_FAILED: near-limit active shard hash mismatch");
+      "TEST_12_FAILED: 3 MiB active shard hash mismatch");
     const shardDir = await f.receiverEngine.root.getDirectoryHandle("shards");
     const stored = await (await shardDir.getFileHandle(hash + ".mjs")).getFile();
-    assert((await stored.text()) === code, "TEST_12_FAILED: near-limit OPFS read-back mismatch");
-    results.push("near-limit multi-chunk signed transfer + persistence");
+    assert((await stored.text()) === code, "TEST_12_FAILED: 3 MiB OPFS read-back mismatch");
+    results.push("3 MiB / 96-chunk signed transfer + OPFS/WAL persistence");
     f.senderMesh.dispose();
     f.receiverMesh.dispose();
   }
@@ -505,7 +505,7 @@ export async function runOverseerMeshVerification() {
       f.receiverMesh.startTransfer("sender", {
         protocol:1, transferId:"fedcba654321", podId:"KashKorner",
         hash:"a".repeat(64), signature:"00", shardSignature:"00", algorithm:"ECDSA-P256",
-        totalBytes:1_048_577, totalChunks:33
+        totalBytes:3 * 1_048_576 + 1, totalChunks:97
       });
     } catch (error) {
       rejected = /TRANSFER_BOUNDS/.test(String(error?.message));
@@ -513,7 +513,7 @@ export async function runOverseerMeshVerification() {
     assert(rejected, "TEST_13_FAILED: oversized transfer header accepted");
     assert(f.receiverMesh.inboundBuffers.size === 0,
       "TEST_13_FAILED: oversized transfer allocated inbound state");
-    results.push("oversized inbound payload rejected before allocation");
+    results.push("payload above 3 MiB rejected before allocation");
     f.senderMesh.dispose();
     f.receiverMesh.dispose();
   }
