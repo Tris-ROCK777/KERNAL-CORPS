@@ -93,6 +93,30 @@ export async function initializeProductionOverseer({
           return {...result, authenticatedShard};
         },
 
+        async signShardManifest({bytes, podId, hash} = {}) {
+          if (closed) throw new Error("OVERSEER_RUNTIME_CLOSED");
+          if (!(bytes instanceof Uint8Array) || !bytes.byteLength || bytes.byteLength > 1024 * 1024) throw new Error("SHARD_SIZE_OUT_OF_RANGE");
+          if (!/^[A-Za-z0-9._-]{1,80}$/.test(podId || "")) throw new Error("INVALID_POD_ID");
+          const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), b => b.toString(16).padStart(2,"0")).join("");
+          if (digest !== String(hash || "").toLowerCase()) throw new Error("SHARD_HASH_MISMATCH");
+          const manifest = new TextEncoder().encode("KERNEL_SHARD_V1\\n" + digest + "\\n" + bytes.byteLength + "\\n" + podId);
+          return Array.from(new Uint8Array(await crypto.subtle.sign("Ed25519", authority.vault.keyPair.privateKey, manifest)), b => b.toString(16).padStart(2,"0")).join("");
+        },
+
+        async acceptRemoteShard({bytes, podId, hash, signatureHex, codeSignature, algorithm} = {}) {
+          if (closed) throw new Error("OVERSEER_RUNTIME_CLOSED");
+          if (algorithm !== "Ed25519") throw new Error("SIGNATURE_ALGORITHM_POLICY_MISMATCH");
+          if (!(bytes instanceof Uint8Array)) throw new Error("SHARD_BYTES_MUST_BE_UINT8ARRAY");
+          const authenticatedShard = await acceptAuthenticatedShard({bytes, signatureHex,
+            publicKey:authority.vault.keyPair.publicKey, pinnedPublicKeyHex:authority.publicKeyHex,
+            signerPublicKeyHex:authority.publicKeyHex, podId});
+          if (authenticatedShard.sha256 !== String(hash || "").toLowerCase()) throw new Error("AUTHENTICATED_SHARD_HASH_MISMATCH");
+          const code = new TextDecoder("utf-8", {fatal:true}).decode(bytes);
+          const result = await pipeline.commitMutation(podId, code, {signature:codeSignature, origin:"peer"});
+          if (result.durability !== "RECEIPT_PERSISTED") throw new Error("DURABILITY_RECEIPT_NOT_CONFIRMED");
+          return {...authenticatedShard, durability:result.durability, commitHash:result.hash};
+        },
+
         async verifyDurability() {
           if (closed) throw new Error("OVERSEER_RUNTIME_CLOSED");
           const result = await pipeline.verifyReceiptChain();
