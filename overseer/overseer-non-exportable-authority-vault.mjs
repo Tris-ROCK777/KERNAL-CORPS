@@ -161,6 +161,68 @@ export class NonExportableAuthorityVault {
     return this.keyPair;
   }
 
+  /**
+   * Explicitly migrate an already-enrolled OPFS/JWK identity into IndexedDB.
+   * The caller must supply the legacy record read from the existing vault.
+   * Migration is pin-bound, verifies private/public correspondence, and never
+   * provisions a replacement identity. The legacy OPFS record is not deleted
+   * here; cleanup must happen only after a separately verified migration.
+   */
+  async migrateExistingIdentity(legacyRecord) {
+    if (!this.expectedPublicKeyHex || !PIN_FORMAT.test(this.expectedPublicKeyHex)) {
+      throw new Error("MIGRATION_REQUIRES_TRUSTED_PUBLIC_KEY_PIN");
+    }
+    if (!legacyRecord || legacyRecord.schema !== 1 ||
+        legacyRecord.algorithm !== "Ed25519" ||
+        !legacyRecord.privateJwk ||
+        !PIN_FORMAT.test(legacyRecord.publicKeyHex || "")) {
+      throw new Error("LEGACY_AUTHORITY_RECORD_INVALID");
+    }
+    const legacyPin = legacyRecord.publicKeyHex.toLowerCase();
+    if (legacyPin !== this.expectedPublicKeyHex) {
+      throw new Error("LEGACY_AUTHORITY_PUBLIC_KEY_PIN_MISMATCH");
+    }
+
+    const db = await this.database();
+    const existing = await withStore(db, "readonly", store => store.get(KEY_ID));
+    if (existing) {
+      await this.initOrRestore();
+      if (this.publicKeyHex !== legacyPin) {
+        throw new Error("AUTHORITY_PUBLIC_KEY_PIN_MISMATCH");
+      }
+      return { keyPair: this.keyPair, status: "EXISTING_NON_EXPORTABLE_IDENTITY_CONFIRMED",
+        publicKeyHex: this.publicKeyHex };
+    }
+
+    const privateKey = await this.crypto.subtle.importKey(
+      "jwk", legacyRecord.privateJwk, { name: "Ed25519" }, false, ["sign"]);
+    const publicKey = await this.crypto.subtle.importKey(
+      "raw", Uint8Array.from(legacyPin.match(/.{2}/g), byte => Number.parseInt(byte, 16)),
+      { name: "Ed25519" }, false, ["verify"]);
+    const challenge = new TextEncoder().encode("KERNEL_CORP_AUTHORITY_KEYPAIR_CHECK_V1");
+    const signature = await this.crypto.subtle.sign("Ed25519", privateKey, challenge);
+    if (!await this.crypto.subtle.verify("Ed25519", publicKey, signature, challenge)) {
+      throw new Error("AUTHORITY_KEYPAIR_MISMATCH");
+    }
+
+    await withStore(db, "readwrite", store => store.put({
+      schema: 1, algorithm: "Ed25519", publicKeyHex: legacyPin, privateKey, publicKey
+    }, KEY_ID));
+
+    // Restore through the normal read path to prove the structured-cloned
+    // CryptoKey survived persistence and is still non-exportable.
+    this.keyPair = null;
+    this.publicKeyHex = null;
+    this.restored = false;
+    const restoredPair = await this.initOrRestore();
+    if (restoredPair.privateKey.extractable !== false ||
+        this.publicKeyHex !== legacyPin) {
+      throw new Error("NON_EXPORTABLE_AUTHORITY_MIGRATION_READBACK_FAILED");
+    }
+    return { keyPair: restoredPair, status: "EXISTING_IDENTITY_MIGRATED",
+      publicKeyHex: this.publicKeyHex };
+  }
+
   getPublicKeyHex() {
     if (!this.publicKeyHex) throw new Error("AUTHORITY_VAULT_NOT_INITIALIZED");
     return this.publicKeyHex;
