@@ -9,6 +9,7 @@ import { OverseerHotSwap } from "./overseer-hotswap.mjs";
 import { initializeTrustedAuthority } from "./overseer-authority-bootstrap.mjs";
 import { OverseerAuthoritySignatureEngine } from "./overseer-authority-signatures.mjs";
 import { OverseerAuthoritativeCommitPipeline } from "./overseer-authoritative-commit-pipeline.mjs";
+import { acceptAuthenticatedShard } from "./overseer-authenticated-shard.mjs";
 
 let runtimePromise = null;
 
@@ -63,11 +64,26 @@ export async function initializeProductionOverseer({
 
         async commitMutation(podId, code, options = {}) {
           if (closed) throw new Error("OVERSEER_RUNTIME_CLOSED");
+          const bytes = new TextEncoder().encode(code);
+          const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
+            byte => byte.toString(16).padStart(2, "0")).join("");
+          const manifest = new TextEncoder().encode(
+            "KERNEL_SHARD_V1\\n" + digest + "\\n" + bytes.byteLength + "\\n" + podId);
+          const shardSignature = Array.from(new Uint8Array(
+            await crypto.subtle.sign("Ed25519", authority.vault.keyPair.privateKey, manifest)),
+            byte => byte.toString(16).padStart(2, "0")).join("");
+          const authenticatedShard = await acceptAuthenticatedShard({
+            bytes, signatureHex: shardSignature,
+            publicKey: authority.vault.keyPair.publicKey,
+            pinnedPublicKeyHex: authority.publicKeyHex,
+            signerPublicKeyHex: authority.publicKeyHex,
+            podId
+          });
           const result = await pipeline.commitMutation(podId, code, options);
           if (result.durability !== "RECEIPT_PERSISTED") {
             throw new Error("DURABILITY_RECEIPT_NOT_CONFIRMED");
           }
-          return result;
+          return {...result, authenticatedShard};
         },
 
         async verifyDurability() {
