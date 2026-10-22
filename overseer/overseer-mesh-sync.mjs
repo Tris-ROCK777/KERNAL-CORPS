@@ -221,7 +221,7 @@ export class OverseerMeshReplicator {
   startTransfer(peerId, meta) {
     if (meta.protocol !== 1 || typeof meta.transferId !== "string" || !/^[a-f0-9]{12}$/.test(meta.transferId) ||
         !isSupportedPodId(meta.podId) || !/^[a-f0-9]{64}$/i.test(meta.hash || "") ||
-        typeof meta.signature !== "string" || !meta.signature || (this.authenticateInboundShard && (typeof meta.shardSignature !== "string" || !meta.shardSignature)) || !["Ed25519", "ECDSA-P256"].includes(meta.algorithm)) throw new Error("INVALID_TRANSFER_HEADER");
+        typeof meta.signature !== "string" || !meta.signature || typeof meta.shardSignature !== "string" || !/^(?:[0-9a-f]{2})+$/i.test(meta.shardSignature) || !["Ed25519", "ECDSA-P256"].includes(meta.algorithm)) throw new Error("INVALID_TRANSFER_HEADER");
     if (!Number.isSafeInteger(meta.totalBytes) || meta.totalBytes < 1 || meta.totalBytes > MAX_PAYLOAD_BYTES ||
         !Number.isSafeInteger(meta.totalChunks) || meta.totalChunks < 1 || meta.totalChunks > MAX_CHUNKS ||
         meta.totalChunks !== Math.ceil(meta.totalBytes / CHUNK_SIZE)) throw new Error("TRANSFER_BOUNDS");
@@ -268,7 +268,7 @@ export class OverseerMeshReplicator {
     }
     const configuredAlgorithm = this.engine.signatureAlgorithm || "ECDSA-P256";
     if (meta.algorithm !== configuredAlgorithm) throw new Error("SIGNATURE_ALGORITHM_POLICY_MISMATCH");
-    if (this.authenticateInboundShard || meta.shardSignature) {
+    {
       // Independently verify the Ed25519 KERNEL_SHARD_V1 manifest and persist
       // through the authenticated OPFS module before any peer ACK is emitted.
       let receipt;
@@ -301,6 +301,6 @@ export class OverseerMeshReplicator {
         transferId:msg.transferId,sha256:receipt.sha256,byteLength:receipt.byteLength,readBackVerified:true});
       return receipt;
     }
-    return this.engine.mutatePod(meta.podId, code, {signature:meta.signature,origin:"peer"});
+    throw new Error("AUTHENTICATED_SHARD_MANIFEST_REQUIRED");
   }
 }
