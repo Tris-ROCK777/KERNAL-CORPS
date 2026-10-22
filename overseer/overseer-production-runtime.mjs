@@ -10,6 +10,7 @@ import { initializeTrustedAuthority } from "./overseer-authority-bootstrap.mjs";
 import { OverseerAuthoritySignatureEngine } from "./overseer-authority-signatures.mjs";
 import { OverseerAuthoritativeCommitPipeline } from "./overseer-authoritative-commit-pipeline.mjs";
 import { acceptAuthenticatedShard } from "./overseer-authenticated-shard.mjs";
+import { isSupportedPodId } from "./overseer-pod-identifiers.mjs";
 
 let runtimePromise = null;
 
@@ -64,6 +65,7 @@ export async function initializeProductionOverseer({
 
         async commitMutation(podId, code, options = {}) {
           if (closed) throw new Error("OVERSEER_RUNTIME_CLOSED");
+          if (!isSupportedPodId(podId)) throw new Error("UNSUPPORTED_CANONICAL_POD_ID");
           const bytes = new TextEncoder().encode(code);
           const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
             byte => byte.toString(16).padStart(2, "0")).join("");
@@ -96,7 +98,7 @@ export async function initializeProductionOverseer({
         async signShardManifest({bytes, podId, hash} = {}) {
           if (closed) throw new Error("OVERSEER_RUNTIME_CLOSED");
           if (!(bytes instanceof Uint8Array) || !bytes.byteLength || bytes.byteLength > 1024 * 1024) throw new Error("SHARD_SIZE_OUT_OF_RANGE");
-          if (!/^[A-Za-z0-9._-]{1,80}$/.test(podId || "")) throw new Error("INVALID_POD_ID");
+          if (!isSupportedPodId(podId)) throw new Error("UNSUPPORTED_CANONICAL_POD_ID");
           const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), b => b.toString(16).padStart(2,"0")).join("");
           if (digest !== String(hash || "").toLowerCase()) throw new Error("SHARD_HASH_MISMATCH");
           const manifest = new TextEncoder().encode("KERNEL_SHARD_V1\n" + digest + "\n" + bytes.byteLength + "\n" + podId);
@@ -107,6 +109,7 @@ export async function initializeProductionOverseer({
           if (closed) throw new Error("OVERSEER_RUNTIME_CLOSED");
           if (algorithm !== "Ed25519") throw new Error("SIGNATURE_ALGORITHM_POLICY_MISMATCH");
           if (!(bytes instanceof Uint8Array)) throw new Error("SHARD_BYTES_MUST_BE_UINT8ARRAY");
+          if (!isSupportedPodId(podId)) throw new Error("UNSUPPORTED_CANONICAL_POD_ID");
           const authenticatedShard = await acceptAuthenticatedShard({bytes, signatureHex,
             publicKey:authority.vault.keyPair.publicKey, pinnedPublicKeyHex:authority.publicKeyHex,
             signerPublicKeyHex:authority.publicKeyHex, podId});
