@@ -110,6 +110,7 @@ jobs:
           cp overseer/index.html _site/index.html
           test -s _site/overseer/index.html
           grep -q "RINGWAL" _site/overseer/index.html
+          test -s _site/overseer/ringwal-console.html
           test -s _site/overseer/pod-command-drawer.html
           test -s _site/overseer/non-exportable-vault-verify.html
           test -s _site/overseer/ringwal-console.html
