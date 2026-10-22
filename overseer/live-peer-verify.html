@@ -48,7 +48,7 @@
     const closeButton = $("close");
     let mqttClient, signaling, peer, closed = false;
     const peerId = "peer_" + crypto.randomUUID().replaceAll("-", "").slice(0, 20);
-    const testPayloadPrefix = 'export function mountPod(){ return {name:"KernelVision", p2pTransfer:true}; }\\n/*';
+    const testPayloadPrefix = 'export function mountPod(){ return {name:"KernelVision", p2pTransfer:true}; }\n/*';
     const testPayloadSuffix = "*/";
     const testBytes = new TextEncoder().encode(
       testPayloadPrefix + "K".repeat(96 * 1024 - testPayloadPrefix.length - testPayloadSuffix.length) + testPayloadSuffix
