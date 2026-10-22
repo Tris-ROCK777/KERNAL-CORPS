@@ -236,7 +236,24 @@ export async function runOverseerMeshVerification() {
     await wait(100);
     assert(f.receiverEngine.activePods.get("KashKorner").hash === previous, "TEST_3_FAILED: invalid signature changed active pod");
     assert(previous === goodHash, "TEST_3_SETUP_FAILED");
-    results.push("tampered payload signature rejection + LKG preservation");
+
+    // A rejected peer payload must not leave a persistent shard or commit record.
+    const shardDir = await f.receiverEngine.root.getDirectoryHandle("shards");
+    let tamperedShardExists = false;
+    try {
+      await shardDir.getFileHandle(badHash + ".mjs");
+      tamperedShardExists = true;
+    } catch {}
+    assert(!tamperedShardExists,
+      "TEST_3_FAILED: signature-invalid peer payload was persisted to OPFS");
+    const wal = await (await f.receiverEngine.root.getFileHandle("ring-wal.jsonl")).getFile();
+    const rows = (await wal.text()).split("\\n").filter(Boolean).map(line => JSON.parse(line));
+    assert(!rows.some(row => row.op === "HOTSWAP_COMMIT" && row.hash === badHash),
+      "TEST_3_FAILED: signature-invalid peer payload received a HOTSWAP_COMMIT");
+    assert(rows.filter(row => row.op === "HOTSWAP_COMMIT").length === 1,
+      "TEST_3_FAILED: invalid peer payload unexpectedly added a commit");
+
+    results.push("tampered payload rejected before OPFS/WAL commit; LKG preserved");
   }
 
   // TEST 4: A stalled bufferedAmount must abort promptly when the channel closes.
