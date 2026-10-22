@@ -11,6 +11,7 @@ const BACKPRESSURE_TIMEOUT_MS = 5_000;
 const TRANSFER_TTL_MS = 15_000;
 const MAX_INBOUND_TRANSFERS = 8;
 import { isSupportedPodId } from "./overseer-pod-identifiers.mjs";
+import { acceptAuthenticatedShard } from "./overseer-authenticated-shard.mjs";
 
 export class OverseerMeshReplicator {
   constructor(hotSwapEngine, authorityPublicKey, { authenticateInboundShard = null, signShardManifest = null } = {}) {
@@ -267,11 +268,24 @@ export class OverseerMeshReplicator {
     }
     const configuredAlgorithm = this.engine.signatureAlgorithm || "ECDSA-P256";
     if (meta.algorithm !== configuredAlgorithm) throw new Error("SIGNATURE_ALGORITHM_POLICY_MISMATCH");
-    if (this.authenticateInboundShard) {
-      const receipt = await this.authenticateInboundShard({
-        bytes:combined, podId:meta.podId, hash:meta.hash, signatureHex:meta.shardSignature,
-        codeSignature:meta.signature, algorithm:meta.algorithm
-      });
+    if (this.authenticateInboundShard || meta.shardSignature) {
+      // Independently verify the Ed25519 KERNEL_SHARD_V1 manifest and persist
+      // through the authenticated OPFS module before any peer ACK is emitted.
+      let receipt;
+      if (this.authenticateInboundShard) {
+        receipt = await this.authenticateInboundShard({
+          bytes:combined, podId:meta.podId, hash:meta.hash, signatureHex:meta.shardSignature,
+          codeSignature:meta.signature, algorithm:meta.algorithm
+        });
+      } else {
+        const rawKey = new Uint8Array(await crypto.subtle.exportKey("raw", this.authorityPublicKey));
+        const pinnedPublicKeyHex = Array.from(rawKey, b => b.toString(16).padStart(2,"0")).join("");
+        receipt = await acceptAuthenticatedShard({
+          bytes:combined, signatureHex:meta.shardSignature,
+          publicKey:this.authorityPublicKey, pinnedPublicKeyHex,
+          signerPublicKeyHex:pinnedPublicKeyHex, podId:meta.podId
+        });
+      }
       if (!receipt?.readBackVerified || !receipt?.signatureVerified || !receipt?.authorityPinMatched ||
           receipt.sha256 !== meta.hash.toLowerCase() || receipt.byteLength !== combined.byteLength) {
         throw new Error("AUTHENTICATED_SHARD_RECEIPT_INVALID");
