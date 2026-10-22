@@ -58,6 +58,8 @@ jobs:
           node --check overseer/overseer-authority-bootstrap.mjs
           node --check overseer/overseer-authority-bootstrap.test.mjs
           node --check overseer/overseer-production-runtime.mjs
+          node --check overseer/overseer-authenticated-shard.mjs
+          node --check overseer/production-runtime-verify.html
 
       - name: Run dual-target durability E2E test
         run: node overseer/overseer-durability-bridge.test.mjs
@@ -101,8 +103,9 @@ jobs:
         run: |
           mkdir -p _site/overseer
           cp -R overseer/. _site/overseer/
-          cp overseer/verify.html _site/overseer/index.html
-          cp overseer/verify.html _site/index.html
+          cp overseer/index.html _site/index.html
+          test -s _site/overseer/index.html
+          grep -q "RINGWAL" _site/overseer/index.html
           test -s _site/overseer/pod-command-drawer.html
           test -s _site/overseer/non-exportable-vault-verify.html
 
