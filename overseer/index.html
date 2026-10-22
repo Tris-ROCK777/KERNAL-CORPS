@@ -119,18 +119,72 @@ window.addEventListener("overseer:authenticated-shard",e=>renderReceipt(e.detail
 window.addEventListener("overseer:node-status",e=>{const d=e.detail||{};livePeerHealth.set(String(d.peerId||"NODE"),d.state||"connecting");if(["open","connected"].includes(d.state))$("connection").textContent="PEER "+(d.peerId||"NODE")+" CONNECTED";else if(["closed","failed","disconnected"].includes(d.state))$("connection").textContent="PEER "+(d.peerId||"NODE")+" "+d.state.toUpperCase();$("livePeers").textContent=String(state.mesh?.peers?.size||0)+" CONNECTED";$("hudLivePeers").textContent=String(state.mesh?.peers?.size||0)});
 function resize(){state.dpr=Math.min(devicePixelRatio||1,2);state.w=innerWidth;state.h=innerHeight;canvas.width=Math.floor(state.w*state.dpr);canvas.height=Math.floor(state.h*state.dpr);canvas.style.width=state.w+"px";canvas.style.height=state.h+"px";ctx.setTransform(state.dpr,0,0,state.dpr,0,0)}
 addEventListener("resize",resize);resize();
-const neuralNodes=Array.from({length:132},(_,i)=>{const a=i*2.3999632297;const radius=Math.sqrt((i+.5)/132);return{x:Math.cos(a)*radius,y:Math.sin(a)*radius,z:Math.sin(i*1.71)*.26,phase:(i*1.37)%6.28,size:.7+(i%5)*.24}});
-function project(x,y,z=0){const c=Math.cos(state.yaw*.18),s=Math.sin(state.yaw*.18),cp=Math.cos(state.pitch*.18),sp=Math.sin(state.pitch*.18);const xx=x*c-z*s,zz=x*s+z*c,yy=y*cp-zz*sp;const scale=Math.min(state.w,state.h)*.76;return{x:state.w/2+xx*scale,y:state.h*.47+yy*scale,z:zz}}
-function nodePos(i){const n=neuralNodes[(i*5)%neuralNodes.length];return project(n.x,n.y,n.z)}
-function draw(){ctx.fillStyle="#020305";ctx.fillRect(0,0,state.w,state.h);const cx=state.w/2,cy=state.h*.47,now=performance.now()*.00022,scale=Math.min(state.w,state.h)*.76;
-const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,scale*.82);glow.addColorStop(0,"rgba(21,34,53,.42)");glow.addColorStop(.42,"rgba(10,17,29,.18)");glow.addColorStop(1,"rgba(2,3,5,0)");ctx.fillStyle=glow;ctx.fillRect(0,0,state.w,state.h);
-const ps=neuralNodes.map(n=>project(n.x,n.y,n.z));
-ctx.lineWidth=.65;
-for(let i=0;i<ps.length;i++){const a=ps[i];for(let j=i+1;j<ps.length;j++){const b=ps[j],d=Math.hypot(a.x-b.x,a.y-b.y);if(d<Math.min(state.w,state.h)*.155){const alpha=(1-d/(Math.min(state.w,state.h)*.155))*.23;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle="rgba(132,178,224,"+alpha+")";ctx.stroke()}}}
-for(let k=0;k<neuralNodes.length;k+=3){const n=neuralNodes[k],a=ps[k],j=(k+17)%ps.length,b=ps[j];const t=(now+n.phase)%1;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle="rgba(154,169,255,.12)";ctx.stroke();const px=a.x+(b.x-a.x)*t,py=a.y+(b.y-a.y)*t;ctx.beginPath();ctx.arc(px,py,1.15,0,Math.PI*2);ctx.fillStyle="rgba(199,226,255,.35)";ctx.fill()}
-for(let i=0;i<ps.length;i++){const p=ps[i],n=neuralNodes[i],pulse=.5+.5*Math.sin(now*4+n.phase),important=i<24,dead=important&&state.dead.has(Math.floor(i/1));const r=(important?2.2:1.05+n.size*.45)+pulse*(important?1.15:.55);ctx.beginPath();ctx.arc(p.x,p.y,r*(important?3.1:2.3),0,Math.PI*2);ctx.fillStyle="rgba(130,178,232,"+(important?.055:.025)+")";ctx.fill();ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=dead?"rgba(145,177,213,.06)":important?"rgba(145,177,213,.20)":(i%7===0?"rgba(170,165,255,.17)":"rgba(145,177,213,"+(.08+pulse*.08)+")");ctx.fill();if(important&&i<24){ctx.beginPath();ctx.arc(p.x,p.y,5+pulse*2,0,Math.PI*2);ctx.strokeStyle=i===state.selected?"rgba(220,241,255,.85)":"rgba(146,190,238,.2)";ctx.stroke()}}
-const liveEntries=[...(state.mesh?.peers?.entries?.()||[])];liveEntries.forEach(([id,peer],idx)=>{const angle=idx*2.3999632297+now*.08,radius=.32+(idx%4)*.105,p=project(Math.cos(angle)*radius,Math.sin(angle)*radius,Math.sin(idx*1.4)*.12);const raw=livePeerHealth.get(String(id))||peer?.readyState||peer?.channel?.readyState||"connected",unhealthy=["failed","disconnected","closing","closed","error"].includes(String(raw).toLowerCase()),col=unhealthy?colors.degraded:colors.healthy,pulse=.5+.5*Math.sin(now*5+idx);ctx.beginPath();ctx.moveTo(state.w/2,state.h*.47);ctx.lineTo(p.x,p.y);ctx.strokeStyle=unhealthy?"rgba(228,210,124,.42)":"rgba(131,186,255,.52)";ctx.lineWidth=1.1;ctx.stroke();ctx.beginPath();ctx.arc(p.x,p.y,5+pulse*2,0,Math.PI*2);ctx.fillStyle=unhealthy?"rgba(228,210,124,.12)":"rgba(131,186,255,.15)";ctx.fill();ctx.beginPath();ctx.arc(p.x,p.y,2.3+pulse*.8,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();ctx.font="8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=unhealthy?"rgba(228,210,124,.85)":"rgba(183,218,255,.9)";ctx.fillText(String(id).slice(0,12),p.x,p.y-9)});const core=project(0,0,0),pulse=.5+.5*Math.sin(now*3.2);ctx.beginPath();ctx.arc(core.x,core.y,23+pulse*4,0,Math.PI*2);ctx.strokeStyle="rgba(168,205,255,.18)";ctx.lineWidth=1;ctx.stroke();ctx.beginPath();ctx.arc(core.x,core.y,13+pulse*2,0,Math.PI*2);ctx.fillStyle="rgba(13,24,39,.9)";ctx.fill();ctx.strokeStyle="rgba(192,224,255,.72)";ctx.stroke();ctx.beginPath();ctx.arc(core.x,core.y,3.5,0,Math.PI*2);ctx.fillStyle="#e0f1ff";ctx.fill();ctx.font="8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="rgba(189,214,240,.7)";ctx.fillText("LOCAL AUTHORITY",core.x,core.y+34);
-requestAnimationFrame(draw)}
+const neuralNodes=Array.from({length:330},(_,i)=>{
+  const cols=22,rows=15,layer=Math.floor(i/(cols*rows)),local=i%(cols*rows),gx=local%cols,gy=Math.floor(local/cols);
+  const u=gx/(cols-1)*2-1,v=gy/(rows-1)*2-1;
+  const x=u*1.08+Math.sin(i*12.9898)*.018,y=v*.84+Math.cos(i*7.13)*.018;
+  const wave=Math.sin(u*5.2+layer*.9)*.105+Math.cos(v*6.1-layer*.65)*.08;
+  return{x,y,z:wave+(layer-1)*.27+Math.sin(i*1.71)*.035,u,v,layer,phase:(i*2.3999632297)%6.283,size:.55+(i%5)*.22};
+});
+function project(x,y,z=0){
+  const yaw=state.yaw*.22,pitch=state.pitch*.22,c=Math.cos(yaw),s=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+  const xx=x*c-z*s,zz=x*s+z*c,yy=y*cp-zz*sp,perspective=1.12/(1.12+zz*.18),scale=Math.min(state.w,state.h)*.7*perspective;
+  return{x:state.w*.5+xx*scale,y:state.h*.49+yy*scale,z:zz};
+}
+function nodePos(i){const n=neuralNodes[(i*11)%neuralNodes.length];return project(n.x,n.y,n.z)}
+function draw(){
+  const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches,now=performance.now()*.00022,cx=state.w*.5,cy=state.h*.49,min=Math.min(state.w,state.h);
+  ctx.fillStyle="#02040a";ctx.fillRect(0,0,state.w,state.h);
+  const bg=ctx.createRadialGradient(cx,cy*.94,0,cx,cy,min*.82);
+  bg.addColorStop(0,"rgba(8,23,48,.48)");bg.addColorStop(.48,"rgba(4,12,27,.24)");bg.addColorStop(1,"rgba(1,3,8,0)");
+  ctx.fillStyle=bg;ctx.fillRect(0,0,state.w,state.h);
+  const ps=neuralNodes.map(n=>project(n.x+Math.sin(now*2+n.u*2.7+n.phase)*.012,n.y+Math.sin(now*2+n.u*2.7+n.phase)*.012,n.z+Math.sin(now*1.4+n.v*3+n.phase)*.025));
+  ctx.lineWidth=.65;
+  for(let i=0;i<ps.length;i++){
+    const a=ps[i],n=neuralNodes[i];
+    for(let j=i+1;j<ps.length;j++){
+      const b=ps[j],m=neuralNodes[j];if(Math.abs(n.layer-m.layer)>1)continue;
+      const d=Math.hypot(a.x-b.x,a.y-b.y),limit=min*(n.layer===m.layer ? .105 : .072);
+      if(d<limit){const alpha=(1-d/limit)*(n.layer===m.layer ? .24 : .12);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=n.layer===m.layer?"rgba(62,139,255,"+alpha+")":"rgba(132,157,255,"+(alpha*.8)+")";ctx.stroke()}
+    }
+  }
+  // Binary ribbons curve through the same mesh layers.
+  for(let band=0;band<5;band++){
+    const phase=(reduceMotion ? 0 : now*(band%2 ? .45 : .7)+band*.83),y0=state.h*(.38+band*.105),amp=min*(.035+band*.006),x0=-state.w*.08,x1=state.w*1.08;
+    const yAt=t=>y0+Math.sin(t*7.4+phase)*amp+Math.sin(t*15.5-phase*.7)*amp*.25;
+    ctx.beginPath();for(let step=0;step<=60;step++){const t=step/60,x=x0+(x1-x0)*t,y=yAt(t);if(step===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}
+    ctx.strokeStyle=band%3===0?"rgba(255,190,119,.34)":"rgba(77,159,255,.22)";ctx.lineWidth=band%3===0?1.15:.8;ctx.stroke();
+    const count=Math.max(20,Math.floor(state.w/8));ctx.font="8px ui-monospace,monospace";ctx.textAlign="center";
+    for(let k=0;k<count;k++){const t=((k/count+(reduceMotion ? 0 : phase*.035))%1),x=x0+(x1-x0)*t,y=yAt(t);if(y<0||y>state.h)continue;ctx.fillStyle=band%3===0?"rgba(255,198,135,.72)":"rgba(112,183,255,.57)";ctx.fillText(((k+band+Math.floor(phase*10))%2)?"1":"0",x,y)}
+  }
+  for(let k=0;k<neuralNodes.length;k+=5){
+    const n=neuralNodes[k],a=ps[k],b=ps[(k+17+n.layer*7)%ps.length],t=reduceMotion ? .5 : (now*.9+n.phase)%1,px=a.x+(b.x-a.x)*t,py=a.y+(b.y-a.y)*t;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle="rgba(91,166,255,.13)";ctx.stroke();
+    const glow=ctx.createRadialGradient(px,py,0,px,py,7);glow.addColorStop(0,"rgba(188,222,255,.82)");glow.addColorStop(1,"rgba(65,142,255,0)");ctx.fillStyle=glow;ctx.fillRect(px-7,py-7,14,14);
+    ctx.beginPath();ctx.arc(px,py,1.15,0,Math.PI*2);ctx.fillStyle="#c7e5ff";ctx.fill();
+  }
+  for(let i=0;i<ps.length;i++){
+    const p=ps[i],n=neuralNodes[i],pulse=reduceMotion ? .5 : .5+.5*Math.sin(now*4+n.phase),important=i<24,slot=i%24,dead=important&&state.dead.has(slot),r=(important?1.9:.65+n.size*.36)+pulse*(important?1:.35);
+    if(!dead){ctx.beginPath();ctx.arc(p.x,p.y,r*3.2,0,Math.PI*2);ctx.fillStyle="rgba(62,143,255,"+(important ? .07 : .025)+")";ctx.fill()}
+    ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=dead?"rgba(133,157,191,.045)":important?"rgba(157,204,255,.62)":(i%11===0?"rgba(211,201,255,.74)":"rgba(101,168,255,"+(.18+pulse*.25)+")");ctx.fill();
+    if(important){ctx.beginPath();ctx.arc(p.x,p.y,4+pulse*1.5,0,Math.PI*2);ctx.strokeStyle=i===state.selected?"rgba(226,239,255,.88)":"rgba(122,177,255,.16)";ctx.stroke()}
+  }
+  const liveEntries=[...(state.mesh?.peers?.entries?.()||[])];
+  liveEntries.forEach(([id,peer],idx)=>{
+    const angle=idx*2.3999632297+now*.08,radius=.25+(idx%4)*.11,p=project(Math.cos(angle)*radius,Math.sin(angle)*radius,Math.sin(idx*1.4)*.18);
+    const raw=livePeerHealth.get(String(id))||peer?.readyState||peer?.channel?.readyState||"connected",unhealthy=["failed","disconnected","closing","closed","error"].includes(String(raw).toLowerCase()),col=unhealthy?colors.degraded:colors.healthy,pulse=reduceMotion ? .5 : .5+.5*Math.sin(now*5+idx);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(p.x,p.y);ctx.strokeStyle=unhealthy?"rgba(228,210,124,.42)":"rgba(131,186,255,.58)";ctx.lineWidth=1.1;ctx.stroke();
+    ctx.beginPath();ctx.arc(p.x,p.y,7+pulse*2,0,Math.PI*2);ctx.fillStyle=unhealthy?"rgba(228,210,124,.13)":"rgba(131,186,255,.17)";ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,2.7+pulse,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+    ctx.font="8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=unhealthy?"rgba(228,210,124,.9)":"rgba(183,218,255,.95)";ctx.fillText(String(id).slice(0,12),p.x,p.y-11);
+  });
+  const core=project(0,0,0),pulse=reduceMotion ? .5 : .5+.5*Math.sin(now*3.2);
+  ctx.beginPath();ctx.arc(core.x,core.y,20+pulse*4,0,Math.PI*2);ctx.strokeStyle="rgba(168,205,255,.24)";ctx.lineWidth=1;ctx.stroke();
+  ctx.beginPath();ctx.arc(core.x,core.y,11+pulse*2,0,Math.PI*2);ctx.fillStyle="rgba(8,20,39,.94)";ctx.fill();ctx.strokeStyle="rgba(192,224,255,.82)";ctx.stroke();
+  ctx.beginPath();ctx.arc(core.x,core.y,3.2,0,Math.PI*2);ctx.fillStyle="#e0f1ff";ctx.fill();
+  ctx.font="8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="rgba(189,214,240,.72)";ctx.fillText("LOCAL AUTHORITY",core.x,core.y+31);
+  requestAnimationFrame(draw);
+}
 requestAnimationFrame(draw);
 updateLiveDisplay();setInterval(updateLiveDisplay,1000);
 function escapeHtml(value){return String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
