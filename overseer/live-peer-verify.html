@@ -48,8 +48,12 @@
     const closeButton = $("close");
     let mqttClient, signaling, peer, closed = false;
     const peerId = "peer_" + crypto.randomUUID().replaceAll("-", "").slice(0, 20);
-    const testBytes = new Uint8Array(96 * 1024);
-    for (let i = 0; i < testBytes.length; i++) testBytes[i] = (i * 31 + 17) & 255;
+    const testPayloadPrefix = 'export function mountPod(){ return {name:"KernelVision", p2pTransfer:true}; }\\n/*';
+    const testPayloadSuffix = "*/";
+    const testBytes = new TextEncoder().encode(
+      testPayloadPrefix + "K".repeat(96 * 1024 - testPayloadPrefix.length - testPayloadSuffix.length) + testPayloadSuffix
+    );
+    if (testBytes.byteLength !== 96 * 1024) throw new Error("TEST_MODULE_PAYLOAD_LENGTH_MISMATCH");
 
     function log(message, data) {
       const line = new Date().toISOString() + " " + message + (data ? " " + JSON.stringify(data) : "");
@@ -146,6 +150,15 @@
                 for (const chunk of transfer.chunks) { combined.set(chunk, offset); offset += chunk.byteLength; }
                 const actualHash = await digest(combined);
                 const passed = combined.byteLength === transfer.byteLength && actualHash === transfer.sha256;
+                if (passed) {
+                  let binary = "";
+                  for (let offset = 0; offset < combined.length; offset += 0x8000) {
+                    binary += String.fromCharCode(...combined.subarray(offset, offset + 0x8000));
+                  }
+                  sessionStorage.setItem("kernel-live-peer-payload", btoa(binary));
+                  sessionStorage.setItem("kernel-live-peer-payload-sha256", actualHash);
+                  sessionStorage.setItem("kernel-live-peer-payload-bytes", String(combined.byteLength));
+                }
                 log(passed ? "PASS: CHUNKED_BINARY_LENGTH_AND_SHA256_ONLY (NO SIGNATURE OR STORAGE)" : "FAIL: BYTE_INTEGRITY_MISMATCH", {
                   transport: "RTCDataChannel binary ArrayBuffer chunks", receivedBytes: combined.byteLength,
                   expectedBytes: transfer.byteLength, totalChunks: transfer.totalChunks,
