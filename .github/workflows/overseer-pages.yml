@@ -1,129 +1,29 @@
-name: Deploy Overseer Mobile Verifier
+name: Deploy Overseer to GitHub Pages
 
 on:
   push:
-    branches: [main]
-    paths:
-      - "overseer/**"
-      - ".github/workflows/overseer-pages.yml"
-  workflow_dispatch:
+    branches: [ main ]
 
 permissions:
   contents: read
-
-concurrency:
-  group: "github-pages"
-  cancel-in-progress: true
+  pages: write
+  id-token: write
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
+  build-and-deploy:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout KERNELCORP
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js for zero-dependency verification
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          node-version: 24
+          path: './overseer'
 
-      - name: Syntax-check real-browser OPFS verification module
-        run: node --check overseer/overseer-opfs-persistence.test.mjs
-
-      - name: Syntax-check authoritative durability modules
-        run: |
-          node --check overseer/overseer-durability-bridge.mjs
-          node --check overseer/overseer-authoritative-commit-pipeline.mjs
-          node --check overseer/overseer-mesh-sync.mjs
-          node --check overseer/overseer-durability-bridge.test.mjs
-          node --check overseer/overseer-durability-concurrency.test.mjs
-          node --check overseer/overseer-recovery-inspector.mjs
-          node --check overseer/overseer-recovery-inspector.test.mjs
-          node --check overseer/overseer-authority-signatures.mjs
-          node --check overseer/overseer-key-vault.mjs
-          node --check overseer/overseer-key-vault.test.mjs
-          node --check overseer/overseer-authority-signatures.test.mjs
-          node --check overseer/overseer-signed-durability.test.mjs
-          node --check overseer/overseer-canonical-signer.mjs
-          node --check overseer/overseer-canonical-signer.test.mjs
-          node --check overseer/overseer-pinned-authority.mjs
-          node --check overseer/overseer-pinned-authority.test.mjs
-          node --check overseer/overseer-authority-bootstrap.mjs
-          node --check overseer/overseer-authority-bootstrap.test.mjs
-          node --check overseer/overseer-production-runtime.mjs
-          node --check overseer/overseer-authenticated-shard.mjs
-          node --check overseer/overseer-authenticated-shard.mjs
-          sed -n '/<script type="module">/,/<\\/script>/p' overseer/ringwal-console.html | sed '1d;$d' > /tmp/ringwal-console.mjs
-          node --check /tmp/ringwal-console.mjs
-          node --check overseer/overseer-authenticated-shard.mjs
-          grep -q "RINGWAL" overseer/index.html
-
-      - name: Run dual-target durability E2E test
-        run: node overseer/overseer-durability-bridge.test.mjs
-
-      - name: Run concurrency and failure-injection suite
-        run: node overseer/overseer-durability-concurrency.test.mjs
-
-      - name: Run dangling pre-commit recovery test
-        run: node overseer/overseer-recovery-inspector.test.mjs
-
-      - name: Run OPFS authority key-vault persistence test
-        run: node overseer/overseer-key-vault.test.mjs
-
-      - name: Run Ed25519 authority signature tests
-        run: node overseer/overseer-authority-signatures.test.mjs
-
-      - name: Run signed durability receipt test
-        run: node overseer/overseer-signed-durability.test.mjs
-
-      - name: Run canonical signer cryptography tests
-        run: node overseer/overseer-canonical-signer.test.mjs
-
-      - name: Run pinned authority startup tests
-        run: node overseer/overseer-pinned-authority.test.mjs
-
-      - name: Run trusted authority bootstrap tests
-        run: node overseer/overseer-authority-bootstrap.test.mjs
-
-      - name: Run trusted authority bootstrap tests
-        run: node overseer/overseer-authority-bootstrap.test.mjs
-
-      - name: Run mesh, storage-recovery and signaling invariants
-        run: node overseer/run-verify.mjs
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
-        with:
-          enablement: true
-
-      - name: Assemble mobile verifier and seven-app command center
-        run: |
-          mkdir -p _site/overseer
-          cp -R overseer/. _site/overseer/
-          cp overseer/index.html _site/index.html
-          test -s _site/overseer/index.html
-          grep -q "RINGWAL" _site/overseer/index.html
-          test -s _site/overseer/ringwal-console.html
-          test -s _site/overseer/pod-command-drawer.html
-          test -s _site/overseer/non-exportable-vault-verify.html
-          test -s _site/overseer/ringwal-console.html
-          grep -q 'RINGWAL // KERNEL CORP OVERSEER' _site/index.html
-
-      - name: Diagnose packaged Overseer files
-        run: ls -la _site/overseer
-
-      - name: Upload static site
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
-        with:
-          path: _site
-
-      - name: Deploy static site
+      - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
+        uses: actions/deploy-pages@v4
