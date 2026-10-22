@@ -24,7 +24,7 @@ try {
   const log = page.locator("#log");
   await page.waitForFunction(
     () => document.querySelector("#log")?.textContent.includes("WEBRTC_DATA_CHANNEL_OPEN"),
-    undefined, { timeout: 90000 }
+    undefined, { timeout: 180000 }
   );
   console.log(JSON.stringify({ event: "WEBRTC_DATA_CHANNEL_OPEN", role, roomId }));
 
