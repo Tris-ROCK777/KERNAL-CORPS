@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KERNEL CORP. — Authenticated Shard Acceptance Test</title>
+<style>
+body{font:16px system-ui,sans-serif;max-width:760px;margin:1.5rem auto;padding:0 1rem;line-height:1.5}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f4f6;padding:1rem;border-radius:8px}
+button{font:inherit;padding:.75rem 1rem}
+</style>
+</head>
+<body>
+<h1>Overseer authenticated shard acceptance</h1>
+<p>This is an isolated browser test. It creates a temporary test authority key, signs a 32 KiB test shard, verifies the signature before OPFS write, and checks the stored bytes by reading them back. It does not enroll or replace the production authority key.</p>
+<p><strong>Security boundary:</strong> the test's public key is generated locally only to test the code path. Production use requires a separately provisioned, independently pinned authority public key.</p>
+<button id="run">Run authenticated-storage tests</button>
+<pre id="log">READY</pre>
+<script type="module">
+const button = document.querySelector("#run");
+const logBox = document.querySelector("#log");
+const log = (name, data) => { logBox.textContent += "\n" + name + (data ? " " + JSON.stringify(data) : ""); };
+const hex = bytes => Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2,"0")).join("");
+const digest = async bytes => hex(await crypto.subtle.digest("SHA-256", bytes));
+button.addEventListener("click", async () => {
+  button.disabled = true;
+  logBox.textContent = "RUNNING";
+  let testDirName = null;
+  try {
+    if (!crypto?.subtle || !navigator.storage?.getDirectory) throw new Error("REQUIRED_BROWSER_APIS_UNAVAILABLE");
+    const { acceptAuthenticatedShard } = await import("./overseer-authenticated-shard.mjs");
+    const pair = await crypto.subtle.generateKey({name:"Ed25519"}, true, ["sign","verify"]);
+    const rawPublic = new Uint8Array(await crypto.subtle.exportKey("raw", pair.publicKey));
+    const publicHex = hex(rawPublic);
+    const bytes = new Uint8Array(32 * 1024);
+    for (let i = 0; i < bytes.length; i++) bytes[i] = (i * 31 + 17) & 255;
+    const shardHash = await digest(bytes);
+    const signedMessage = new TextEncoder().encode(`KERNEL_SHARD_V1\n${shardHash}\n${bytes.byteLength}\nKernelVision`);
+    const signatureHex = hex(await crypto.subtle.sign("Ed25519", pair.privateKey, signedMessage));
+    const root = await navigator.storage.getDirectory();
+    testDirName = "authenticated-shard-test-" + crypto.randomUUID().replaceAll("-","");
+    // Supply an isolated OPFS root adapter so this test never writes into the real shard store.
+    const isolatedStorage = { getDirectory: async () => {
+      const dir = await root.getDirectoryHandle(testDirName, {create:true});
+      return dir;
+    }};
+    const result = await acceptAuthenticatedShard({
+      bytes, signatureHex, publicKey:pair.publicKey,
+      pinnedPublicKeyHex:publicHex, signerPublicKeyHex:publicHex,
+      podId:"KernelVision", storage:isolatedStorage
+    });
+    log("VALID_SIGNATURE_STORED_AND_READ_BACK", result);
+    if (result.status !== "AUTHENTICATED_SHARD_STORED" || result.byteLength !== bytes.byteLength ||
+        result.sha256 !== shardHash || !result.signatureVerified || !result.readBackVerified) {
+      throw new Error("VALID_SHARD_ACCEPTANCE_ASSERTION_FAILED");
+    }
+    log("PASS: valid signature + authority pin + OPFS read-back");
+    const tampered = bytes.slice();
+    tampered[0] ^= 0xff;
+    let rejected = false;
+    try {
+      await acceptAuthenticatedShard({
+        bytes:tampered, signatureHex, publicKey:pair.publicKey,
+        pinnedPublicKeyHex:publicHex, signerPublicKeyHex:publicHex,
+        podId:"KernelVision", storage:isolatedStorage
+      });
+    } catch (error) {
+      rejected = String(error?.message || error) === "SHARD_SIGNATURE_INVALID";
+      log("TAMPER_REJECTION", {error:String(error?.message || error)});
+    }
+    if (!rejected) throw new Error("TAMPERED_SHARD_WAS_NOT_REJECTED");
+    log("PASS: tampered shard rejected before storage");
+    let pinRejected = false;
+    try {
+      await acceptAuthenticatedShard({
+        bytes, signatureHex, publicKey:pair.publicKey,
+        pinnedPublicKeyHex:"0".repeat(64), signerPublicKeyHex:publicHex,
+        podId:"KernelVision", storage:isolatedStorage
+      });
+    } catch (error) {
+      pinRejected = String(error?.message || error) === "AUTHORITY_PUBLIC_KEY_PIN_MISMATCH";
+      log("WRONG_PIN_REJECTION", {error:String(error?.message || error)});
+    }
+    if (!pinRejected) throw new Error("WRONG_AUTHORITY_PIN_WAS_NOT_REJECTED");
+    log("ALL_AUTHENTICATED_SHARD_TESTS_PASSED");
+  } catch (error) {
+    log("TEST_FAILED", {error:String(error?.stack || error)});
+  } finally {
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
