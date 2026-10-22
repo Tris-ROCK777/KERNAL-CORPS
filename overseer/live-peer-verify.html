@@ -38,8 +38,8 @@
   </section>
   <script type="module">
     import mqtt from "https://unpkg.com/mqtt@5.10.4/dist/mqtt.esm.js";
-    import { createMqttSignaling } from "./overseer-signaling-bootstrap.mjs?v=20261022-binary96k";
-    import { createRealPeerNode } from "./overseer-real-peer.mjs?v=20261022-binary96k";
+    import { createMqttSignaling } from "./overseer-signaling-bootstrap.mjs?v=20261022-binary96k-chunked";
+    import { createRealPeerNode } from "./overseer-real-peer.mjs?v=20261022-binary96k-chunked";
 
     const $ = id => document.getElementById(id);
     const logBox = $("log");
@@ -108,22 +108,46 @@
                   const packet = JSON.parse(event.data);
                   if (packet.kind !== "KERNEL_TEST_SHARD_HEADER" ||
                       !Number.isSafeInteger(packet.byteLength) || packet.byteLength < 1 ||
-                      packet.byteLength > 1024 * 1024 || !/^[a-f0-9]{64}$/.test(packet.sha256 || "")) return;
-                  expectedBinaryTransfer = packet;
-                  log("BINARY_SHARD_HEADER_RECEIVED", {byteLength: packet.byteLength, sha256: packet.sha256});
+                      packet.byteLength > 1024 * 1024 ||
+                      packet.chunkSize !== 32 * 1024 ||
+                      packet.totalChunks !== Math.ceil(packet.byteLength / packet.chunkSize) ||
+                      !/^[a-f0-9]{64}$/.test(packet.sha256 || "")) return;
+                  expectedBinaryTransfer = { ...packet, chunks: [], receivedBytes: 0 };
+                  log("BINARY_SHARD_HEADER_RECEIVED", {
+                    byteLength: packet.byteLength, chunkSize: packet.chunkSize, totalChunks: packet.totalChunks,
+                    sha256: packet.sha256
+                  });
                   return;
                 }
                 if (!(event.data instanceof ArrayBuffer) || !expectedBinaryTransfer) return;
-                const packet = expectedBinaryTransfer;
-                expectedBinaryTransfer = null;
+                const transfer = expectedBinaryTransfer;
                 const bytes = new Uint8Array(event.data);
-                const actualHash = await digest(bytes);
-                const passed = bytes.byteLength === packet.byteLength && actualHash === packet.sha256;
-                log(passed ? "PASS: BINARY_LENGTH_AND_SHA256_ONLY (NO SIGNATURE OR STORAGE)" : "FAIL: BYTE_INTEGRITY_MISMATCH", {
-                  transport: "RTCDataChannel binary ArrayBuffer", receivedBytes: bytes.byteLength,
-                  expectedBytes: packet.byteLength, expectedSha256: packet.sha256, actualSha256: actualHash
+                const index = transfer.chunks.length;
+                const expectedChunkLength = Math.min(transfer.chunkSize, transfer.byteLength - transfer.receivedBytes);
+                if (index >= transfer.totalChunks || bytes.byteLength !== expectedChunkLength) {
+                  expectedBinaryTransfer = null;
+                  log("FAIL: BINARY_CHUNK_BOUNDS", {index, receivedBytes: bytes.byteLength, expectedChunkBytes: expectedChunkLength});
+                  return;
+                }
+                transfer.chunks.push(bytes);
+                transfer.receivedBytes += bytes.byteLength;
+                if (transfer.chunks.length !== transfer.totalChunks) {
+                  log("BINARY_CHUNK_RECEIVED", {index, chunkBytes: bytes.byteLength, totalReceived: transfer.receivedBytes});
+                  return;
+                }
+                expectedBinaryTransfer = null;
+                if (transfer.receivedBytes !== transfer.byteLength) throw new Error("BINARY_TRANSFER_LENGTH_MISMATCH");
+                const combined = new Uint8Array(transfer.byteLength);
+                let offset = 0;
+                for (const chunk of transfer.chunks) { combined.set(chunk, offset); offset += chunk.byteLength; }
+                const actualHash = await digest(combined);
+                const passed = combined.byteLength === transfer.byteLength && actualHash === transfer.sha256;
+                log(passed ? "PASS: CHUNKED_BINARY_LENGTH_AND_SHA256_ONLY (NO SIGNATURE OR STORAGE)" : "FAIL: BYTE_INTEGRITY_MISMATCH", {
+                  transport: "RTCDataChannel binary ArrayBuffer chunks", receivedBytes: combined.byteLength,
+                  expectedBytes: transfer.byteLength, totalChunks: transfer.totalChunks,
+                  expectedSha256: transfer.sha256, actualSha256: actualHash
                 });
-              } catch (error) { log("Received message parse failed", { error: String(error) }); }
+              } catch (error) { expectedBinaryTransfer = null; log("Received message parse failed", { error: String(error) }); }
             });
           },
           detachPeerChannel() {}
@@ -154,10 +178,16 @@
       sendButton.disabled = true;
       try {
         const bytes = testBytes;
-        const packet = { kind: "KERNEL_TEST_SHARD_HEADER", byteLength: bytes.byteLength, sha256: await digest(bytes) };
+        const chunkSize = 32 * 1024;
+        const totalChunks = Math.ceil(bytes.byteLength / chunkSize);
+        const packet = { kind: "KERNEL_TEST_SHARD_HEADER", byteLength: bytes.byteLength, chunkSize, totalChunks, sha256: await digest(bytes) };
         channel.send(JSON.stringify(packet));
-        channel.send(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
-        log("TEST_SHARD_SENT_AS_BINARY", { transport: "RTCDataChannel binary ArrayBuffer", byteLength: bytes.byteLength, sha256: packet.sha256 });
+        for (let offset = 0, index = 0; offset < bytes.byteLength; offset += chunkSize, index++) {
+          const chunk = bytes.subarray(offset, Math.min(offset + chunkSize, bytes.byteLength));
+          channel.send(chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength));
+          log("TEST_BINARY_CHUNK_SENT", { index, chunkBytes: chunk.byteLength, totalChunks });
+        }
+        log("TEST_SHARD_SENT_AS_CHUNKED_BINARY", { transport: "RTCDataChannel 32 KiB ArrayBuffer chunks", byteLength: bytes.byteLength, totalChunks, sha256: packet.sha256 });
       } catch (error) { log("SEND_FAILED", { error: String(error) }); }
       finally { if (!closed) sendButton.disabled = false; }
     });
