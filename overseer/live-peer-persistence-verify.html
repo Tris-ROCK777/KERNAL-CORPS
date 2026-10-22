@@ -85,8 +85,10 @@
         authenticatedStoragePath: authenticated.storagePath, opfsReadBackVerified: true,
         ringWalCommit: "HOTSWAP_COMMIT"
       });
-      params.set("phase", "recover");
-      location.replace(location.pathname + "?" + params.toString());
+      if (params.get("hold") !== "1") {
+        params.set("phase", "recover");
+        location.replace(location.pathname + "?" + params.toString());
+      }
     }
 
     async function recoverPhase() {
