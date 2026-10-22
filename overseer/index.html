@@ -119,13 +119,27 @@ window.addEventListener("overseer:authenticated-shard",e=>renderReceipt(e.detail
 window.addEventListener("overseer:node-status",e=>{const d=e.detail||{};livePeerHealth.set(String(d.peerId||"NODE"),d.state||"connecting");if(["open","connected"].includes(d.state))$("connection").textContent="PEER "+(d.peerId||"NODE")+" CONNECTED";else if(["closed","failed","disconnected"].includes(d.state))$("connection").textContent="PEER "+(d.peerId||"NODE")+" "+d.state.toUpperCase();$("livePeers").textContent=String(state.mesh?.peers?.size||0)+" CONNECTED";$("hudLivePeers").textContent=String(state.mesh?.peers?.size||0)});
 function resize(){state.dpr=Math.min(devicePixelRatio||1,2);state.w=innerWidth;state.h=innerHeight;canvas.width=Math.floor(state.w*state.dpr);canvas.height=Math.floor(state.h*state.dpr);canvas.style.width=state.w+"px";canvas.style.height=state.h+"px";ctx.setTransform(state.dpr,0,0,state.dpr,0,0)}
 addEventListener("resize",resize);resize();
-const neuralNodes=Array.from({length:330},(_,i)=>{
-  const cols=22,rows=15,layer=Math.floor(i/(cols*rows)),local=i%(cols*rows),gx=local%cols,gy=Math.floor(local/cols);
-  const u=gx/(cols-1)*2-1,v=gy/(rows-1)*2-1;
-  const x=u*1.08+Math.sin(i*12.9898)*.018,y=v*.84+Math.cos(i*7.13)*.018;
-  const wave=Math.sin(u*5.2+layer*.9)*.105+Math.cos(v*6.1-layer*.65)*.08;
-  return{x,y,z:wave+(layer-1)*.27+Math.sin(i*1.71)*.035,u,v,layer,phase:(i*2.3999632297)%6.283,size:.55+(i%5)*.22};
+// Organic, connected strands with depth variation. Each node has a small fixed
+// neighbor set so the animation stays light enough for mobile Safari.
+const neuralNodes=Array.from({length:210},(_,i)=>{
+  const strand=i%14,step=Math.floor(i/14),t=step/14;
+  const phase=strand*2.3999632297,spread=.18+(strand%5)*.115;
+  const angle=phase+t*2.1+Math.sin(t*5+phase)*.24;
+  const x=Math.cos(angle)*spread + (t-.5)*.58 + Math.sin(t*8+phase)*.09;
+  const y=Math.sin(angle)*spread*.72 + Math.sin(t*5.2+phase)*.17;
+  const z=Math.cos(t*6+phase)*.34 + Math.sin(t*9+phase)*.09;
+  return{x,y,z,strand,step,t,phase,size:.6+(i%5)*.18};
 });
+const strandEdges=[];
+for(let i=0;i<neuralNodes.length;i++){
+  const n=neuralNodes[i];
+  if(n.step<14)strandEdges.push([i,i+14]);
+  for(let offset of [-1,1]){
+    const next=n.strand+offset;
+    if(next>=0&&next<14)strandEdges.push([i,n.step*14+next]);
+  }
+}
+const binaryStreams=Array.from({length:8},(_,i)=>({strand:i*2,offset:i*.79,speed:.055+(i%3)*.018,gold:i===2||i===6}));
 function project(x,y,z=0){
   const yaw=state.yaw*.22,pitch=state.pitch*.22,c=Math.cos(yaw),s=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
   const xx=x*c-z*s,zz=x*s+z*c,yy=y*cp-zz*sp,perspective=1.12/(1.12+zz*.18),scale=Math.min(state.w,state.h)*.7*perspective;
@@ -135,55 +149,71 @@ function nodePos(i){const n=neuralNodes[(i*11)%neuralNodes.length];return projec
 function draw(){
   const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches,now=performance.now()*.00022,cx=state.w*.5,cy=state.h*.49,min=Math.min(state.w,state.h);
   ctx.fillStyle="#02040a";ctx.fillRect(0,0,state.w,state.h);
-  const bg=ctx.createRadialGradient(cx,cy*.94,0,cx,cy,min*.82);
-  bg.addColorStop(0,"rgba(8,23,48,.48)");bg.addColorStop(.48,"rgba(4,12,27,.24)");bg.addColorStop(1,"rgba(1,3,8,0)");
+  const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,min*.9);
+  bg.addColorStop(0,"rgba(8,24,53,.42)");bg.addColorStop(.58,"rgba(4,10,24,.2)");bg.addColorStop(1,"rgba(1,3,8,0)");
   ctx.fillStyle=bg;ctx.fillRect(0,0,state.w,state.h);
-  const ps=neuralNodes.map(n=>project(n.x+Math.sin(now*2+n.u*2.7+n.phase)*.012,n.y+Math.sin(now*2+n.u*2.7+n.phase)*.012,n.z+Math.sin(now*1.4+n.v*3+n.phase)*.025));
-  ctx.lineWidth=.65;
-  for(let i=0;i<ps.length;i++){
+  const motion=reduceMotion?0:now;
+  const ps=neuralNodes.map(n=>{
+    const sway=Math.sin(motion*2.2+n.t*5+n.phase)*.035;
+    return project(n.x+Math.sin(motion*1.5+n.phase)*.035,n.y+sway,n.z+Math.cos(motion*1.7+n.t*6+n.phase)*.045);
+  });
+  // Draw actual curved strand connections, then sparse cross-links for depth.
+  ctx.lineCap="round";
+  for(const [ai,bi] of strandEdges){
+    const a=ps[ai],b=ps[bi],n=neuralNodes[ai],d=Math.hypot(a.x-b.x,a.y-b.y);
+    ctx.beginPath();ctx.moveTo(a.x,a.y);
+    const mx=(a.x+b.x)/2+Math.sin(n.phase+motion)*d*.14;
+    const my=(a.y+b.y)/2+Math.cos(n.phase+motion)*d*.12;
+    ctx.quadraticCurveTo(mx,my,b.x,b.y);
+    ctx.strokeStyle=n.step%4===0?"rgba(102,171,255,.34)":"rgba(65,126,219,.19)";
+    ctx.lineWidth=n.step%4===0?1.05:.65;ctx.stroke();
+  }
+  for(let i=0;i<neuralNodes.length;i+=3){
     const a=ps[i],n=neuralNodes[i];
-    for(let j=i+1;j<ps.length;j++){
-      const b=ps[j],m=neuralNodes[j];if(Math.abs(n.layer-m.layer)>1)continue;
-      const d=Math.hypot(a.x-b.x,a.y-b.y),limit=min*(n.layer===m.layer ? .105 : .072);
-      if(d<limit){const alpha=(1-d/limit)*(n.layer===m.layer ? .24 : .12);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=n.layer===m.layer?"rgba(62,139,255,"+alpha+")":"rgba(132,157,255,"+(alpha*.8)+")";ctx.stroke()}
+    const j=((n.step+1)%15)*14+((n.strand+5)%14),b=ps[j];
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo((a.x+b.x)/2+Math.sin(n.phase)*12,(a.y+b.y)/2+Math.cos(n.phase)*15,b.x,b.y);
+    ctx.strokeStyle="rgba(115,146,255,.095)";ctx.lineWidth=.6;ctx.stroke();
+  }
+  // Binary glyphs travel along the same curved mesh strands—not separate horizontal ribbons.
+  ctx.font="9px ui-monospace,SFMono-Regular,monospace";ctx.textAlign="center";
+  for(const stream of binaryStreams){
+    const strand=stream.strand;
+    for(let glyph=0;glyph<18;glyph++){
+      const progress=((glyph/18)+(reduceMotion?0:motion*stream.speed)+stream.offset)%1;
+      const stepFloat=progress*14,step=Math.min(13,Math.floor(stepFloat)),frac=stepFloat-step;
+      const ia=step*14+strand,ib=(step+1)*14+strand;
+      const a=ps[ia],b=ps[ib];if(!a||!b)continue;
+      const x=a.x+(b.x-a.x)*frac,y=a.y+(b.y-a.y)*frac;
+      if(x<-20||x>state.w+20||y<-20||y>state.h+20)continue;
+      ctx.fillStyle=stream.gold?"rgba(231,193,133,.78)":"rgba(143,205,255,.82)";
+      ctx.shadowBlur=stream.gold?7:9;ctx.shadowColor=stream.gold?"rgba(219,169,102,.6)":"rgba(76,156,255,.65)";
+      ctx.fillText((glyph+Math.floor(progress*14)+strand)%2?"1":"0",x,y);
     }
   }
-  // Binary ribbons curve through the same mesh layers.
-  for(let band=0;band<5;band++){
-    const phase=(reduceMotion ? 0 : now*(band%2 ? .45 : .7)+band*.83),y0=state.h*(.38+band*.105),amp=min*(.035+band*.006),x0=-state.w*.08,x1=state.w*1.08;
-    const yAt=t=>y0+Math.sin(t*7.4+phase)*amp+Math.sin(t*15.5-phase*.7)*amp*.25;
-    ctx.beginPath();for(let step=0;step<=60;step++){const t=step/60,x=x0+(x1-x0)*t,y=yAt(t);if(step===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}
-    ctx.strokeStyle=band%3===0?"rgba(255,190,119,.34)":"rgba(77,159,255,.22)";ctx.lineWidth=band%3===0?1.15:.8;ctx.stroke();
-    const count=Math.max(20,Math.floor(state.w/8));ctx.font="8px ui-monospace,monospace";ctx.textAlign="center";
-    for(let k=0;k<count;k++){const t=((k/count+(reduceMotion ? 0 : phase*.035))%1),x=x0+(x1-x0)*t,y=yAt(t);if(y<0||y>state.h)continue;ctx.fillStyle=band%3===0?"rgba(255,198,135,.72)":"rgba(112,183,255,.57)";ctx.fillText(((k+band+Math.floor(phase*10))%2)?"1":"0",x,y)}
-  }
-  for(let k=0;k<neuralNodes.length;k+=5){
-    const n=neuralNodes[k],a=ps[k],b=ps[(k+17+n.layer*7)%ps.length],t=reduceMotion ? .5 : (now*.9+n.phase)%1,px=a.x+(b.x-a.x)*t,py=a.y+(b.y-a.y)*t;
-    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle="rgba(91,166,255,.13)";ctx.stroke();
-    const glow=ctx.createRadialGradient(px,py,0,px,py,7);glow.addColorStop(0,"rgba(188,222,255,.82)");glow.addColorStop(1,"rgba(65,142,255,0)");ctx.fillStyle=glow;ctx.fillRect(px-7,py-7,14,14);
-    ctx.beginPath();ctx.arc(px,py,1.15,0,Math.PI*2);ctx.fillStyle="#c7e5ff";ctx.fill();
-  }
+  ctx.shadowBlur=0;
   for(let i=0;i<ps.length;i++){
-    const p=ps[i],n=neuralNodes[i],pulse=reduceMotion ? .5 : .5+.5*Math.sin(now*4+n.phase),important=i<24,slot=i%24,dead=important&&state.dead.has(slot),r=(important?1.9:.65+n.size*.36)+pulse*(important?1:.35);
-    if(!dead){ctx.beginPath();ctx.arc(p.x,p.y,r*3.2,0,Math.PI*2);ctx.fillStyle="rgba(62,143,255,"+(important ? .07 : .025)+")";ctx.fill()}
-    ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=dead?"rgba(133,157,191,.045)":important?"rgba(157,204,255,.62)":(i%11===0?"rgba(211,201,255,.74)":"rgba(101,168,255,"+(.18+pulse*.25)+")");ctx.fill();
-    if(important){ctx.beginPath();ctx.arc(p.x,p.y,4+pulse*1.5,0,Math.PI*2);ctx.strokeStyle=i===state.selected?"rgba(226,239,255,.88)":"rgba(122,177,255,.16)";ctx.stroke()}
+    const p=ps[i],n=neuralNodes[i],pulse=reduceMotion?.5:.5+.5*Math.sin(motion*4+n.phase),important=i<24,slot=i%24,dead=important&&state.dead.has(slot),r=(important?1.7:.55+n.size*.25)+pulse*(important?1:.25);
+    if(!dead){ctx.beginPath();ctx.arc(p.x,p.y,r*3,0,Math.PI*2);ctx.fillStyle="rgba(62,143,255,"+(important?.075:.025)+")";ctx.fill()}
+    ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);
+    ctx.fillStyle=dead?"rgba(133,157,191,.045)":important?"rgba(174,215,255,.78)":(i%13===0?"rgba(220,216,255,.86)":"rgba(101,168,255,"+(.2+pulse*.28)+")");ctx.fill();
+    if(important){ctx.beginPath();ctx.arc(p.x,p.y,4+pulse,0,Math.PI*2);ctx.strokeStyle=i===state.selected?"rgba(226,239,255,.9)":"rgba(122,177,255,.19)";ctx.stroke()}
   }
   const liveEntries=[...(state.mesh?.peers?.entries?.()||[])];
   liveEntries.forEach(([id,peer],idx)=>{
-    const angle=idx*2.3999632297+now*.08,radius=.25+(idx%4)*.11,p=project(Math.cos(angle)*radius,Math.sin(angle)*radius,Math.sin(idx*1.4)*.18);
-    const raw=livePeerHealth.get(String(id))||peer?.readyState||peer?.channel?.readyState||"connected",unhealthy=["failed","disconnected","closing","closed","error"].includes(String(raw).toLowerCase()),col=unhealthy?colors.degraded:colors.healthy,pulse=reduceMotion ? .5 : .5+.5*Math.sin(now*5+idx);
-    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(p.x,p.y);ctx.strokeStyle=unhealthy?"rgba(228,210,124,.42)":"rgba(131,186,255,.58)";ctx.lineWidth=1.1;ctx.stroke();
+    const angle=idx*2.3999632297+motion*.08,radius=.25+(idx%4)*.11,p=project(Math.cos(angle)*radius,Math.sin(angle)*radius,Math.sin(idx*1.4)*.18);
+    const raw=livePeerHealth.get(String(id))||peer?.readyState||peer?.channel?.readyState||"connected",unhealthy=["failed","disconnected","closing","closed","error"].includes(String(raw).toLowerCase()),col=unhealthy?colors.degraded:colors.healthy,pulse=reduceMotion?.5:.5+.5*Math.sin(motion*5+idx);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.quadraticCurveTo((cx+p.x)/2+Math.sin(motion+idx)*12,(cy+p.y)/2+Math.cos(motion+idx)*12,p.x,p.y);ctx.strokeStyle=unhealthy?"rgba(228,210,124,.42)":"rgba(131,186,255,.58)";ctx.lineWidth=1.1;ctx.stroke();
     ctx.beginPath();ctx.arc(p.x,p.y,7+pulse*2,0,Math.PI*2);ctx.fillStyle=unhealthy?"rgba(228,210,124,.13)":"rgba(131,186,255,.17)";ctx.fill();
     ctx.beginPath();ctx.arc(p.x,p.y,2.7+pulse,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
     ctx.font="8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=unhealthy?"rgba(228,210,124,.9)":"rgba(183,218,255,.95)";ctx.fillText(String(id).slice(0,12),p.x,p.y-11);
   });
-  const core=project(0,0,0),pulse=reduceMotion ? .5 : .5+.5*Math.sin(now*3.2);
+  const core=project(0,0,0),pulse=reduceMotion?.5:.5+.5*Math.sin(motion*3.2);
   ctx.beginPath();ctx.arc(core.x,core.y,20+pulse*4,0,Math.PI*2);ctx.strokeStyle="rgba(168,205,255,.24)";ctx.lineWidth=1;ctx.stroke();
   ctx.beginPath();ctx.arc(core.x,core.y,11+pulse*2,0,Math.PI*2);ctx.fillStyle="rgba(8,20,39,.94)";ctx.fill();ctx.strokeStyle="rgba(192,224,255,.82)";ctx.stroke();
   ctx.beginPath();ctx.arc(core.x,core.y,3.2,0,Math.PI*2);ctx.fillStyle="#e0f1ff";ctx.fill();
   ctx.font="8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="rgba(189,214,240,.72)";ctx.fillText("LOCAL AUTHORITY",core.x,core.y+31);
   requestAnimationFrame(draw);
+}
 }
 requestAnimationFrame(draw);
 updateLiveDisplay();setInterval(updateLiveDisplay,1000);
