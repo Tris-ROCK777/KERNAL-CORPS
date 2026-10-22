@@ -11,6 +11,7 @@ if (!roomId || !/^[A-Za-z0-9_-]{16,128}$/.test(roomId)) throw new Error("KERNEL_
 const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
 const page = await browser.newPage();
 const errors = [];
+let receivedTransferSha256 = null;
 page.on("pageerror", error => errors.push(String(error)));
 page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
 
@@ -50,11 +51,15 @@ try {
     );
     const receivedLog = await log.textContent();
     const passLine = receivedLog.split("\n").find(line => line.includes("PASS: CHUNKED_BINARY_LENGTH_AND_SHA256_ONLY"));
-    if (!passLine || !passLine.includes('"receivedBytes":98304') ||
-        !passLine.includes('"expectedBytes":98304') || !passLine.includes('"totalChunks":3')) {
+    const receiptStart = passLine?.indexOf('{"transport":') ?? -1;
+    const transferReceipt = receiptStart >= 0 ? JSON.parse(passLine.slice(receiptStart)) : null;
+    if (!transferReceipt || transferReceipt.receivedBytes !== 98304 ||
+        transferReceipt.expectedBytes !== 98304 || transferReceipt.totalChunks !== 3 ||
+        transferReceipt.expectedSha256 !== transferReceipt.actualSha256) {
       throw new Error("LIVE_PEER_RECEIPT_ASSERTION_FAILED: " + (passLine ?? "PASS line missing"));
     }
-    console.log(JSON.stringify({ event: "LIVE_PEER_PAYLOAD_RECEIVED_AND_SHA256_VERIFIED", bytes: 98304, chunks: 3, receipt: passLine }));
+    receivedTransferSha256 = transferReceipt.actualSha256;
+    console.log(JSON.stringify({ event: "LIVE_PEER_PAYLOAD_RECEIVED_AND_SHA256_VERIFIED", bytes: 98304, chunks: 3, sha256: receivedTransferSha256, receipt: passLine }));
   }
 
   if (role === "receiver") {
@@ -77,7 +82,9 @@ try {
     if (!receipt || receipt.authorityRestored !== true || receipt.authorityPinMatched !== true ||
         receipt.privateKeyExtractable !== false || receipt.manifestSignatureVerified !== true ||
         receipt.opfsReadBackVerified !== true || receipt.ringWalCommitRecovered !== true ||
-        receipt.signedShardRecovered !== true || receipt.byteLength < 1) {
+        receipt.signedShardRecovered !== true || receipt.sameTransferredPayloadRecovered !== true ||
+        receipt.sourceTransportHash !== receivedTransferSha256 || receipt.sha256 !== receivedTransferSha256 ||
+        receipt.byteLength !== 98304) {
       throw new Error("PERSISTENCE_RECOVERY_RECEIPT_ASSERTION_FAILED: " + (passLine ?? "PASS line missing"));
     }
     console.log(JSON.stringify({ event: "LIVE_PEER_AND_RESTART_RECOVERY_PASS", transportBytes: 98304, transportChunks: 3, persistence: receipt }));
