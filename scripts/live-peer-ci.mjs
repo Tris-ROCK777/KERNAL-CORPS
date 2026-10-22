@@ -57,6 +57,32 @@ try {
     console.log(JSON.stringify({ event: "LIVE_PEER_PAYLOAD_RECEIVED_AND_SHA256_VERIFIED", bytes: 98304, chunks: 3, receipt: passLine }));
   }
 
+  if (role === "receiver") {
+    const persistenceUrl = pageUrl.replace("live-peer-verify.html", "live-peer-persistence-verify.html");
+    await page.goto(persistenceUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.waitForFunction(
+      () => {
+        const output = document.querySelector("#log")?.textContent || "";
+        return output.includes("PERSISTENCE_RESTART_RECOVERY_PASS") ||
+          output.includes("PERSISTENCE_RESTART_RECOVERY_FAIL");
+      },
+      undefined, { timeout: 60000 }
+    );
+    const persistenceLog = await page.locator("#log").textContent();
+    const failureLine = persistenceLog.split("\\n").find(line => line.includes("PERSISTENCE_RESTART_RECOVERY_FAIL"));
+    if (failureLine) throw new Error("PERSISTENCE_RESTART_RECOVERY_FAILED: " + failureLine);
+    const passLine = persistenceLog.split("\\n").find(line => line.includes("PERSISTENCE_RESTART_RECOVERY_PASS"));
+    const passJson = passLine?.slice(passLine.indexOf("PERSISTENCE_RESTART_RECOVERY_PASS ") + "PERSISTENCE_RESTART_RECOVERY_PASS ".length);
+    const receipt = passJson ? JSON.parse(passJson) : null;
+    if (!receipt || receipt.authorityRestored !== true || receipt.authorityPinMatched !== true ||
+        receipt.privateKeyExtractable !== false || receipt.manifestSignatureVerified !== true ||
+        receipt.opfsReadBackVerified !== true || receipt.ringWalCommitRecovered !== true ||
+        receipt.signedShardRecovered !== true || receipt.byteLength < 1) {
+      throw new Error("PERSISTENCE_RECOVERY_RECEIPT_ASSERTION_FAILED: " + (passLine ?? "PASS line missing"));
+    }
+    console.log(JSON.stringify({ event: "LIVE_PEER_AND_RESTART_RECOVERY_PASS", transportBytes: 98304, transportChunks: 3, persistence: receipt }));
+  }
+
   if (errors.some(error => /CONNECT_FAILED|FAIL:|Uncaught|TypeError|ReferenceError/.test(error))) {
     throw new Error("LIVE_PEER_BROWSER_ERROR: " + errors.join(" | "));
   }
