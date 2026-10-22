@@ -44,6 +44,17 @@ export async function acceptAuthenticatedShard({
     throw new Error("AUTHORITY_PUBLIC_KEY_PIN_MISMATCH");
   }
 
+  // Bind the actual CryptoKey to the textual pin. Caller-supplied hex strings alone are not proof.
+  let actualPublicKeyHex;
+  try {
+    actualPublicKeyHex = toHex(await cryptoProvider.subtle.exportKey("raw", publicKey));
+  } catch {
+    throw new Error("AUTHORITY_PUBLIC_KEY_NOT_EXPORTABLE_FOR_PIN_CHECK");
+  }
+  if (actualPublicKeyHex.toLowerCase() !== pinnedPublicKeyHex.toLowerCase()) {
+    throw new Error("AUTHORITY_CRYPTO_KEY_PIN_MISMATCH");
+  }
+
   const digest = await sha256(bytes, cryptoProvider);
   const message = new TextEncoder().encode(
     `KERNEL_SHARD_V1\n${digest}\n${bytes.byteLength}\n${podId}`);
