@@ -98,6 +98,38 @@ const implicitProvision = new NonExportableAuthorityVault({
 await assert.rejects(() => implicitProvision.initOrRestore(),
   /EXPLICIT_FIRST_BOOT_PROVISIONING_REQUIRED/);
 
+
+const legacyPair = await webcrypto.subtle.generateKey({name:"Ed25519"}, true, ["sign", "verify"]);
+const legacyPrivateJwk = await webcrypto.subtle.exportKey("jwk", legacyPair.privateKey);
+const legacyPublicHex = Array.from(new Uint8Array(
+  await webcrypto.subtle.exportKey("raw", legacyPair.publicKey)),
+  byte => byte.toString(16).padStart(2, "0")).join("");
+const legacyRecord = {
+  schema: 1,
+  algorithm: "Ed25519",
+  publicKeyHex: legacyPublicHex,
+  privateJwk: legacyPrivateJwk
+};
+const migrationDb = makeIndexedDB();
+const migrating = new NonExportableAuthorityVault({
+  indexedDB: migrationDb, crypto: webcrypto, expectedPublicKeyHex: legacyPublicHex
+});
+const migration = await migrating.migrateExistingIdentity(legacyRecord);
+assert.equal(migration.status, "EXISTING_IDENTITY_MIGRATED");
+assert.equal(migration.publicKeyHex, legacyPublicHex);
+assert.equal(migrating.getStatus().privateKeyExtractable, false);
+const migrationRestore = new NonExportableAuthorityVault({
+  indexedDB: migrationDb, crypto: webcrypto, expectedPublicKeyHex: legacyPublicHex
+});
+await migrationRestore.initOrRestore();
+assert.equal(migrationRestore.getPublicKeyHex(), legacyPublicHex);
+assert.equal(migrationRestore.getStatus().restored, true);
+const wrongMigration = new NonExportableAuthorityVault({
+  indexedDB: makeIndexedDB(), crypto: webcrypto, expectedPublicKeyHex: "cd".repeat(32)
+});
+await assert.rejects(() => wrongMigration.migrateExistingIdentity(legacyRecord),
+  /LEGACY_AUTHORITY_PUBLIC_KEY_PIN_MISMATCH/);
+
 console.log(JSON.stringify({
   status: "NON_EXPORTABLE_AUTHORITY_VAULT_TESTS_PASSED",
   checks: [
