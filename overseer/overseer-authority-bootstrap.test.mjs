@@ -44,24 +44,24 @@ await assert.rejects(
   /PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT/
 );
 await assert.rejects(
-  () => provisionAuthorityIdentity({vaultOptions:{root}}),
+  () => provisionAuthorityIdentity({vaultOptions}),
   /EXPLICIT_FIRST_BOOT_PROVISIONING_REQUIRED/
 );
 
 const provisioned = await provisionAuthorityIdentity({
-  vaultOptions:{root},
+  vaultOptions,
   allowFirstBootProvisioning:true
 });
 assert.equal(provisioned.status, "NEW_IDENTITY_CREATED_REQUIRES_TRUSTED_PIN");
 const pin = provisioned.publicKeyHex;
 
-const restored = await initializeTrustedAuthority({publicKeyHex:pin, vaultOptions:{root}});
+const restored = await initializeTrustedAuthority({publicKeyHex:pin, vaultOptions});
 assert.equal(restored.status, "TRUSTED_NON_EXPORTABLE_AUTHORITY_INITIALIZED");
 assert.equal(restored.restored, true);
 assert.equal(restored.publicKeyHex, pin);
 
 await assert.rejects(
-  () => initializeTrustedAuthority({publicKeyHex:"cd".repeat(32), vaultOptions:{root}}),
+  () => initializeTrustedAuthority({publicKeyHex:"cd".repeat(32), vaultOptions}),
   /AUTHORITY_PUBLIC_KEY_PIN_MISMATCH|RESTORED_AUTHORITY_KEY_DOES_NOT_MATCH_PIN/
 );
 
