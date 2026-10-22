@@ -106,6 +106,10 @@
               try {
                 if (typeof event.data === "string") {
                   const packet = JSON.parse(event.data);
+                  if (packet.kind === "KERNEL_TEST_SHARD_ACK") {
+                    log("LIVE_PEER_RECEIPT_ACK", packet);
+                    return;
+                  }
                   if (packet.kind !== "KERNEL_TEST_SHARD_HEADER" ||
                       !Number.isSafeInteger(packet.byteLength) || packet.byteLength < 1 ||
                       packet.byteLength > 1024 * 1024 ||
@@ -147,6 +151,16 @@
                   expectedBytes: transfer.byteLength, totalChunks: transfer.totalChunks,
                   expectedSha256: transfer.sha256, actualSha256: actualHash
                 });
+                if (passed) {
+                  const acknowledgement = {
+                    kind: "KERNEL_TEST_SHARD_ACK",
+                    byteLength: combined.byteLength,
+                    totalChunks: transfer.totalChunks,
+                    sha256: actualHash
+                  };
+                  channel.send(JSON.stringify(acknowledgement));
+                  log("LIVE_PEER_RECEIPT_ACK_SENT", acknowledgement);
+                }
               } catch (error) { expectedBinaryTransfer = null; log("Received message parse failed", { error: String(error) }); }
             });
           },
