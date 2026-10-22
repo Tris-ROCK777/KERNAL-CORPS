@@ -86,7 +86,9 @@ button.addEventListener("click", async () => {
       () => call({pinnedPublicKeyHex:publicHexB}));
     await mustReject("signer key differs from pin", "AUTHORITY_PUBLIC_KEY_PIN_MISMATCH",
       () => call({signerPublicKeyHex:publicHexB}));
-    log("PASS: wrong authority-key pins rejected");
+    await mustReject("actual CryptoKey differs from textual pin", "AUTHORITY_CRYPTO_KEY_PIN_MISMATCH",
+      () => call({publicKey:keyB.publicKey}));
+    log("PASS: wrong authority-key pins and mismatched CryptoKey rejected");
 
     // 5. Simulate corrupted bytes on read-back and ensure the bad file is removed.
     const corruptRoot = await root.getDirectoryHandle(tempName + "-corrupt", {create:true});
