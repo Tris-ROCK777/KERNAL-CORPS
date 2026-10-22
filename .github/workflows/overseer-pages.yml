@@ -106,6 +106,9 @@ jobs:
           test -s _site/overseer/pod-command-drawer.html
           test -s _site/overseer/non-exportable-vault-verify.html
 
+      - name: Diagnose packaged Overseer files
+        run: ls -la _site/overseer
+
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
