@@ -25,7 +25,7 @@ button.addEventListener("click", async () => {
   button.disabled = true; out.textContent = "RUNNING";
   try {
     assert(!!crypto?.subtle && !!navigator.storage?.getDirectory, "WebCrypto and OPFS required");
-    const {acceptAuthenticatedShard} = await import("./overseer-authenticated-shard.mjs");
+    const {acceptAuthenticatedShard} = await import("./overseer-authenticated-shard.mjs?v=ef5bbac");
     const root = await navigator.storage.getDirectory();
     const tempName = "auth-shard-matrix-" + crypto.randomUUID().replaceAll("-","");
     const tempRoot = await root.getDirectoryHandle(tempName, {create:true});
