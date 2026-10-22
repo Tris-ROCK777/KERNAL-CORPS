@@ -32,10 +32,17 @@ try {
     await page.waitForFunction(() => !document.querySelector("#send")?.disabled, undefined, { timeout: 20000 });
     await page.locator("#send").click();
     await page.waitForFunction(
-      () => document.querySelector("#log")?.textContent.includes("TEST_SHARD_SENT_AS_CHUNKED_BINARY"),
-      undefined, { timeout: 15000 }
+      () => document.querySelector("#log")?.textContent.includes("LIVE_PEER_RECEIPT_ACK"),
+      undefined, { timeout: 60000 }
     );
-    console.log(JSON.stringify({ event: "LIVE_PEER_PAYLOAD_SENT", bytes: 98304, chunks: 3 }));
+    const senderLog = await log.textContent();
+    const ackLine = senderLog.split("\\n").find(line => line.includes("LIVE_PEER_RECEIPT_ACK "));
+    const ackJson = ackLine?.slice(ackLine.indexOf("LIVE_PEER_RECEIPT_ACK ") + "LIVE_PEER_RECEIPT_ACK ".length);
+    const ack = ackJson ? JSON.parse(ackJson) : null;
+    if (!ack || ack.byteLength !== 98304 || ack.totalChunks !== 3 || !/^[a-f0-9]{64}$/.test(ack.sha256 || "")) {
+      throw new Error("LIVE_PEER_RECEIPT_ACK_ASSERTION_FAILED: " + (ackLine ?? "ACK line missing"));
+    }
+    console.log(JSON.stringify({ event: "LIVE_PEER_PAYLOAD_SENT_AND_RECEIPT_ACKNOWLEDGED", bytes: ack.byteLength, chunks: ack.totalChunks, sha256: ack.sha256 }));
   } else {
     await page.waitForFunction(
       () => document.querySelector("#log")?.textContent.includes("PASS: CHUNKED_BINARY_LENGTH_AND_SHA256_ONLY"),
