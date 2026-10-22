@@ -59,7 +59,8 @@ jobs:
           node --check overseer/overseer-authority-bootstrap.test.mjs
           node --check overseer/overseer-production-runtime.mjs
           node --check overseer/overseer-authenticated-shard.mjs
-          node --check overseer/ringwal-console.html
+          sed -n '/<script type="module">/,/<\\/script>/p' overseer/ringwal-console.html | sed '1d;$d' > /tmp/ringwal-console.mjs
+          node --check /tmp/ringwal-console.mjs
           node --check overseer/overseer-authenticated-shard.mjs
           grep -q "RINGWAL" overseer/index.html
 
