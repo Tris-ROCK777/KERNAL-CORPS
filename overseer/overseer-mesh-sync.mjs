@@ -4,12 +4,12 @@
  */
 const CHUNK_SIZE = 32 * 1024;
 const HEADER_BYTES = 16;
-const MAX_PAYLOAD_BYTES = 1_048_576;
-const MAX_CHUNKS = 32;
+const MAX_PAYLOAD_BYTES = 3 * 1_048_576;
+const MAX_CHUNKS = 96;
 const MAX_BUFFERED_AMOUNT = 256 * 1024;
 const BACKPRESSURE_TIMEOUT_MS = 5_000;
 const TRANSFER_TTL_MS = 15_000;
-const MAX_INBOUND_TRANSFERS = 8;
+const MAX_INBOUND_TRANSFERS = 2;
 import { isSupportedPodId } from "./overseer-pod-identifiers.mjs";
 import { acceptAuthenticatedShard } from "./overseer-authenticated-shard.mjs";
 
