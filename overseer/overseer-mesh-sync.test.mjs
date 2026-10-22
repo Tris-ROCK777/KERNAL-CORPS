@@ -247,7 +247,7 @@ export async function runOverseerMeshVerification() {
     assert(!tamperedShardExists,
       "TEST_3_FAILED: signature-invalid peer payload was persisted to OPFS");
     const wal = await (await f.receiverEngine.root.getFileHandle("ring-wal.jsonl")).getFile();
-    const rows = (await wal.text()).split("\\n").filter(Boolean).map(line => JSON.parse(line));
+    const rows = (await wal.text()).split("\n").filter(Boolean).map(line => JSON.parse(line));
     assert(!rows.some(row => row.op === "HOTSWAP_COMMIT" && row.hash === badHash),
       "TEST_3_FAILED: signature-invalid peer payload received a HOTSWAP_COMMIT");
     assert(rows.filter(row => row.op === "HOTSWAP_COMMIT").length === 1,
