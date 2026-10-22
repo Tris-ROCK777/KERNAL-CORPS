@@ -57,8 +57,7 @@ jobs:
           node --check overseer/overseer-pinned-authority.test.mjs
           node --check overseer/overseer-authority-bootstrap.mjs
           node --check overseer/overseer-authority-bootstrap.test.mjs
-          node --check overseer/overseer-authority-bootstrap.mjs
-          node --check overseer/overseer-authority-bootstrap.test.mjs
+          node --check overseer/overseer-production-runtime.mjs
 
       - name: Run dual-target durability E2E test
         run: node overseer/overseer-durability-bridge.test.mjs
@@ -103,7 +102,6 @@ jobs:
           mkdir -p _site/overseer
           cp -R overseer/. _site/overseer/
           cp overseer/verify.html _site/overseer/index.html
-          cp overseer/verify.html _site/index.html
           cp overseer/verify.html _site/index.html
           test -s _site/overseer/pod-command-drawer.html
           test -s _site/overseer/non-exportable-vault-verify.html
