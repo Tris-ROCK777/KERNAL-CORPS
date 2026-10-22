@@ -37,28 +37,37 @@ function openDatabase(indexedDBProvider, databaseName) {
 
 async function withStore(db, mode, operation) {
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, mode);
-    const store = transaction.objectStore(STORE_NAME);
+    let transaction;
     let request;
-    try { request = operation(store); }
-    catch (error) { reject(error); return; }
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(new Error("AUTHORITY_IDB_OPERATION_FAILED"));
-    transaction.onabort = () => reject(new Error("AUTHORITY_IDB_TRANSACTION_ABORTED"));
+    try {
+      transaction = db.transaction(STORE_NAME, mode);
+      request = operation(transaction.objectStore(STORE_NAME));
+    } catch (error) {
+      reject(error);
+      return;
+    }
+
     let result;
+    let requestSucceeded = false;
     let settled = false;
     const fail = error => {
       if (settled) return;
       settled = true;
       reject(error);
     };
-    try { request = operation(store); }
-    catch (error) { fail(error); return; }
-    request.onsuccess = () => { result = request.result; };
+
+    request.onsuccess = () => {
+      result = request.result;
+      requestSucceeded = true;
+    };
     request.onerror = () => fail(new Error("AUTHORITY_IDB_OPERATION_FAILED"));
     transaction.oncomplete = () => {
       if (settled) return;
       settled = true;
+      if (!requestSucceeded) {
+        reject(new Error("AUTHORITY_IDB_OPERATION_DID_NOT_COMPLETE"));
+        return;
+      }
       resolve(result);
     };
     transaction.onerror = () => fail(new Error("AUTHORITY_IDB_TRANSACTION_FAILED"));
