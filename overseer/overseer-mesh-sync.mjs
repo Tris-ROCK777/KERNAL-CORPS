@@ -13,7 +13,7 @@ const MAX_INBOUND_TRANSFERS = 8;
 import { isSupportedPodId } from "./overseer-pod-identifiers.mjs";
 
 export class OverseerMeshReplicator {
-  constructor(hotSwapEngine, authorityPublicKey) {
+  constructor(hotSwapEngine, authorityPublicKey, { authenticateInboundShard = null, signShardManifest = null } = {}) {
     if (!hotSwapEngine) throw new Error("MISSING_ENGINE");
     if (!hotSwapEngine.publicKey) throw new Error("MISSING_PINNED_ENGINE_AUTHORITY_KEY");
     if (!authorityPublicKey || authorityPublicKey !== hotSwapEngine.publicKey) {
@@ -23,6 +23,8 @@ export class OverseerMeshReplicator {
     // Durability is installed once by OverseerAuthoritativeCommitPipeline before peers attach.
     // Keep one trust root: outbound verification and inbound installation must agree.
     this.authorityPublicKey = hotSwapEngine.publicKey;
+    this.authenticateInboundShard = authenticateInboundShard;
+    this.signShardManifest = signShardManifest;
     this.peers = new Map();
     this.inboundBuffers = new Map();
     this.seenTransferIds = new Map();
@@ -162,6 +164,8 @@ export class OverseerMeshReplicator {
     }
     const hashFn = this.engine.sha256 || this.engine.computeSHA256;
     if (typeof hashFn !== "function" || (await hashFn.call(this.engine, codeString)).toLowerCase() !== hash.toLowerCase()) throw new Error("OUTBOUND_HASH_MISMATCH");
+    const shardSignature = this.signShardManifest ? await this.signShardManifest({bytes, podId, hash}) : null;
+    if (this.authenticateInboundShard && !shardSignature) throw new Error("AUTHENTICATED_SHARD_SIGNATURE_REQUIRED");
     const totalChunks = Math.ceil(bytes.byteLength / CHUNK_SIZE);
     if (totalChunks > MAX_CHUNKS) throw new Error("CHUNK_COUNT_LIMIT");
     const results = [];
@@ -170,7 +174,7 @@ export class OverseerMeshReplicator {
       if (channel.readyState !== "open") continue;
       const transferId = this.generateTransferId();
       try {
-        channel.send(JSON.stringify({type:"OVERSEER_SHARD_HEADER", protocol:1, transferId, podId, hash, signature, algorithm, totalBytes:bytes.byteLength, totalChunks}));
+        channel.send(JSON.stringify({type:"OVERSEER_SHARD_HEADER", protocol:1, transferId, podId, hash, signature, shardSignature, algorithm, totalBytes:bytes.byteLength, totalChunks}));
         for (let i = 0; i < totalChunks; i++) {
           await this.waitForDrain(channel);
           if (channel.readyState !== "open") throw new Error("CHANNEL_CLOSED_DURING_TRANSFER");
@@ -191,6 +195,7 @@ export class OverseerMeshReplicator {
       try { msg = JSON.parse(data); } catch { throw new Error("INVALID_JSON_FRAME"); }
       if (msg.type === "OVERSEER_SHARD_HEADER") return this.startTransfer(peerId, msg);
       if (msg.type === "OVERSEER_SHARD_EOF") return this.finishTransfer(peerId, msg);
+      if (msg.type === "OVERSEER_SHARD_ACK") return this.log("MESH_AUTHENTICATED_ACK_RECEIVED", {peerId, transferId:msg.transferId, receipt:msg.receipt});
       throw new Error("UNKNOWN_CONTROL_FRAME");
     }
     const {transferId, chunkIndex, payload} = this.unpackBinaryChunk(data);
@@ -215,7 +220,7 @@ export class OverseerMeshReplicator {
   startTransfer(peerId, meta) {
     if (meta.protocol !== 1 || typeof meta.transferId !== "string" || !/^[a-f0-9]{12}$/.test(meta.transferId) ||
         !isSupportedPodId(meta.podId) || !/^[a-f0-9]{64}$/i.test(meta.hash || "") ||
-        typeof meta.signature !== "string" || !meta.signature || !["Ed25519", "ECDSA-P256"].includes(meta.algorithm)) throw new Error("INVALID_TRANSFER_HEADER");
+        typeof meta.signature !== "string" || !meta.signature || (this.authenticateInboundShard && (typeof meta.shardSignature !== "string" || !meta.shardSignature)) || !["Ed25519", "ECDSA-P256"].includes(meta.algorithm)) throw new Error("INVALID_TRANSFER_HEADER");
     if (!Number.isSafeInteger(meta.totalBytes) || meta.totalBytes < 1 || meta.totalBytes > MAX_PAYLOAD_BYTES ||
         !Number.isSafeInteger(meta.totalChunks) || meta.totalChunks < 1 || meta.totalChunks > MAX_CHUNKS ||
         meta.totalChunks !== Math.ceil(meta.totalBytes / CHUNK_SIZE)) throw new Error("TRANSFER_BOUNDS");
@@ -262,8 +267,26 @@ export class OverseerMeshReplicator {
     }
     const configuredAlgorithm = this.engine.signatureAlgorithm || "ECDSA-P256";
     if (meta.algorithm !== configuredAlgorithm) throw new Error("SIGNATURE_ALGORITHM_POLICY_MISMATCH");
-    return this.engine.mutatePod(meta.podId, code, {
-      signature:meta.signature, origin:"peer"
-    });
+    if (this.authenticateInboundShard) {
+      const receipt = await this.authenticateInboundShard({
+        bytes:combined, podId:meta.podId, hash:meta.hash, signatureHex:meta.shardSignature,
+        codeSignature:meta.signature, algorithm:meta.algorithm
+      });
+      if (!receipt?.readBackVerified || !receipt?.signatureVerified || !receipt?.authorityPinMatched ||
+          receipt.sha256 !== meta.hash.toLowerCase() || receipt.byteLength !== combined.byteLength) {
+        throw new Error("AUTHENTICATED_SHARD_RECEIPT_INVALID");
+      }
+      const peer = this.peers.get(peerId);
+      if (!peer || peer.channel.readyState !== "open") throw new Error("CHANNEL_CLOSED_BEFORE_AUTHENTICATED_ACK");
+      peer.channel.send(JSON.stringify({type:"OVERSEER_SHARD_ACK", transferId:msg.transferId,
+        receipt:{status:receipt.status,podId:receipt.podId,byteLength:receipt.byteLength,sha256:receipt.sha256,
+          storagePath:receipt.storagePath,signatureVerified:receipt.signatureVerified,
+          authorityPinMatched:receipt.authorityPinMatched,readBackVerified:receipt.readBackVerified,
+          durability:receipt.durability,commitHash:receipt.commitHash}}));
+      await this.log("MESH_AUTHENTICATED_SHARD_ACK_SENT", {peerId,podId:meta.podId,
+        transferId:msg.transferId,sha256:receipt.sha256,byteLength:receipt.byteLength,readBackVerified:true});
+      return receipt;
+    }
+    return this.engine.mutatePod(meta.podId, code, {signature:meta.signature,origin:"peer"});
   }
 }
