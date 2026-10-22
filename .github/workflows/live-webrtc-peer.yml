@@ -7,37 +7,45 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: live-webrtc-peer-${{ github.event.workflow_run.id }}
-  cancel-in-progress: false
-
 jobs:
-  peer:
+  sender:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        role: [sender, receiver]
     timeout-minutes: 6
     steps:
-      - name: Check out deployed commit
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Install browser test dependency
         run: |
           npm install --no-save playwright
           npx playwright install --with-deps chromium
-
-      - name: Join independent peer and verify live 96 KiB transfer
+      - name: Send test shard over live WebRTC
         env:
-          KERNEL_PEER_ROLE: ${{ matrix.role }}
+          KERNEL_PEER_ROLE: sender
+          KERNEL_PEER_ROOM: kernelci_${{ github.run_id }}
+          KERNEL_PEER_URL: https://tris-rock777.github.io/KERNAL-CORPS/overseer/live-peer-verify.html
+        run: node scripts/live-peer-ci.mjs
+
+  receiver:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser test dependency
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Receive and verify live WebRTC shard
+        env:
+          KERNEL_PEER_ROLE: receiver
           KERNEL_PEER_ROOM: kernelci_${{ github.run_id }}
           KERNEL_PEER_URL: https://tris-rock777.github.io/KERNAL-CORPS/overseer/live-peer-verify.html
         run: node scripts/live-peer-ci.mjs
