@@ -24,6 +24,8 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
         with:
           node-version: 24
+      - name: Install IndexedDB test polyfill
+        run: npm install --no-save fake-indexeddb
       - name: Run authority key vault tests
         run: node overseer/overseer-key-vault.test.mjs
       - name: Run pinned authority tests
