@@ -9,6 +9,10 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: overseer-pages
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -22,8 +26,11 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
         with:
+          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
           path: './overseer'
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
