@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050507"><title>KERNELCORP Authority Vault Migration</title>
+<style>
+:root{color-scheme:dark}body{margin:0;padding:20px;background:#050507;color:#e5e7eb;font:14px ui-monospace,Menlo,monospace}main{max-width:680px;margin:0 auto;padding:18px;background:#121218;border:1px solid #30303b;border-radius:14px}h1{font-size:16px;line-height:1.5}p{font-size:12px;line-height:1.7;color:#a1a1aa}.warning{color:#fbbf24}button{width:100%;padding:14px;margin:12px 0;background:#10b981;border:0;border-radius:8px;color:#04130d;font-weight:800;font-family:inherit}button:disabled{opacity:.5}pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:#09090d;border:1px solid #30303b;border-radius:8px;font-size:11px;line-height:1.6}a{color:#a5b4fc}
+</style></head>
+<body><main>
+<h1>KERNEL CORP. // AUTHORITY KEY MIGRATION</h1>
+<p class="warning">Explicit migration only. This reads the existing OPFS authority identity, verifies it matches the application-pinned public key, and copies the same identity into IndexedDB as a non-exportable CryptoKey. It does not generate a replacement key and does not delete the legacy OPFS record.</p>
+<p>Run this only in the same browser profile that holds the existing authority identity. Use HTTPS. Do not clear site data during migration.</p>
+<button id="migrate">VERIFY AND MIGRATE EXISTING AUTHORITY</button>
+<pre id="out">No migration has been performed.</pre>
+<p><a href="./index.html">Back to Overseer</a></p>
+</main>
+<script type="module">
+import { NonExportableAuthorityVault } from "./overseer-non-exportable-authority-vault.mjs";
+import { getConfiguredAuthorityPin } from "./overseer-pinned-authority.mjs";
+const button=document.querySelector("#migrate"), output=document.querySelector("#out");
+button.addEventListener("click",async()=>{
+  button.disabled=true; output.textContent="Checking secure browser storage and the configured authority pin…";
+  try {
+    if(!isSecureContext || !navigator.storage?.getDirectory || !crypto?.subtle || !indexedDB) throw new Error("SECURE_OPFS_INDEXEDDB_WEBCRYPTO_REQUIRED");
+    const pin=getConfiguredAuthorityPin().toLowerCase();
+    const root=await navigator.storage.getDirectory();
+    const dir=await root.getDirectoryHandle("kernel_vault");
+    const handle=await dir.getFileHandle("authority.vault.json");
+    const legacy=JSON.parse(await (await handle.getFile()).text());
+    if(legacy.publicKeyHex?.toLowerCase()!==pin) throw new Error("LEGACY_AUTHORITY_PUBLIC_KEY_DOES_NOT_MATCH_TRUSTED_PIN");
+    const vault=new NonExportableAuthorityVault({expectedPublicKeyHex:pin});
+    const result=await vault.migrateExistingIdentity(legacy);
+    const status=vault.getStatus();
+    if(result.publicKeyHex!==pin || status.privateKeyExtractable!==false) throw new Error("NON_EXPORTABLE_MIGRATION_VERIFICATION_FAILED");
+    output.textContent=JSON.stringify({
+      status:result.status,
+      publicKeyPinMatched:true,
+      publicKeyHex:result.publicKeyHex,
+      privateKeyExtractable:status.privateKeyExtractable,
+      indexedDBStore:"kernel-authority-vault / keys / pinned-authority-v1",
+      legacyOPFSRecord:"PRESERVED — not deleted",
+      productionStartup:"NOT SWITCHED AUTOMATICALLY; separate rollout remains required"
+    },null,2);
+  } catch(error) {
+    output.textContent="MIGRATION FAILED CLOSED\n"+(error?.stack||error?.message||String(error));
+  } finally { button.disabled=false; }
+});
+</script></body></html>
