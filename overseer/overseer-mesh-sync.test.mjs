@@ -154,12 +154,60 @@ async function makePair() {
   senderEngine.root = createMockOPFS();
   receiverEngine.root = createMockOPFS();
 
-  const senderMesh = new OverseerMeshReplicator(senderEngine, keyPair.publicKey);
-  const receiverMesh = new OverseerMeshReplicator(receiverEngine, keyPair.publicKey);
+  // Manifest signatures are Ed25519; code signatures remain under the engine's
+  // pinned ECDSA-P256 key. Production uses the same authority policy end-to-end.
+  const manifestKeys = await crypto.subtle.generateKey(
+    { name: "Ed25519" }, true, ["sign", "verify"]
+  );
+  const toHex = bytes => Array.from(new Uint8Array(bytes),
+    b => b.toString(16).padStart(2, "0")).join("");
+  const manifestBytes = (bytes, podId, hash) =>
+    new TextEncoder().encode(`KERNEL_SHARD_V1\\n${hash}\\n${bytes.byteLength}\\n${podId}`);
+
+  const signShardManifest = async ({bytes, podId, hash}) => {
+    const actualHash = toHex(await crypto.subtle.digest("SHA-256", bytes));
+    if (actualHash !== hash.toLowerCase()) throw new Error("TEST_MANIFEST_HASH_MISMATCH");
+    return toHex(await crypto.subtle.sign(
+      "Ed25519", manifestKeys.privateKey, manifestBytes(bytes, podId, actualHash)
+    ));
+  };
+
+  const authenticateInboundShard = async ({bytes, podId, hash, signatureHex, codeSignature, algorithm}) => {
+    if (algorithm !== "ECDSA-P256") throw new Error("SIGNATURE_ALGORITHM_POLICY_MISMATCH");
+    const actualHash = toHex(await crypto.subtle.digest("SHA-256", bytes));
+    if (actualHash !== hash.toLowerCase()) throw new Error("SHARD_HASH_MISMATCH");
+    if (!/^(?:[0-9a-f]{2})+$/i.test(signatureHex || "")) throw new Error("INVALID_MANIFEST_SIGNATURE");
+    const signatureBytes = Uint8Array.from(signatureHex.match(/.{2}/g),
+      pair => parseInt(pair, 16));
+    const validManifest = await crypto.subtle.verify(
+      "Ed25519", manifestKeys.publicKey, signatureBytes,
+      manifestBytes(bytes, podId, actualHash)
+    );
+    if (!validManifest) throw new Error("SHARD_SIGNATURE_INVALID");
+
+    const code = new TextDecoder("utf-8", {fatal:true}).decode(bytes);
+    const committed = await receiverEngine.mutatePod(podId, code, {
+      signature: codeSignature, origin: "peer"
+    });
+    if (committed.hash !== actualHash) throw new Error("AUTHENTICATED_SHARD_HASH_MISMATCH");
+    // This receipt is backed by the receiver's mock storage + verified HOTSWAP WAL.
+    const storedDir = await receiverEngine.root.getDirectoryHandle("shards");
+    const storedFile = await (await storedDir.getFileHandle(actualHash + ".mjs")).getFile();
+    if (await storedFile.text() !== code) throw new Error("TEST_STORAGE_READBACK_MISMATCH");
+    return {
+      status: "AUTHENTICATED_SHARD_STORED", podId, byteLength: bytes.byteLength,
+      sha256: actualHash, storagePath: `shards/${actualHash}.mjs`,
+      signatureVerified: true, authorityPinMatched: true, readBackVerified: true,
+      durability: "TEST_WAL_COMMIT", commitHash: committed.hash
+    };
+  };
+
+  const senderMesh = new OverseerMeshReplicator(senderEngine, keyPair.publicKey, {signShardManifest});
+  const receiverMesh = new OverseerMeshReplicator(receiverEngine, keyPair.publicKey, {authenticateInboundShard});
   const channels = createLoopbackChannelPair();
   senderMesh.attachPeerChannel("receiver", channels.senderChannel);
   receiverMesh.attachPeerChannel("sender", channels.receiverChannel);
-  return { keyPair, sign, senderEngine, receiverEngine, senderMesh, receiverMesh, ...channels };
+  return { keyPair, sign, signShardManifest, senderEngine, receiverEngine, senderMesh, receiverMesh, ...channels };
 }
 
 async function broadcast(mesh, engine, sign, podId, code) {
@@ -230,7 +278,7 @@ export async function runOverseerMeshVerification() {
     const bytes = new TextEncoder().encode(bad);
     const chunks = Math.ceil(bytes.length / (32 * 1024));
     channel.send(JSON.stringify({type:"OVERSEER_SHARD_HEADER", protocol:1, transferId, podId:"KashKorner",
-      hash:badHash, signature:originalSignature, algorithm:"ECDSA-P256", totalBytes:bytes.length, totalChunks:chunks}));
+      hash:badHash, signature:originalSignature, shardSignature:await f.signShardManifest({bytes, podId:"KashKorner", hash:badHash}), algorithm:"ECDSA-P256", totalBytes:bytes.length, totalChunks:chunks}));
     channel.send(f.senderMesh.packBinaryChunk(transferId, 0, bytes));
     channel.send(JSON.stringify({type:"OVERSEER_SHARD_EOF", transferId, expectedHash:badHash}));
     await wait(100);
@@ -432,7 +480,7 @@ export async function runOverseerMeshVerification() {
     try {
       f.receiverMesh.startTransfer("sender", {
         protocol:1, transferId:"fedcba654321", podId:"KashKorner",
-        hash:"a".repeat(64), signature:"00", algorithm:"ECDSA-P256",
+        hash:"a".repeat(64), signature:"00", shardSignature:"00", algorithm:"ECDSA-P256",
         totalBytes:1_048_577, totalChunks:33
       });
     } catch (error) {
@@ -453,7 +501,7 @@ export async function runOverseerMeshVerification() {
     const f = await makePair();
     const header = {
       protocol:1, transferId:"abcdef123456", podId:"KashKorner",
-      hash:"a".repeat(64), signature:"00", algorithm:"ECDSA-P256",
+      hash:"a".repeat(64), signature:"00", shardSignature:"00", algorithm:"ECDSA-P256",
       totalBytes:32, totalChunks:1
     };
     f.receiverMesh.startTransfer("sender", header);
@@ -474,7 +522,7 @@ export async function runOverseerMeshVerification() {
     const f = await makePair();
     const header = {
       protocol:1, transferId:"123456abcdef", podId:"KashKorner",
-      hash:"a".repeat(64), signature:"00", algorithm:"ECDSA-P256",
+      hash:"a".repeat(64), signature:"00", shardSignature:"00", algorithm:"ECDSA-P256",
       totalBytes:32, totalChunks:1
     };
     f.receiverMesh.startTransfer("sender", header);
@@ -595,7 +643,7 @@ export async function runOverseerMeshVerification() {
     const transferId = "c0ffee123456";
     f.receiverMesh.startTransfer("sender", {
       protocol:1, transferId, podId:"KashKorner", hash:"a".repeat(64),
-      signature:"00", algorithm:"ECDSA-P256", totalBytes:32, totalChunks:1
+      signature:"00", shardSignature:"00", algorithm:"ECDSA-P256", totalBytes:32, totalChunks:1
     });
     let rejected = false;
     try {
@@ -621,7 +669,7 @@ export async function runOverseerMeshVerification() {
     const transferId = "d00d12345678";
     f.receiverMesh.startTransfer("sender", {
       protocol:1, transferId, podId:"KashKorner", hash:"b".repeat(64),
-      signature:"00", algorithm:"ECDSA-P256", totalBytes:32, totalChunks:1
+      signature:"00", shardSignature:"00", algorithm:"ECDSA-P256", totalBytes:32, totalChunks:1
     });
     const frame = f.senderMesh.packBinaryChunk(transferId, 0, new Uint8Array(32).fill(7));
     await f.receiverMesh.handleInboundFrame("sender", frame);
@@ -728,7 +776,7 @@ export async function runOverseerMeshVerification() {
     let invalidRejected = false;
     try {
       await f.senderMesh.broadcastPodMutation({podId:"NotAKernelApp", hash:"a".repeat(64),
-        codeString:"export function mountPod() {}", signature:"00", algorithm:"ECDSA-P256"});
+        codeString:"export function mountPod() {}", signature:"00", shardSignature:"00", algorithm:"ECDSA-P256"});
     } catch (error) { invalidRejected = /INVALID_POD/.test(String(error?.message)); }
     assert(invalidRejected, "TEST_24_FAILED: unsupported pod ID was not rejected");
     f.senderMesh.dispose(); f.receiverMesh.dispose();
