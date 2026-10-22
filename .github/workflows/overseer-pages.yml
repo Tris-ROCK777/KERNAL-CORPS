@@ -103,6 +103,7 @@ jobs:
           mkdir -p _site/overseer
           cp -R overseer/. _site/overseer/
           cp overseer/verify.html _site/overseer/index.html
+          cp overseer/verify.html _site/index.html
           test -s _site/overseer/pod-command-drawer.html
           test -s _site/overseer/non-exportable-vault-verify.html
 
