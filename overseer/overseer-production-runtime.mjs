@@ -68,7 +68,7 @@ export async function initializeProductionOverseer({
           const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
             byte => byte.toString(16).padStart(2, "0")).join("");
           const manifest = new TextEncoder().encode(
-            "KERNEL_SHARD_V1\\n" + digest + "\\n" + bytes.byteLength + "\\n" + podId);
+            "KERNEL_SHARD_V1\n" + digest + "\n" + bytes.byteLength + "\n" + podId);
           const shardSignature = Array.from(new Uint8Array(
             await crypto.subtle.sign("Ed25519", authority.vault.keyPair.privateKey, manifest)),
             byte => byte.toString(16).padStart(2, "0")).join("");
