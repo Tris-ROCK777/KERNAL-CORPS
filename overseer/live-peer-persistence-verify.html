@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050507">
+  <title>KERNEL CORP. — OPFS Restart Recovery Verification</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    body { margin: 0 auto; padding: 20px; max-width: 760px; background: #050507; color: #e4e4e7; }
+    h1 { font-size: 1.05rem; }
+    p { font-size: .88rem; line-height: 1.5; color: #c4c4cc; }
+    .warning { color: #fbbf24; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #0d0d13; border-radius: 8px; padding: 12px; min-height: 120px; font-size: .78rem; }
+  </style>
+</head>
+<body>
+  <h1>KERNEL CORP. / OVERSEER — RESTART RECOVERY TEST</h1>
+  <p class="warning">AUTOMATED TEST ONLY: creates a temporary Ed25519 authority identity in this browser profile. This does not replace or enroll the production trust pin.</p>
+  <p>Checks signed module storage in OPFS, authenticated manifest read-back, Ring-WAL recovery, and non-exportable authority-key restoration after a real page reload.</p>
+  <pre id="log">Starting persistence verification…</pre>
+  <script type="module">
+    import { provisionAuthorityIdentity, initializeTrustedAuthority } from "./overseer-authority-bootstrap.mjs";
+    import { OverseerHotSwap } from "./overseer-hotswap.mjs";
+    import { acceptAuthenticatedShard } from "./overseer-authenticated-shard.mjs";
+
+    const $ = id => document.getElementById(id);
+    const STORE_KEY = "kernel-live-persistence-test-v1";
+    const encoder = new TextEncoder();
+    const toHex = bytes => [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, "0")).join("");
+    const log = (event, details = {}) => {
+      $("log").textContent += "\n" + new Date().toISOString() + " " + event + " " + JSON.stringify(details);
+    };
+    const digest = async bytes => toHex(await crypto.subtle.digest("SHA-256", bytes));
+    const params = new URLSearchParams(location.search);
+
+    async function writePhase() {
+      const provisioned = await provisionAuthorityIdentity({ allowFirstBootProvisioning: true });
+      const vault = provisioned.vault;
+      const pin = provisioned.publicKeyHex;
+      const code = 'export function mountPod(){ return {name:"KernelVision", restartRecovery:true}; }';
+      const bytes = encoder.encode(code);
+      const hash = await digest(bytes);
+      const manifest = encoder.encode("KERNEL_SHARD_V1\n" + hash + "\n" + bytes.byteLength + "\nKernelVision");
+      const manifestSignature = toHex(await crypto.subtle.sign("Ed25519", vault.keyPair.privateKey, manifest));
+      const codeSignature = toHex(await crypto.subtle.sign("Ed25519", vault.keyPair.privateKey, bytes));
+
+      const engine = new OverseerHotSwap({
+        publicKey: vault.keyPair.publicKey,
+        signatureAlgorithm: "Ed25519"
+      });
+      await engine.init();
+      const commit = await engine.mutatePod("KernelVision", code, {
+        signature: codeSignature, origin: "local"
+      });
+      if (commit.hash !== hash) throw new Error("INITIAL_COMMIT_HASH_MISMATCH");
+
+      const authenticated = await acceptAuthenticatedShard({
+        bytes, signatureHex: manifestSignature,
+        publicKey: vault.keyPair.publicKey,
+        pinnedPublicKeyHex: pin, signerPublicKeyHex: pin, podId: "KernelVision"
+      });
+      if (!authenticated.signatureVerified || !authenticated.readBackVerified ||
+          authenticated.sha256 !== hash) throw new Error("INITIAL_AUTHENTICATED_SHARD_WRITE_FAILED");
+
+      localStorage.setItem(STORE_KEY, JSON.stringify({
+        pin, hash, code, manifestSignature, codeSignature, byteLength: bytes.byteLength
+      }));
+      log("PERSISTENCE_WRITE_PASS", {
+        authorityPin: pin, privateKeyExtractable: vault.keyPair.privateKey.extractable,
+        publicKeyExtractable: vault.keyPair.publicKey.extractable,
+        sha256: hash, byteLength: bytes.byteLength, manifestSignatureVerified: true,
+        authenticatedStoragePath: authenticated.storagePath, opfsReadBackVerified: true,
+        ringWalCommit: "HOTSWAP_COMMIT"
+      });
+      params.set("phase", "recover");
+      location.replace(location.pathname + "?" + params.toString());
+    }
+
+    async function recoverPhase() {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) throw new Error("PERSISTENCE_TEST_STATE_MISSING_AFTER_RELOAD");
+      const saved = JSON.parse(raw);
+      const restored = await initializeTrustedAuthority({ publicKeyHex: saved.pin });
+      if (!restored.restored) throw new Error("AUTHORITY_IDENTITY_NOT_RESTORED");
+      if (restored.vault.keyPair.privateKey.extractable !== false) throw new Error("AUTHORITY_PRIVATE_KEY_BECAME_EXPORTABLE");
+      if (restored.vault.keyPair.publicKey.extractable !== true) throw new Error("AUTHORITY_PUBLIC_KEY_NOT_EXPORTABLE_FOR_PIN_CHECK");
+
+      const engine = new OverseerHotSwap({
+        publicKey: restored.vault.keyPair.publicKey,
+        signatureAlgorithm: "Ed25519"
+      });
+      await engine.init();
+      const active = engine.activePods.get("KernelVision");
+      if (!active || active.hash !== saved.hash) throw new Error("SIGNED_SHARD_NOT_RECOVERED_FROM_WAL");
+
+      const codeBytes = encoder.encode(saved.code);
+      if (await digest(codeBytes) !== saved.hash) throw new Error("RECOVERED_SHARD_SHA256_MISMATCH");
+      const shardDir = await navigator.storage.getDirectory().then(root => root.getDirectoryHandle("authenticated-shards"));
+      const shardFile = await shardDir.getFileHandle("KernelVision-" + saved.hash + ".shard");
+      const storedBytes = new Uint8Array(await (await shardFile.getFile()).arrayBuffer());
+      if (storedBytes.byteLength !== saved.byteLength || await digest(storedBytes) !== saved.hash) {
+        throw new Error("AUTHENTICATED_SHARD_OPFS_READBACK_MISMATCH_AFTER_RELOAD");
+      }
+      const manifest = encoder.encode("KERNEL_SHARD_V1\n" + saved.hash + "\n" + saved.byteLength + "\nKernelVision");
+      const signature = Uint8Array.from(saved.manifestSignature.match(/.{2}/g), pair => parseInt(pair, 16));
+      const manifestSignatureVerified = await crypto.subtle.verify(
+        "Ed25519", restored.vault.keyPair.publicKey, signature, manifest
+      );
+      if (!manifestSignatureVerified) throw new Error("MANIFEST_SIGNATURE_INVALID_AFTER_RELOAD");
+
+      const root = await navigator.storage.getDirectory();
+      const walFile = await root.getFileHandle("ring-wal.jsonl");
+      const walText = await (await walFile.getFile()).text();
+      if (!walText.includes('"op":"HOTSWAP_COMMIT"') || !walText.includes(saved.hash)) {
+        throw new Error("RING_WAL_COMMIT_MISSING_AFTER_RELOAD");
+      }
+
+      log("PERSISTENCE_RESTART_RECOVERY_PASS", {
+        authorityRestored: restored.restored,
+        authorityPinMatched: restored.publicKeyHex === saved.pin,
+        privateKeyExtractable: restored.vault.keyPair.privateKey.extractable,
+        signedShardRecovered: true, manifestSignatureVerified,
+        opfsReadBackVerified: true, ringWalCommitRecovered: true,
+        sha256: saved.hash, byteLength: storedBytes.byteLength
+      });
+    }
+
+    try {
+      if (params.get("phase") === "recover") await recoverPhase();
+      else await writePhase();
+    } catch (error) {
+      log("PERSISTENCE_RESTART_RECOVERY_FAIL", { error: String(error?.stack || error) });
+      throw error;
+    }
+  </script>
+</body>
+</html>
