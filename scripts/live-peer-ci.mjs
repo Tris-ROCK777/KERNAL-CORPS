@@ -109,26 +109,31 @@ try {
 
     // Verify the deployed Overseer command center itself at a phone-sized viewport.
     const consoleUrl = pageUrl.replace("live-peer-verify.html", "index.html");
+    // Use a clean, isolated browser context so the temporary persistence-test identity
+    // cannot contaminate the production command-center trust-pin check.
+    const smokeBrowser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
+    const smokeContext = await smokeBrowser.newContext({ viewport: { width: 393, height: 852 } });
+    const smokePage = await smokeContext.newPage();
     const resourceFailures = [];
     const consoleErrors = [];
-    page.on("requestfailed", request => resourceFailures.push({ url: request.url(), error: request.failure()?.errorText }));
-    page.on("response", response => {
+    smokePage.on("requestfailed", request => resourceFailures.push({ url: request.url(), error: request.failure()?.errorText }));
+    smokePage.on("response", response => {
       if (response.status() >= 400) resourceFailures.push({ url: response.url(), status: response.status() });
     });
-    page.on("pageerror", error => consoleErrors.push(String(error)));
-    page.on("console", message => { if (message.type() === "error") consoleErrors.push(message.text()); });
-    await page.setViewportSize({ width: 393, height: 852 });
-    await page.goto(consoleUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
-    await page.waitForFunction(
+    smokePage.on("pageerror", error => consoleErrors.push(String(error)));
+    smokePage.on("console", message => { if (message.type() === "error") consoleErrors.push(message.text()); });
+    await smokePage.goto(consoleUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await smokePage.waitForFunction(
       () => document.querySelector("#log")?.textContent.includes("PRODUCTION RUNTIME READY") ||
             document.querySelector("#log")?.textContent.includes("RUNTIME BLOCKED:"),
       undefined, { timeout: 60000 }
     );
-    const runtimeLog = await page.locator("#log").textContent();
+    const runtimeLog = await smokePage.locator("#log").textContent();
     if (!runtimeLog.includes("PRODUCTION RUNTIME READY")) {
+      await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_RUNTIME_FAILED: " + runtimeLog);
     }
-    const ui = await page.evaluate(() => ({
+    const ui = await smokePage.evaluate(() => ({
       title: document.title,
       canvasPresent: Boolean(document.querySelector("#scene")),
       canvasWidth: document.querySelector("#scene")?.width ?? 0,
@@ -143,12 +148,15 @@ try {
     }));
     if (!ui.canvasPresent || ui.canvasWidth <= 0 || ui.canvasHeight <= 0 ||
         !ui.authorityPinLoaded || ui.controls.some(control => !control.visible)) {
+      await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_UI_ASSERTION_FAILED: " + JSON.stringify(ui));
     }
     if (resourceFailures.length || consoleErrors.length) {
+      await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_RESOURCE_OR_CONSOLE_ERRORS: " +
         JSON.stringify({ resourceFailures, consoleErrors }));
     }
+    await smokeBrowser.close();
     console.log(JSON.stringify({ event: "DEPLOYED_COMMAND_CENTER_MOBILE_SMOKE_PASS", viewport: "393x852", ui, resourceFailures, consoleErrors }));
   }
 
