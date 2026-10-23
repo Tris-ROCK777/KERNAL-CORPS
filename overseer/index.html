@@ -6,200 +6,72 @@
 <meta name="theme-color" content="#020617">
 <meta name="color-scheme" content="dark">
 <title>KERNEL UMBRELLA CORP // X-KOM’Z OVERSEER</title>
+
+
+
+
+
+
 <style>
-:root{color-scheme:dark;--bg:#020617;--panel:rgba(8,17,34,.9);--card:rgba(13,26,48,.84);--line:rgba(0,240,255,.22);--cyan:#00eaff;--gold:#f5b942;--green:#3be0a2;--red:#ff657b;--muted:#8da2bc;--white:#edf7ff;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html{min-height:100%;background:var(--bg);scroll-behavior:smooth}body{margin:0;min-height:100dvh;color:var(--muted);background:radial-gradient(ellipse at 50% -20%,rgba(0,176,255,.14),transparent 55%),linear-gradient(145deg,#020617,#040a16 55%,#020617);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-button,input,a{font:inherit}button,a{touch-action:manipulation}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
-.shell{max-width:1440px;margin:auto;padding:0 18px 36px}.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 -18px;padding:calc(13px + env(safe-area-inset-top)) 18px 13px;background:rgba(2,6,23,.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:11px;min-width:0}.mark{width:38px;height:38px;flex:none;border:1px solid var(--cyan);border-radius:50%;display:grid;place-items:center;color:var(--cyan);position:relative;box-shadow:0 0 25px #00eaff22}.mark:before,.mark:after{content:"";position:absolute;inset:4px;border:1px dashed #00eaff88;border-radius:50%;animation:spin 14s linear infinite}.mark:after{inset:10px;border-style:solid;animation-direction:reverse;animation-duration:9s}.brand h1{font-size:12px;letter-spacing:.16em;color:var(--white);margin:0 0 5px}.brand p{font-size:9px;letter-spacing:.12em;color:var(--cyan);margin:0}.top-actions{display:flex;align-items:center;gap:8px}.status-pill{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--line);border-radius:999px;font-size:9px;white-space:nowrap}.dot{width:7px;height:7px;display:inline-block;border-radius:50%;background:var(--gold);box-shadow:0 0 10px currentColor}.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:#0a1629;color:var(--white);font-size:10px;letter-spacing:.06em}.btn.primary{background:linear-gradient(110deg,#00eaff24,#4a7cff25);border-color:#00eaff78}.btn:active{transform:translateY(1px)}.eyebrow{font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:var(--cyan)}.hero{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:18px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 50px #0004,inset 0 0 22px #00eaff06}.hero-main{position:relative;overflow:hidden;padding:23px}.hero-main:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(120deg,transparent 40%,#00eaff06 70%,transparent)}.hero-top{display:flex;justify-content:space-between;gap:10px;align-items:start}.ai-core-wrap{display:flex;align-items:center;gap:7px;flex:none;padding-top:4px}.ai-core{position:relative;isolation:isolate;display:grid;place-content:center;flex:none;width:74px;height:74px;border:1px solid rgba(0,234,255,.7);border-radius:50%;text-align:center;color:var(--cyan);background:radial-gradient(circle,rgba(0,234,255,.13),rgba(2,6,23,.4) 64%);box-shadow:0 0 20px rgba(0,234,255,.13),inset 0 0 18px rgba(0,234,255,.08)}.ai-core:before,.ai-core:after{content:"";position:absolute;inset:5px;border:1px solid rgba(0,234,255,.36);border-radius:50%;animation:core-orbit 12s linear infinite}.ai-core:after{inset:-4px;border-color:rgba(245,185,66,.34);border-style:dashed;animation-direction:reverse;animation-duration:22s}.ai-core span{font-size:9px;font-weight:800;letter-spacing:.04em}.ai-core small{margin-top:3px;color:var(--gold);font-size:8px;letter-spacing:.2em}.core-label{max-width:60px;font-size:8px;line-height:1.5;letter-spacing:.08em;color:var(--muted)}@keyframes core-orbit{to{transform:rotate(360deg)}}.hero h2{font-size:clamp(21px,3.5vw,36px);line-height:1.15;letter-spacing:-.045em;color:var(--white);margin:10px 0}.hero-copy{max-width:600px;font-size:11px;line-height:1.8;margin:0;color:#9aadc4}.core{width:154px;height:154px;flex:none;position:relative;display:grid;place-items:center;margin:3px auto 15px}.ring{position:absolute;inset:5px;border:1px dashed #00eaff8a;border-radius:50%;animation:spin 22s linear infinite}.ring.r2{inset:19px;border-style:solid;border-color:#f5b94288;animation-direction:reverse;animation-duration:13s}.ring.r3{inset:35px;border:1px solid var(--cyan);box-shadow:0 0 25px #00eaff22,inset 0 0 18px #00eaff18}.core-center{text-align:center;z-index:1}.core-center b{display:block;color:var(--cyan);font-size:14px;letter-spacing:.08em}.core-center span{display:block;font-size:8px;margin-top:6px;letter-spacing:.18em}.telemetry{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:20px}.metric{padding:12px;border:1px solid #6b8bac2b;border-radius:11px;background:#071226a8;min-width:0}.metric label{display:block;font-size:8px;letter-spacing:.11em;color:#8398b2;text-transform:uppercase}.metric strong{display:block;font-size:clamp(12px,1.5vw,17px);color:var(--white);font-weight:600;margin-top:8px;overflow-wrap:anywhere}.metric small{display:block;font-size:9px;color:#8da2bc;margin-top:5px;line-height:1.4}.good{color:var(--green)!important}.warn{color:var(--gold)!important}.bad{color:var(--red)!important}.side-panel{padding:18px;display:flex;flex-direction:column;gap:12px}.side-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.side-head h3,.section-head h3{font-size:11px;color:var(--white);letter-spacing:.12em;text-transform:uppercase;margin:0}.mini-tag{font-size:8px;color:var(--cyan);border:1px solid var(--line);border-radius:5px;padding:5px 7px}.health-list{display:flex;flex-direction:column;gap:8px}.health-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid #6b8bac24;border-radius:9px;background:#06102280;font-size:10px}.health-row span:first-child{color:#b6c7da}.health-row b{font-size:9px;font-weight:600;text-align:right}.health-note{font-size:9px;line-height:1.65;margin:0;color:#849ab3}.section{margin-top:24px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:0 2px 12px}.section-head p{margin:5px 0 0;font-size:9px;line-height:1.5;color:#8195ad}.section-head .eyebrow{margin-bottom:7px}.apps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.app{display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:10px;min-height:142px;padding:15px;border:1px solid #7193b32c;border-radius:13px;background:linear-gradient(150deg,#10203a9c,#071123b5);transition:border-color .18s,transform .18s}.app:hover{border-color:#00eaff88;transform:translateY(-2px)}.app-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.app-icon{width:33px;height:33px;display:grid;place-items:center;border:1px solid var(--line);border-radius:9px;color:var(--cyan);font-size:12px}.app-num{font-size:8px;color:#6e829a}.app strong{font-size:11px;color:var(--white)}.app p{font-size:9px;line-height:1.55;margin:0;color:#8da2bc}.app-foot{margin-top:auto;font-size:8px;color:#8edfff;letter-spacing:.09em}.app.hub{border-color:#00eaff60;background:linear-gradient(145deg,#07304477,#071123d9)}.workspace{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:12px}.tool-panel,.activity-panel{padding:17px;min-width:0}.search{width:100%;min-height:42px;margin:13px 0 10px;padding:10px 12px;background:#020917;border:1px solid #718aa533;border-radius:9px;color:var(--white);font-size:11px}.tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.tool-link{display:flex;align-items:center;gap:9px;min-height:50px;padding:9px;border:1px solid #718aa526;border-radius:9px;background:#081326;color:#b9c9db;font-size:9px;line-height:1.4}.tool-link:before{content:"↗";display:grid;place-items:center;width:24px;height:24px;flex:none;border:1px solid var(--line);border-radius:6px;color:var(--cyan)}.tool-link:hover{border-color:#00eaff70}.tool-link[hidden]{display:none}.activity{display:flex;flex-direction:column;gap:8px;margin-top:14px;max-height:320px;overflow:auto}.event{display:grid;grid-template-columns:54px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid #7193b31d;font-size:9px;line-height:1.55}.event time{color:#6e849f}.event span{color:#afc1d6;overflow-wrap:anywhere}.event.info span{color:#a6d9ff}.event.warn span{color:#e5cd8a}.event.error span{color:#ff9aaa}.bottom-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}.footer{padding:22px 3px 0;display:flex;justify-content:space-between;gap:12px;font-size:8px;letter-spacing:.08em;color:#5f748d}.modal{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center;padding:16px;background:#000b;backdrop-filter:blur(12px)}.modal.open{display:flex}.modal-card{position:relative;isolation:isolate;overflow:hidden;width:min(520px,100%);padding:21px;border:1px solid rgba(0,234,255,.58);border-radius:17px;background:linear-gradient(145deg,rgba(5,19,39,.98),rgba(6,10,25,.97));box-shadow:0 0 0 1px rgba(0,234,255,.12),0 0 32px rgba(0,234,255,.12),0 20px 80px #000a;animation:holo-in .22s ease-out}.modal-card:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(115deg,transparent 10%,rgba(0,234,255,.07) 42%,transparent 65%),radial-gradient(ellipse at top right,rgba(245,185,66,.09),transparent 55%)}.modal-card:after{content:"";position:absolute;left:18px;right:18px;top:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),var(--gold),transparent);opacity:.9}.modal-card h2{color:var(--white);font-size:17px;margin:0 0 10px}.modal-card p{font-size:11px;line-height:1.8}.modal-actions{display:flex;gap:8px;margin-top:18px}.modal-actions>*{flex:1}.hide{display:none!important}
-@keyframes spin{to{transform:rotate(360deg)}}@keyframes holo-in{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}@media(max-width:850px){.hero{grid-template-columns:1fr}.hero-main{padding:18px}.side-panel{padding:14px}.apps{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace{grid-template-columns:1fr}.telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}.core{width:130px;height:130px}.footer{flex-direction:column}}@media(max-width:430px){.ai-core{width:54px;height:54px}.ai-core-wrap .core-label{display:none}.hero-top{gap:6px}.shell{padding:0 11px 24px}.topbar{margin:0 -11px;padding-left:11px;padding-right:11px}.brand h1{font-size:10px;letter-spacing:.1em}.brand p{font-size:8px}.mark{width:32px;height:32px}.status-pill{font-size:8px;padding:7px}.top-actions .btn{font-size:9px;padding:8px}.hero h2{font-size:23px}.hero-main{padding:15px}.telemetry{gap:6px}.metric{padding:10px}.apps{gap:7px}.app{padding:11px;min-height:145px}.tool-grid{grid-template-columns:1fr}.section-head h3{font-size:10px}.section-head p{max-width:220px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition:none!important}}
-.network-shell{overflow:hidden;padding:12px}.network-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:7px 4px 13px}.network-toolbar p{margin:6px 0 0;font-size:9px;line-height:1.6;color:#8195ad}.network-frame{display:block;width:100%;height:clamp(620px,78vh,980px);border:1px solid rgba(0,234,255,.2);border-radius:12px;background:#020305}.network-frame:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}.jump-nav{display:flex;gap:7px;flex-wrap:wrap}.jump-nav a{font-size:9px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#071226;color:#c5d7e8}.jump-nav a:hover{border-color:#00eaff80}@media(max-width:600px){.network-shell{padding:8px}.network-frame{height:760px}.network-toolbar{align-items:flex-start}.network-toolbar .btn{min-height:40px}}.command-switcher{display:flex;gap:7px;overflow-x:auto;padding:3px 2px 11px;scrollbar-width:thin;overscroll-behavior-x:contain}.command-tab{flex:0 0 auto;min-height:40px;padding:9px 12px;border:1px solid #718aa544;border-radius:9px;background:#061022;color:#9db4cd;font-size:9px;letter-spacing:.08em;white-space:nowrap;touch-action:manipulation}.command-tab.active{color:#eafaff;border-color:#00eaffaa;background:linear-gradient(110deg,#00eaff22,#4a7cff18);box-shadow:inset 0 0 15px #00eaff08}.command-tab:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}.command-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:3px 2px 12px}.command-toolbar strong{display:block;color:var(--white);font-size:10px;letter-spacing:.1em}.command-toolbar span{display:block;color:#8195ad;font-size:9px;margin-top:5px}.command-frame{display:block;width:100%;height:clamp(680px,82vh,1080px);border:1px solid rgba(0,234,255,.24);border-radius:12px;background:#020617}.command-frame:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}.tool-link[aria-current=page]{border-color:#00eaff99;background:#09213a;color:#effbff}@media(max-width:600px){.command-frame{height:78vh;min-height:650px}.command-switcher{margin-right:-8px;padding-right:8px}.command-tab{min-height:44px}.command-toolbar .btn{min-height:44px}}/* Keep the live X-KOM’Z surface focused on the four canonical operating areas. The legacy tool directory remains in source for recovery, but is not a fifth dashboard. */
-.tool-panel,.activity-panel{display:none!important}
-/* Keep the live home screen to the four operating areas, AYE•YAE core, and canonical pods. */
-.side-panel{display:none!important}
-.hero{grid-template-columns:minmax(0,1fr)}
-
-
-/* Visual system refresh: premium product UI, less terminal cosplay, clearer hierarchy. */
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--bg:#070b12;--panel:rgba(15,22,34,.92);--card:rgba(19,29,44,.86);--line:rgba(143,170,204,.17);--cyan:#80e4df;--gold:#e8bd75;--green:#72d6ac;--red:#ff8294;--muted:#9caec2;--white:#f4f7fb}
-html{background:#070b12}body{background:radial-gradient(ellipse at 80% -20%,rgba(68,126,147,.16),transparent 50%),radial-gradient(ellipse at 5% 25%,rgba(58,80,119,.12),transparent 42%),#070b12;color:#a8b7c9;letter-spacing:0}
-.shell{max-width:1320px;padding:0 28px 48px}
-.topbar{margin:0 -28px;padding:18px 28px;background:rgba(7,11,18,.88);border-bottom:1px solid rgba(143,170,204,.15);backdrop-filter:blur(22px)}
-.mark{border-radius:12px;width:40px;height:40px;border-color:#80e4df77;color:#a0efea;background:linear-gradient(145deg,#16333c,#101a29);box-shadow:none;font-weight:750}
-.mark:before,.mark:after{display:none}
-.brand h1{font-size:11px;letter-spacing:.15em;font-weight:750}.brand p{font-size:9px;letter-spacing:.1em;color:#8fb9c1}
-.top-actions{gap:9px}.btn{min-height:40px;border-radius:9px;border-color:#73859b35;background:#121b29;color:#dce5ef;font-size:10px;letter-spacing:.025em;transition:background .18s,border-color .18s,transform .18s}
-.btn:hover{background:#1a2939;border-color:#80e4df77}.btn.primary{background:#b0eee5;color:#102125;border-color:#b0eee5;font-weight:750}.btn.primary:hover{background:#d0faf3}
-.status-pill{border-color:#73859b30;background:#111a27;color:#d3dfec}
-.hero{margin-top:24px;gap:16px}.hero-main{padding:clamp(22px,4vw,42px);border-radius:18px;background:linear-gradient(120deg,rgba(17,30,45,.97),rgba(11,18,29,.96));border-color:#8ba3bd24;box-shadow:0 18px 60px #0003}
-.hero-main:after{background:linear-gradient(110deg,transparent 35%,#80e4df06 70%,transparent)}
-.eyebrow{font-size:9px;letter-spacing:.15em;color:#8bd6d1;font-weight:700}
-.hero h2{font-size:clamp(28px,4.4vw,48px);line-height:1.08;letter-spacing:-.055em;font-weight:700;margin:16px 0}
-.hero-copy{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:13px;line-height:1.8;max-width:580px;color:#a6b6c8}
-.ai-core{border-color:#80e4df77;color:#a0efea;background:radial-gradient(circle,#17313a,#0a1420 70%);box-shadow:0 0 30px #80e4df0b}
-.ai-core:before{border-color:#80e4df38}.ai-core:after{border-color:#e8bd7544}
-.core-label{font-size:9px;letter-spacing:.04em}
-.telemetry{gap:10px;margin-top:30px}.metric{padding:16px;border-radius:12px;border-color:#8ba3bd20;background:rgba(4,11,20,.46)}
-.metric label{font-size:9px;letter-spacing:.09em;color:#8fa2b8}.metric strong{font-size:clamp(13px,1.7vw,19px);letter-spacing:-.025em}.metric small{font-size:10px;color:#8e9fb3;line-height:1.55}
-.section{margin-top:34px}.section-head{margin-bottom:16px}.section-head h3{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:14px;letter-spacing:-.015em;font-weight:700}.section-head p{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:11px;line-height:1.7;color:#899db3;max-width:620px}
-.mini-tag{border-radius:7px;border-color:#8ba3bd2c;background:#111b29;color:#a3d8d4;font-size:8px;letter-spacing:.07em}
-.apps{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.app{position:relative;overflow:hidden;min-height:168px;padding:18px;border-radius:14px;border-color:#8ba3bd20;background:linear-gradient(145deg,rgba(19,29,44,.9),rgba(12,19,30,.9));gap:12px;transition:transform .2s,border-color .2s,background .2s}
-.app:before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent;transition:background .2s}
-.app:hover{transform:translateY(-3px);border-color:#80e4df60;background:linear-gradient(145deg,rgba(24,40,54,.96),rgba(13,23,35,.96))}
-.app:hover:before{background:#80e4df}
-.app.hub{border-color:#80e4df42;background:linear-gradient(145deg,#132d36,#101c2a 80%)}
-.app-icon{width:36px;height:36px;border-radius:10px;background:#152a35;border-color:#80e4df30;color:#9ee8e2;font-size:15px}
-.app-num{font-size:9px;color:#8296ab;letter-spacing:.08em}
-.app strong{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:14px;letter-spacing:-.02em;font-weight:700}
-.app p{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:11px;line-height:1.7;color:#9aabbe;max-width:35ch}
-.app-foot{font-size:9px;color:#9bdcd7;letter-spacing:.08em;font-weight:700}
-.network-shell{padding:16px;border-radius:16px;border-color:#8ba3bd22;background:rgba(12,19,30,.9)}
-.network-toolbar{padding:6px 4px 16px}.network-toolbar p{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:11px;line-height:1.7;max-width:620px}
-.jump-nav a{border-radius:8px;border-color:#73859b30;background:#111b29;color:#c4d2e1;font-size:10px}.jump-nav a:hover{border-color:#80e4df70}
-.command-switcher{gap:8px;padding-bottom:14px}.command-tab{border-radius:9px;border-color:#73859b30;background:#0d1724;color:#a3b3c6;font-size:10px;font-weight:650;letter-spacing:.04em}
-.command-tab.active{color:#d8f9f5;border-color:#80e4df66;background:#183039;box-shadow:inset 0 0 0 1px #80e4df0a}
-.command-toolbar strong{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:11px;letter-spacing:.06em}.command-toolbar span{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:10px}
-.command-frame{border-radius:12px;border-color:#8ba3bd24;background:#070b12}
-.footer{padding-top:28px;font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:9px;letter-spacing:.06em;color:#72869b}
-.modal{align-items:center}.modal-card{border-radius:18px;border-color:#80e4df50;background:linear-gradient(145deg,#111f2d,#0a111c);box-shadow:0 30px 100px #0009}.modal-card:after{background:linear-gradient(90deg,transparent,#80e4df,#e8bd75,transparent)}.modal-card h2{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:22px;letter-spacing:-.035em}.modal-card p{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:12px;line-height:1.8;color:#a6b7c9}
-a:focus-visible,button:focus-visible,input:focus-visible{outline-color:#a0efea}
-@media(max-width:850px){.shell{padding:0 18px 32px}.topbar{margin:0 -18px;padding:14px 18px}.apps{grid-template-columns:repeat(2,minmax(0,1fr))}.hero-main{padding:22px}.network-shell{padding:12px}}
-@media(max-width:600px){.shell{padding:0 12px 26px}.topbar{margin:0 -12px;padding:12px;gap:8px}.brand{gap:8px}.brand h1{font-size:9px}.brand p{font-size:7px}.mark{width:32px;height:32px}.top-actions{gap:5px}.top-actions .btn{font-size:8px;min-height:35px;padding:7px 8px}.status-pill{padding:7px 8px}.hero{margin-top:14px}.hero-main{padding:17px}.hero h2{font-size:29px;margin:13px 0}.hero-copy{font-size:12px}.ai-core{width:52px;height:52px}.ai-core span{font-size:7px}.ai-core small{font-size:7px}.ai-core-wrap .core-label{display:none}.telemetry{margin-top:22px;gap:7px}.metric{padding:12px}.metric label{font-size:8px}.metric small{font-size:9px}.section{margin-top:26px}.apps{gap:8px}.app{min-height:160px;padding:13px;gap:10px}.app strong{font-size:12px}.app p{font-size:10px}.app-foot{font-size:8px}.section-head h3{font-size:13px}.section-head p{font-size:10px}.mini-tag{font-size:7px}.network-frame{height:700px}.command-frame{height:76vh;min-height:620px}.network-shell{padding:9px}.command-tab{font-size:9px;padding:9px 10px}.footer{font-size:8px}}
-@media(max-width:370px){.top-actions .btn:first-child{display:none}.apps{grid-template-columns:1fr}.app{min-height:138px}.hero-top{align-items:center}}
-
-
-/* Immersive neural interface — original command plane is retained below. */
-#neuralExperience{position:fixed;inset:0;z-index:9999;overflow:hidden;background:#02050d;color:#eaf5ff;font-family:Inter,ui-sans-serif,system-ui,sans-serif;touch-action:pan-y;isolation:isolate}
-#neuralExperience *{box-sizing:border-box}
-#neuralExperience .mesh-layer{position:absolute;inset:0;width:100%;height:100%;display:block;transition:filter .32s ease,transform .32s ease}
-#neuralExperience.telemetry-active #meshGL,#neuralExperience.telemetry-active #binaryFlow{filter:blur(5px) brightness(.58);transform:scale(1.025)}
-#neuralExperience.telemetry-active .mesh-vignette{background:rgba(1,4,12,.28)}
-body:has(#neuralExperience){overflow:hidden}
-#neuralExperience #binaryFlow{pointer-events:none;mix-blend-mode:screen;opacity:.92}
-#neuralExperience .mesh-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 20%,rgba(2,5,13,.18) 58%,#02050d 100%),linear-gradient(180deg,rgba(2,5,13,.12),transparent 20%,transparent 76%,rgba(2,5,13,.34)}
-#neuralExperience .drawer{position:absolute;top:0;bottom:0;width:min(430px,88vw);padding:calc(22px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));overflow:auto;background:rgba(5,9,17,.91);backdrop-filter:blur(28px) saturate(125%);-webkit-backdrop-filter:blur(28px) saturate(125%);border-color:rgba(175,205,235,.16);transition:transform .38s cubic-bezier(.2,.8,.2,1);z-index:4;box-shadow:0 0 70px rgba(0,0,0,.48)}
-#neuralExperience #ledgerDrawer{left:0;transform:translateX(-105%);border-right:1px solid rgba(175,205,235,.16)}
-#neuralExperience #podsDrawer{right:0;transform:translateX(105%);border-left:1px solid rgba(175,205,235,.16)}
-#neuralExperience .drawer.open{transform:translateX(0)!important}
-#neuralExperience .drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:22px}
-#neuralExperience .eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#8aa2bd}
-#neuralExperience h2{font-size:23px;letter-spacing:-.04em;margin:7px 0 0;font-weight:650}
-#neuralExperience .close-drawer{font:inherit;color:#c9d7e8;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);border-radius:50%;width:36px;height:36px;flex:none;cursor:pointer}
-#neuralExperience .ledger-note{color:#a9bacd;font-size:12px;line-height:1.6;margin:0 0 20px}
-#neuralExperience .ledger-item{display:block;padding:15px 0;border-top:1px solid rgba(255,255,255,.1);text-decoration:none;color:inherit}
-#neuralExperience .ledger-item strong{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
-#neuralExperience .ledger-item span{display:block;color:#8fa2b9;font-size:11px;line-height:1.5}
-#neuralExperience .ledger-item i{font-style:normal;color:#8ce6ff;font-size:9px;letter-spacing:.12em;text-transform:uppercase}
-#neuralExperience .pod-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-#neuralExperience .pod-card{position:relative;min-height:188px;perspective:1000px;cursor:pointer;outline:none}
-#neuralExperience .pod-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.2,.75,.2,1)}
-#neuralExperience .pod-card.flipped .pod-inner{transform:rotateY(180deg)}
-#neuralExperience .pod-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid rgba(255,255,255,.13);border-radius:17px;padding:15px;background:linear-gradient(145deg,rgba(28,39,53,.86),rgba(5,9,16,.96));box-shadow:inset 0 1px rgba(255,255,255,.05);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
-#neuralExperience .pod-face:before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent,#61baff);box-shadow:0 0 18px var(--accent,#61baff)}
-#neuralExperience .pod-back{transform:rotateY(180deg);background:linear-gradient(145deg,rgba(15,24,34,.98),rgba(3,6,12,.98))}
-#neuralExperience .pod-index{font-size:9px;letter-spacing:.16em;color:#8295aa}
-#neuralExperience .pod-name{font-size:15px;font-weight:650;letter-spacing:-.02em;margin-top:12px}
-#neuralExperience .pod-desc{font-size:11px;line-height:1.5;color:#9eafc1;margin-top:8px}
-#neuralExperience .pod-hint{font-size:9px;letter-spacing:.12em;color:var(--accent,#61baff);text-transform:uppercase;margin-top:15px}
-#neuralExperience .pod-back .pod-desc{color:#c0cedd}
-#neuralExperience .pod-commands{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-start;margin-top:10px}#neuralExperience .pod-commands .pod-open{margin-top:0;line-height:1.5}
-#neuralExperience .pod-open{font-size:10px;color:#dbeaff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25);padding-bottom:3px;align-self:flex-start;margin-top:12px}
-#neuralExperience .telemetry{position:absolute;left:50%;bottom:0;transform:translate(-50%,110%);width:min(620px,100%);max-height:72vh;overflow:auto;z-index:5;padding:25px 23px calc(26px + env(safe-area-inset-bottom));background:rgba(7,11,18,.88);border:1px solid rgba(207,225,245,.18);border-bottom:0;border-radius:25px 25px 0 0;backdrop-filter:blur(32px) saturate(125%);-webkit-backdrop-filter:blur(32px) saturate(125%);box-shadow:0 -20px 80px rgba(0,0,0,.45);transition:transform .42s cubic-bezier(.2,.8,.2,1)}
-#neuralExperience .telemetry.open{transform:translate(-50%,0)}
-#neuralExperience .telemetry-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-#neuralExperience .telemetry h2{font-size:22px;margin:6px 0 0}
-#neuralExperience .telemetry-close{border:0;background:transparent;color:#b9c7d8;font-size:25px;padding:4px 8px;cursor:pointer}
-#neuralExperience .telemetry-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
-#neuralExperience .telemetry-cell{padding:13px;border:1px solid rgba(255,255,255,.1);border-radius:13px;background:rgba(255,255,255,.035)}
-#neuralExperience .telemetry-cell small{display:block;color:#8297ae;font-size:9px;letter-spacing:.1em;text-transform:uppercase}
-#neuralExperience .telemetry-cell strong{display:block;font-size:12px;font-weight:550;margin-top:8px;line-height:1.45}
-#neuralExperience .telemetry-copy{font-size:12px;line-height:1.6;color:#9eafc2}
-#neuralExperience .telemetry-link{display:inline-block;margin:8px 12px 0 0;color:#e5f3ff;text-decoration:none;font-size:11px;border-bottom:1px solid rgba(180,210,240,.4);padding-bottom:4px}
-#neuralExperience .gesture-hint{position:absolute;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(178,204,233,.53);white-space:nowrap;pointer-events:none;transition:opacity .5s}
-#neuralExperience .gesture-hint.fade{opacity:0}
-#neuralExperience .drawer-scrim{position:absolute;inset:0;z-index:3;background:rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .3s}
-#neuralExperience .drawer-scrim.open{opacity:1;pointer-events:auto}
-#neuralExperience .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-@media(max-width:420px){#neuralExperience .pod-grid{gap:8px}#neuralExperience .pod-card{min-height:174px}#neuralExperience .pod-face{padding:12px}#neuralExperience .pod-name{font-size:14px}#neuralExperience .telemetry-grid{grid-template-columns:1fr}#neuralExperience .telemetry-cell{display:flex;justify-content:space-between;gap:12px;align-items:center}#neuralExperience .telemetry-cell strong{text-align:right;margin:0}}
-@media(prefers-reduced-motion:reduce){#neuralExperience .drawer,#neuralExperience .pod-inner,#neuralExperience .telemetry,#neuralExperience .drawer-scrim{transition-duration:.01ms!important}}
-
-
-/* True perspective particle mesh; the legacy 2D renderer remains only as a fallback. */
-#neuralExperience #meshGL,#neuralExperience #binaryFlow{display:none!important}
-#neuralExperience #threeMesh{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:auto;touch-action:pan-y;background:radial-gradient(ellipse at 50% 48%,#061b3b 0%,#020712 68%,#01030a 100%)}
-#neuralExperience #meshViewportMount{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:auto;overflow:hidden}#neuralExperience #meshViewportMount .xk-root{position:absolute;inset:0;width:100%;height:100%;min-height:0;background:transparent}#neuralExperience #meshViewportMount .xk-viewport{position:absolute;inset:0;width:100%;height:100%;z-index:0;touch-action:none}#neuralExperience #meshViewportMount canvas{display:block;width:100%;height:100%;touch-action:none}
-#neuralExperience .mesh-vignette{z-index:2;pointer-events:none}
-#neuralExperience .drawer-scrim,#neuralExperience .drawer,#neuralExperience #nodeTelemetry{z-index:5}
-
-html,body{width:100%;height:100%;overflow:hidden;background:#020712}body{padding:0!important}body>.shell,body>.modal{display:none!important}
-#neuralExperience{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;overflow:hidden!important;z-index:1;background:#020712}
-#neuralExperience .mesh-layer{position:absolute;inset:0;width:100%;height:100%;display:none!important}
-#neuralExperience #threeMesh{display:block!important;z-index:0;touch-action:none}
-#neuralExperience .mesh-vignette{position:absolute;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,transparent 30%,rgba(1,5,14,.28) 72%,rgba(1,4,12,.8) 100%)}
-#neuralExperience .drawer-scrim{z-index:4}
-#neuralExperience .drawer,#neuralExperience .telemetry{z-index:5;background:rgba(2,8,19,.86);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-color:#58dfff50;max-height:calc(100dvh - 16px);overflow:auto}
-#neuralExperience .telemetry-console{width:100%;height:min(48dvh,560px);min-height:300px;border:1px solid #64dfff3b;border-radius:12px;background:#030914;margin-top:14px}
-#neuralExperience .telemetry-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
-#neuralExperience .telemetry-actions a{display:inline-flex;padding:10px;border:1px solid #61dfff48;border-radius:8px;font-size:10px;color:#bdefff}
-@media(max-width:700px){#neuralExperience .drawer{width:min(92vw,440px);padding:18px 14px}#neuralExperience .telemetry{left:8px;right:8px;max-height:72dvh}#neuralExperience .telemetry-console{height:43dvh;min-height:280px}}
-
-
-/* Unified live workbench inside the node telemetry drawer. All metrics remain sourced from real tools. */
-#neuralExperience .telemetry-tool-title{margin-top:10px;padding:10px 12px;border:1px solid #64dfff2e;border-radius:9px;background:rgba(6,14,25,.92);color:#c8efff;font-size:10px;letter-spacing:.1em}
-#neuralExperience .telemetry-actions button{min-height:40px;display:inline-flex;align-items:center;justify-content:center;padding:9px 10px;border:1px solid #61dfff48;border-radius:8px;background:rgba(8,17,30,.94);font-size:9px;letter-spacing:.04em;color:#bdefff;touch-action:manipulation}
-#neuralExperience .telemetry-actions button.active{background:rgba(33,75,102,.72);border-color:#a7e8ff;color:#fff}
-#neuralExperience .telemetry-console{height:min(52dvh,620px);min-height:360px}
-@media(max-width:700px){#neuralExperience .telemetry-console{height:45dvh;min-height:300px}}
-
-/* Immersive command HUD — pinned above the live 3D viewport and below active drawers. */
-#neuralExperience .mesh-top-hud{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));left:12px;right:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none}
-#neuralExperience .mesh-brand{display:flex;align-items:center;gap:10px;min-width:0;padding:10px 13px;border:1px solid rgba(105,208,255,.25);border-radius:13px;background:rgba(3,9,18,.68);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 8px 32px #0005}
-#neuralExperience .mesh-brand-mark{display:grid;place-items:center;width:34px;height:34px;flex:none;border:1px solid rgba(105,220,255,.55);border-radius:10px;color:#dff9ff;background:radial-gradient(circle at 35% 25%,#2a9eff66,#061222 72%);font:700 10px/1 ui-monospace,monospace;letter-spacing:-.04em}
-#neuralExperience .mesh-brand-copy{min-width:0}#neuralExperience .mesh-brand-copy strong{display:block;color:#effbff;font:600 11px/1.2 ui-monospace,monospace;letter-spacing:.13em}#neuralExperience .mesh-brand-copy small{display:block;margin-top:5px;color:#8aaac2;font:8px/1.2 ui-monospace,monospace;letter-spacing:.11em}
-#neuralExperience .mesh-status-pill{padding:9px 11px;border:1px solid rgba(103,204,255,.28);border-radius:999px;background:rgba(3,9,18,.7);color:#a6cbe0;font:9px ui-monospace,monospace;letter-spacing:.1em;white-space:nowrap;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-#neuralExperience .mesh-edge-controls{position:absolute;z-index:3;top:48%;left:0;right:0;display:flex;justify-content:space-between;padding:0 9px;pointer-events:none}
-#neuralExperience .mesh-edge-controls button{pointer-events:auto;min-height:76px;padding:11px 8px;border:1px solid rgba(109,209,255,.24);border-radius:11px;background:rgba(3,9,18,.65);color:#a9d9ef;font:8px ui-monospace,monospace;letter-spacing:.13em;writing-mode:vertical-rl;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);touch-action:manipulation}
-#neuralExperience .mesh-edge-controls button:active,#neuralExperience .mesh-edge-controls button:focus-visible{outline:2px solid #85e5ff;outline-offset:2px;background:rgba(11,39,60,.92)}
-#neuralExperience .mesh-core-caption{position:absolute;z-index:2;top:55%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:9px;padding:8px 12px;border:1px solid rgba(112,211,255,.22);border-radius:999px;background:rgba(3,10,20,.48);color:#c9edff;font:9px ui-monospace,monospace;letter-spacing:.2em;white-space:nowrap;pointer-events:none;text-shadow:0 0 18px #3bafff66;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-#neuralExperience .mesh-core-caption:before{content:"";width:5px;height:5px;border-radius:50%;background:#7be5ff;box-shadow:0 0 12px #55cfff;flex:none}
-@media(max-width:600px){#neuralExperience .mesh-core-caption{top:56%;font-size:8px;letter-spacing:.14em;padding:7px 10px}}
-#neuralExperience .mesh-bottom-hud{position:absolute;z-index:3;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;pointer-events:none}
-#neuralExperience .mesh-readout{min-width:0;padding:10px 12px;border:1px solid rgba(100,197,255,.18);border-radius:12px;background:rgba(3,9,18,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 8px 30px #0004}
-#neuralExperience .mesh-readout small{display:block;color:#7898b1;font:8px/1.3 ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
-#neuralExperience .mesh-readout strong{display:block;margin-top:6px;color:#dff7ff;font:500 11px/1.35 ui-monospace,monospace;overflow-wrap:anywhere}
-#neuralExperience .mesh-readout .mesh-unit{color:#759bb6;font-size:8px}
-@media(max-width:600px){#neuralExperience .mesh-top-hud{top:calc(8px + env(safe-area-inset-top));left:8px;right:8px;gap:6px}#neuralExperience .mesh-brand{padding:8px 9px;gap:8px}#neuralExperience .mesh-brand-mark{width:30px;height:30px}#neuralExperience .mesh-brand-copy strong{font-size:9px}#neuralExperience .mesh-brand-copy small{font-size:7px;letter-spacing:.06em}#neuralExperience .mesh-status-pill{font-size:8px;padding:8px 9px}#neuralExperience .mesh-edge-controls{padding:0 6px}#neuralExperience .mesh-edge-controls button{min-height:65px;padding:9px 6px;font-size:7px}#neuralExperience .mesh-bottom-hud{left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}#neuralExperience .mesh-readout{padding:8px 10px}#neuralExperience .mesh-readout small{font-size:7px}#neuralExperience .mesh-readout strong{font-size:10px;margin-top:4px}}
-@media(max-height:620px) and (min-width:601px){#neuralExperience .mesh-bottom-hud{bottom:calc(6px + env(safe-area-inset-bottom))}#neuralExperience .mesh-readout{padding:6px 9px}#neuralExperience .mesh-edge-controls{top:42%}}
-</style>
-
-<style id="selected-node-panel-styles">#neuralExperience .selected-node-panel{margin:12px 0 18px;padding:14px;border:1px solid #5ccfff4d;border-radius:15px;background:linear-gradient(145deg,#09192af2,#030810f5);box-shadow:inset 0 1px #cef4ff0a,0 10px 32px #0004}#neuralExperience .selected-node-panel-head{display:flex;align-items:center;gap:9px;min-width:0;padding-bottom:12px;border-bottom:1px solid #83dfff20}#neuralExperience .selected-node-indicator{width:8px;height:8px;flex:none;border-radius:50%;background:#55d9ff;box-shadow:0 0 14px #55d9ff88}#neuralExperience .selected-node-panel-head>div{min-width:0;flex:1}#neuralExperience .selected-node-panel-head small,#neuralExperience .selected-node-grid small{display:block;color:#789ab4;font:8px/1.5 ui-monospace,monospace;letter-spacing:.1em}#neuralExperience .selected-node-panel-head strong{display:block;margin-top:4px;color:#e0f7ff;font:600 12px/1.4 ui-monospace,monospace;overflow-wrap:anywhere}#neuralExperience .selected-node-state{flex:none;padding:5px 7px;border:1px solid #6acfff35;border-radius:7px;color:#9edfff;font:8px ui-monospace,monospace;letter-spacing:.04em}#neuralExperience .selected-node-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:11px}#neuralExperience .selected-node-grid>div{min-width:0;padding:9px;border:1px solid #7ecfff19;border-radius:9px;background:#06101c}#neuralExperience .selected-node-grid strong{display:block;margin-top:6px;color:#d7f3ff;font:500 10px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;word-break:break-word}#neuralExperience .selected-node-grid .selected-node-wide{grid-column:1/-1}#neuralExperience .selected-node-note{margin:10px 0 0;color:#7f9bb2;font-size:10px;line-height:1.55}@media(max-width:420px){#neuralExperience .selected-node-panel{padding:11px}#neuralExperience .selected-node-grid{gap:6px}#neuralExperience .selected-node-grid>div{padding:8px}}</style><style id="mesh-global-grid-styles">#neuralExperience .mesh-context-head{margin-top:15px;padding-top:12px;border-top:1px solid #83dfff20;color:#81b5d1;font:8px ui-monospace,monospace;letter-spacing:.14em}#neuralExperience .mesh-global-grid{margin-top:9px}#neuralExperience .mesh-global-grid>div{background:linear-gradient(145deg,#071625,#040b14)}#neuralExperience .mesh-global-grid strong{color:#9fdcf5}</style><style id="mesh-evidence-styles">#neuralExperience .mesh-evidence-record{display:flex;flex-direction:column;gap:7px;min-width:0;padding:10px;border:1px solid #74d5ff26;border-radius:9px;background:#030b14}#neuralExperience .mesh-evidence-record strong{color:#d4f2ff;font:10px ui-monospace,monospace;overflow-wrap:anywhere}#neuralExperience .mesh-evidence-record code{color:#85cdec;font:9px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;word-break:break-all}#neuralExperience .mesh-evidence-record span,#neuralExperience .mesh-evidence-empty{color:#8aa7bf;font:9px/1.6 ui-monospace,monospace;overflow-wrap:anywhere}#neuralExperience .mesh-evidence-empty{padding:10px;border:1px dashed #74d5ff26;border-radius:9px}</style>
-<style id="kernel-single-mesh-architecture">
-html,body{margin:0!important;padding:0!important;width:100vw!important;height:100vh!important;min-height:100vh!important;overflow:hidden!important;background:#000!important}body>.shell,body>.modal{display:none!important}
-#neuralExperience{position:fixed!important;inset:0!important;display:block!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#000!important;z-index:0!important}
-#meshViewportMount{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;overflow:hidden!important;background:#000!important;z-index:1!important}#meshViewportMount canvas#threeMesh{position:fixed!important;inset:0!important;display:block!important;width:100vw!important;height:100vh!important;z-index:1!important;background:#000!important;touch-action:none!important}
-#neuralExperience>.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-#neuralExperience .mesh-top-hud,#neuralExperience .mesh-work-tabs,#neuralExperience .mesh-edge-controls,#neuralExperience .mesh-core-caption,#neuralExperience .mesh-bottom-hud,#neuralExperience .mesh-vignette,#neuralExperience #openFullDashboard,#neuralExperience #returnToMesh{display:none!important}
-#neuralExperience .drawer,#neuralExperience #nodeTelemetry{position:fixed!important;z-index:50!important;box-sizing:border-box!important;background:rgba(4,8,16,.86)!important;backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important;border:1px solid rgba(0,210,255,.18)!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important;transition:transform .35s cubic-bezier(.16,1,.3,1)!important;pointer-events:none!important;color:#d8f5ff!important}
-#neuralExperience #ledgerDrawer{top:0!important;bottom:0!important;left:0!important;width:min(88vw,380px)!important;height:100dvh!important;transform:translateX(-105%)!important}#neuralExperience #podsDrawer{top:0!important;bottom:0!important;right:0!important;left:auto!important;width:min(88vw,380px)!important;height:100dvh!important;transform:translateX(105%)!important}
-#neuralExperience #nodeTelemetry{left:0!important;right:0!important;bottom:0!important;top:auto!important;width:100vw!important;height:55vh!important;height:55dvh!important;max-height:85dvh!important;padding:16px!important;transform:translateY(105%)!important}
-#neuralExperience .drawer.open,#neuralExperience #nodeTelemetry.open{pointer-events:auto!important}#neuralExperience #ledgerDrawer.open{transform:translateX(0)!important}#neuralExperience #podsDrawer.open{transform:translateX(0)!important}#neuralExperience #nodeTelemetry.open{transform:translateY(0)!important}
-#neuralExperience .drawer-scrim{position:fixed!important;inset:0!important;z-index:49!important;background:rgba(0,0,0,.22)!important;opacity:0!important;pointer-events:none!important;transition:opacity .25s ease!important}#neuralExperience .drawer-scrim.open{opacity:1!important;pointer-events:auto!important}
-#neuralExperience .drawer-head{position:sticky!important;top:-16px!important;z-index:2!important;padding:14px 0 12px!important;background:rgba(4,8,16,.94)!important}#neuralExperience .telemetry-console{width:100%!important;min-height:280px!important;height:40dvh!important;background:#02050a!important}
-#neuralExperience .telemetry-actions{display:flex!important;flex-wrap:wrap!important;gap:8px!important}#neuralExperience .telemetry-actions button,#neuralExperience .telemetry-actions a{min-height:42px!important}
-#neuralExperience .selected-node-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}#neuralExperience .selected-node-grid strong{overflow-wrap:anywhere!important}#neuralExperience .selected-node-wide{grid-column:1/-1!important}
-@media(max-width:600px){#neuralExperience #nodeTelemetry{padding:12px!important}}
-</style>
-
-<style id="kernel-drawer-motion-fix">
-#neuralExperience .drawer,#neuralExperience #nodeTelemetry{transition-duration:.35s!important;transition-timing-function:cubic-bezier(.16,1,.3,1)!important}
-#neuralExperience .drawer:not(.open),#neuralExperience #nodeTelemetry:not(.open){pointer-events:none!important}
-#neuralExperience #ledgerDrawer.open{transform:translateX(0)!important}
-#neuralExperience #podsDrawer.open{transform:translateX(0)!important}
-#neuralExperience #nodeTelemetry.open{transform:translateY(0)!important}
-#neuralExperience .drawer-scrim:not(.open){pointer-events:none!important}
-</style>
-</head>
+:root{color-scheme:dark;background:#000;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#eaf5ff}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100vw;height:100vh;overflow:hidden;background:#000}
+body{position:relative}
+button,a{font:inherit;touch-action:manipulation}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid #72dfff;outline-offset:3px}
+#neuralExperience{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#000;touch-action:none}
+#meshViewportMount,.xk-root.xk-viewport-only,.xk-viewport{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;min-width:0;min-height:0;overflow:hidden}
+#threeMesh{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:1;display:block;touch-action:none}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.drawer,.telemetry{position:fixed;z-index:50;display:block;visibility:visible;background:rgba(4,8,16,.86);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(0,210,255,.18);overflow-y:auto;overscroll-behavior:contain;color:#eaf5ff;transition:transform .35s cubic-bezier(.16,1,.3,1);pointer-events:none;will-change:transform}
+#ledgerDrawer{top:0;bottom:0;left:0;width:min(88vw,380px);height:100vh;height:100dvh;transform:translateX(-105%);border-radius:0 18px 18px 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+#podsDrawer{top:0;bottom:0;right:0;width:min(88vw,380px);height:100vh;height:100dvh;transform:translateX(105%);border-radius:18px 0 0 18px;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+#nodeTelemetry{left:0;right:0;bottom:0;height:55vh;height:55dvh;max-height:760px;transform:translateY(105%);border-radius:18px 18px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom))}
+.drawer.open,.telemetry.open{transform:translate(0,0);pointer-events:auto}
+.drawer-scrim{position:fixed;inset:0;z-index:49;background:rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .25s ease}
+.drawer-scrim.open{opacity:1;pointer-events:auto}
+.drawer-head,.telemetry-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.eyebrow,.pod-index,.mesh-context-head{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#73dfff}
+.drawer h2,.telemetry h2{font-size:20px;line-height:1.2;margin:6px 0 0;font-weight:650}
+.close-drawer,.telemetry-close{width:42px;height:42px;flex:0 0 42px;border:1px solid rgba(115,223,255,.24);border-radius:50%;background:rgba(5,17,30,.9);color:#eafaff;font-size:24px}
+.ledger-note,.telemetry-copy,.selected-node-note{font-size:13px;line-height:1.55;color:#a9bfd2}
+.ledger-item{display:block;padding:14px;margin:10px 0;border:1px solid rgba(115,223,255,.16);border-radius:12px;background:rgba(5,16,29,.64)}
+.ledger-item i,.ledger-item strong,.ledger-item span{display:block}
+.ledger-item i{font-size:10px;font-style:normal;letter-spacing:.1em;text-transform:uppercase;color:#73dfff}
+.ledger-item strong{margin:5px 0;font-size:14px}
+.ledger-item span{font-size:12px;line-height:1.45;color:#a9bfd2}
+.pod-grid{display:grid;grid-template-columns:1fr;gap:12px;padding-bottom:10px}
+.pod-card{min-height:150px;perspective:1000px;cursor:pointer;outline:none}
+.pod-inner{position:relative;min-height:150px;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.7,.2,1)}
+.pod-card.flipped .pod-inner{transform:rotateY(180deg)}
+.pod-face{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:16px;border:1px solid rgba(115,223,255,.2);border-radius:14px;background:linear-gradient(145deg,rgba(9,25,43,.96),rgba(3,8,16,.96));backface-visibility:hidden}
+.pod-back{transform:rotateY(180deg)}
+.pod-commands{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pod-name{font-size:19px;font-weight:650;margin:8px 0}
+.pod-desc{font-size:12px;line-height:1.5;color:#b6cadb}
+.pod-hint{font-size:10px;color:#73dfff;letter-spacing:.1em;text-transform:uppercase}
+.pod-open,.telemetry-actions a,.telemetry-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:8px 10px;border:1px solid rgba(115,223,255,.2);border-radius:8px;background:rgba(8,23,40,.8);color:#d9f5ff;font-size:10px;letter-spacing:.04em}
+.kernel-core-summary,.selected-node-panel,.telemetry-cell{margin:12px 0;padding:12px;border:1px solid rgba(115,223,255,.15);border-radius:12px;background:rgba(3,11,21,.62)}
+.selected-node-grid,.telemetry-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+.selected-node-grid>div,.telemetry-cell{min-width:0;padding:10px;border:1px solid rgba(115,223,255,.12);border-radius:9px;background:rgba(6,17,30,.72)}
+.selected-node-grid small,.telemetry-cell small{display:block;font-size:9px;letter-spacing:.1em;color:#80cfe9;text-transform:uppercase;margin-bottom:5px}
+.selected-node-grid strong,.telemetry-cell strong{display:block;overflow-wrap:anywhere;font-size:12px;font-weight:550;line-height:1.5;color:#e5f7ff}
+.selected-node-wide{grid-column:1/-1}
+.selected-node-panel-head{display:flex;align-items:center;gap:10px}
+.selected-node-panel-head small,.selected-node-panel-head strong{display:block}
+.selected-node-panel-head small{font-size:9px;letter-spacing:.1em;color:#80cfe9}
+.selected-node-panel-head strong{font-size:13px;margin-top:4px}
+.selected-node-state{margin-left:auto;font-size:9px;color:#80cfe9}
+.selected-node-indicator{width:8px;height:8px;border-radius:50%;background:#73dfff;box-shadow:0 0 12px #73dfff}
+.telemetry-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.telemetry-actions button{cursor:pointer}
+.telemetry-tool-title{font-size:10px;letter-spacing:.12em;color:#73dfff;margin:14px 0 8px}
+.telemetry-console{display:block;width:100%;height:55vh;min-height:320px;border:1px solid rgba(115,223,255,.18);border-radius:10px;background:#030812}
+@media(min-width:700px){.pod-grid{grid-template-columns:1fr 1fr}.selected-node-grid,.telemetry-grid{grid-template-columns:repeat(3,minmax(0,1fr))}#nodeTelemetry{padding:22px 24px calc(24px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.drawer,.telemetry,.drawer-scrim,.pod-inner{transition-duration:.01ms!important}}
+</style></head>
 <body>
 <div id="neuralExperience" aria-label="KERNELCORP neural network interface">
  <div id="meshViewportMount" aria-label="Live 3D KERNEL mesh viewport"></div>
