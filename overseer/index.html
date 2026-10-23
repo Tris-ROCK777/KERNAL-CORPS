@@ -228,6 +228,16 @@ scrim.addEventListener('click', closeMeshDrawers);
 clearDrawerContentAfterClose(panes.telemetry, 'telemetry');
 clearDrawerContentAfterClose(panes.left, 'left');
 clearDrawerContentAfterClose(panes.right, 'right');
+for (const [key, pane] of Object.entries(panes)) {
+ let origin;
+ pane.addEventListener('pointerdown', e => { origin = {x:e.clientX,y:e.clientY,id:e.pointerId}; }, {passive:true});
+ pane.addEventListener('pointerup', e => {
+  if (!origin || origin.id !== e.pointerId) return;
+  const dx=e.clientX-origin.x, dy=e.clientY-origin.y; origin=null;
+  if ((key==='telemetry' && dy>55) || (key==='left' && dx< -55) || (key==='right' && dx>55)) closeMeshDrawers();
+ }, {passive:true});
+ pane.addEventListener('pointercancel', () => { origin=null; }, {passive:true});
+}
 
 // Gesture-first controls: the default scene stays clean; drawers are revealed only by node taps or edge swipes.
 let edgeGestureStart = null;
