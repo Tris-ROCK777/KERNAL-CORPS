@@ -35,3 +35,42 @@ The historical Ring-WAL dashboard was restored to `overseer/index.html` in commi
 
 ## Resume point
 Continue from the restored Ring-WAL dashboard. Do not ask the user to repeat existing tests or re-supply history already in Git. Next verification target is the actual deployed Pages entry and its module loading, followed by an end-to-end live authenticated shard transfer from the dashboard.
+
+
+## Unified entrypoint and historical branch audit (2026-10-22)
+
+Canonical command plane: `/overseer/index.html` (title: **KERNEL UMBRELLA CORP // X-KOM’Z OVERSEER**). The root `/index.html` already redirects here. The historical names below are compatibility entrypoints; they must not fork the UI or create separate dashboards.
+
+Compatibility pages added at repository root:
+- `/command.html` and `/command-center.html`
+- `/dashboard.html`
+- `/overseer.html`
+- `/x-komz.html` and `/x-koms.html`
+- `/kernel.html`
+
+All compatibility pages redirect to the same canonical Overseer command plane. The canonical dashboard hosts the live mesh console and provides one embedded workbench for the existing network, Ring-WAL/storage, peer verification, authenticated shard, and authority/vault tools. The seven canonical product cards are X-KOM’Z (hub) plus Planet-K, KashKorner, X-Koin’s, Kernelodie’s, KernelVision, and X-Shield. A card marked “PRODUCT BRIEF” describes a planned product surface; it is not evidence that a separate production app has been built.
+
+### Historical branches checked against `main`
+
+The repository's branch search returned these 13 non-main branches:
+- `feat/integrated-overseer-network-dashboard`
+- `feat/jarvis-overseer-command-center`
+- `feat/jarvis-theme-live-mesh-console`
+- `feat/overseer-command-center-completion`
+- `feat/overseer-module-launcher`
+- `feat/restore-overseer-tool-directory`
+- `feat/unified-overseer-command-workbench`
+- `fix/allow-mqtt-ready-handshake`
+- `fix/cache-bust-live-peer-modules`
+- `fix/mqtt-ready-outbound-allowlist`
+- `fix/overseer-mobile-command-layout`
+- `fix/overseer-mobile-command-layout-v2`
+- `redesign/overseer-angular-mesh-ui`
+
+The command-center, module-launcher, mobile-layout, JARVIS-theme, integrated-dashboard, and angular-redesign branches are historical snapshots of overlapping UI iterations. They diverge from current `main`; wholesale replacement would discard later integrations and is not a safe merge strategy. Their core themes are represented by the current canonical command plane and `overseer/mesh-console.html`, which contains the JARVIS theme and actual console controls.
+
+The MQTT/WebRTC branches are also old snapshots. Current `main` was checked directly: `overseer/overseer-real-peer.mjs` contains READY handshake handling; `overseer/overseer-signaling-bootstrap.mjs` allows READY through the signaling transports; and `overseer/live-peer-verify.html` uses cache-busted module imports. Do not reapply stale patches unless a current regression is demonstrated.
+
+### Integration rule
+
+Keep all future UI and runtime fixes directly on `main`, with no new branches or routine pull requests. Extend the canonical workbench, preserve existing modules and tests, and distinguish verified runtime measurements from architecture targets or product briefs.
