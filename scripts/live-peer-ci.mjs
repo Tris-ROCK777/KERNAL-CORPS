@@ -263,7 +263,7 @@ try {
     }
     console.log(JSON.stringify({ event: "SEVEN_CANONICAL_APP_MODALS_PASS", apps: expectedApps, commandAreas: tabLabels.map(value => value.trim()) }));
     // Verify Storage and Security really load their intended views inside the same X-KOMZ frame.
-    await smokePage.getByRole("button", { name: "STORAGE", exact: true }).click();
+    await smokePage.locator('.command-tab[data-command-title="Storage"]').click();
     await smokePage.frameLocator("#commandFrame").locator("#walRecords").waitFor({ state: "attached", timeout: 15000 });
     const storageControls = await smokePage.frameLocator("#commandFrame").locator(".dock button").allTextContents();
     if (!storageControls.some(value => value.includes("VERIFY WAL CHAIN")) ||
@@ -291,7 +291,7 @@ try {
       await smokeBrowser.close();
       throw new Error("WAL_CHAIN_VERIFY_STATUS_UNEXPECTED: " + walVerifyStatus);
     }
-    await smokePage.getByRole("button", { name: "SECURITY", exact: true }).click();
+    await smokePage.locator('.command-tab[data-command-title="Security"]').click();
     await smokePage.frameLocator("#commandFrame").locator("#run").waitFor({ state: "attached", timeout: 15000 });
     const securityButton = (await smokePage.frameLocator("#commandFrame").locator("#run").textContent())?.trim();
     if (!securityButton?.includes("VERIFY AUTHORITY")) {
@@ -321,7 +321,7 @@ try {
       await smokeBrowser.close();
       throw new Error("SECURITY_TAB_PRIVATE_KEY_POLICY_FAILED: " + securityOutput);
     }
-    await smokePage.getByRole("button", { name: "NETWORK", exact: true }).click();
+    await smokePage.locator('.command-tab[data-command-title="Network"]').click();
     await smokePage.frameLocator("#commandFrame").locator("#simTransfer").waitFor({ state: "attached", timeout: 15000 });
     console.log(JSON.stringify({ event: "FOUR_COMMAND_AREAS_LOAD_PASS", storageControls, securityButton }));
     // Primary network and worker actions stay visible in the mobile HUD.
@@ -371,7 +371,7 @@ try {
     console.log(JSON.stringify({ event: "DEPLOYED_LOCAL_WORKER_TASK_QUEUE_PASS", actualWorkers: workerState.count, verifiedTaskLog: workerState.log }));
     // Explicit first-boot provisioning is tested only after all production fail-closed checks,
     // in this disposable CI browser profile. The generated key is never installed as a trust pin.
-    await smokePage.getByRole("button", { name: "SECURITY", exact: true }).click();
+    await smokePage.locator('.command-tab[data-command-title="Security"]').click();
     const securityFrame = smokePage.frameLocator("#commandFrame");
     await securityFrame.locator("#provision").click();
     await smokePage.waitForFunction(() => {
