@@ -213,7 +213,7 @@ try {
       throw new Error("STORAGE_TAB_CONTROLS_FAILED: " + JSON.stringify(storageControls));
     }
     const storageFrame = smokePage.frameLocator("#commandFrame");
-    await storageFrame.getByRole("button", { name: "REFRESH STORAGE", exact: true }).click();
+    await storageFrame.getByRole("button", { name: "REFRESH STORAGE", exact: true }).evaluate(button => button.click());
     await smokePage.waitForFunction(() => {
       const text = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#status")?.textContent || "";
       return text.includes("OPFS STORAGE REFRESHED") || text.includes("STORAGE READ FAILED");
@@ -223,7 +223,7 @@ try {
       await smokeBrowser.close();
       throw new Error("OPFS_STORAGE_REFRESH_FAILED: " + storageStatus);
     }
-    await storageFrame.getByRole("button", { name: "VERIFY WAL CHAIN", exact: true }).click();
+    await storageFrame.getByRole("button", { name: "VERIFY WAL CHAIN", exact: true }).evaluate(button => button.click());
     const walVerifyStatus = (await storageFrame.locator("#status").textContent()) || "";
     if (!walVerifyStatus.includes("WAL CHAIN VERIFICATION BLOCKED") && !walVerifyStatus.includes("WAL CHAIN VERIFIED")) {
       await smokeBrowser.close();
