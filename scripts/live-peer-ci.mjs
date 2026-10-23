@@ -261,6 +261,7 @@ try {
       const frame = document.querySelector("#commandFrame");
       return frame?.contentWindow?.__KERNEL_CONSOLE_UI_READY === true;
     }, undefined, { timeout: 15000 });
+    await commandFrame.locator("#openRightDrawer").click();
     await commandFrame.locator("#simTransfer").click();
     await smokePage.waitForFunction(() => {
       const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#log")?.textContent || "";
