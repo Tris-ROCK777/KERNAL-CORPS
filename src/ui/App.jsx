@@ -1,100 +1,77 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, Line, OrbitControls, Stars } from '@react-three/drei';
+import { Float, Html, Line, OrbitControls, Stars } from '@react-three/drei';
 
 const PODS = [
   ['Planet-K','planet-k'], ['KashKorner','kashkorner'], ['X-Koin’s','x-koins'],
-  ['Kernelodie’s','kernelodies'], ['KernelVision','kernelvision'], ['X-Shield','x-shield'],
+  ['Kernelodie’z','kernelodies'], ['KernelVision','kernelvision'], ['X-Shield','x-shield'],
 ];
 
-function Core() {
+function CoreNexus({onNode, selected}) {
   const core=useRef(), shell=useRef(), halo=useRef();
-  const beams = useMemo(() => Array.from({length:48}, (_,i) => {
-    const a=i*Math.PI*2/48, r=0.58+(i%5)*0.095, y=(i%2?1:-1)*2.25;
+  const beams=useMemo(()=>Array.from({length:48},(_,i)=>{
+    const a=i*Math.PI*2/48,r=.58+(i%5)*.095,y=(i%2?1:-1)*2.25;
     return [[Math.cos(a)*r,y,Math.sin(a)*r],[Math.cos(a)*.12,0,Math.sin(a)*.12],[Math.cos(a)*r,-y,Math.sin(a)*r]];
-  }), []);
-  useFrame(({clock})=>{const t=clock.elapsedTime;if(core.current)core.current.rotation.y=t*.18;if(shell.current){shell.current.rotation.y=-t*.12;shell.current.rotation.x=Math.sin(t*.17)*.12;}if(halo.current)halo.current.scale.setScalar(1+Math.sin(t*2.2)*.035);});
+  }),[]);
+  const select=e=>{e.stopPropagation();onNode({id:'core-nexus',kind:'CORE',source:'three-raycast',position:[0,0,0]});};
+  useFrame(({clock})=>{const t=clock.elapsedTime;if(core.current){core.current.rotation.y=t*.18;core.current.rotation.x=Math.sin(t*.1)*.12;}if(shell.current){shell.current.rotation.y=-t*.12;shell.current.rotation.x=Math.sin(t*.17)*.12;}if(halo.current)halo.current.scale.setScalar(1+Math.sin(t*2.2)*.035);});
   return <group>
-    <mesh ref={core}><icosahedronGeometry args={[0.68,2]}/><meshStandardMaterial color="#04111c" emissive="#00cfff" emissiveIntensity={2.8} wireframe/></mesh>
-    <mesh ref={shell}><octahedronGeometry args={[0.43,2]}/><meshBasicMaterial color="#edffff" wireframe/></mesh>
+    <mesh ref={core} onClick={select} onPointerDown={e=>{if(e.pointerType==='touch')select(e);}}>
+      <icosahedronGeometry args={[.82,2]}/><meshStandardMaterial color="#04111c" emissive="#00cfff" emissiveIntensity={2.8} wireframe/>
+    </mesh>
+    <mesh ref={shell}><octahedronGeometry args={[.48,2]}/><meshBasicMaterial color="#edffff" wireframe/></mesh>
     <mesh ref={halo}><torusGeometry args={[1.12,.012,8,160]}/><meshBasicMaterial color="#00cfff" transparent opacity={.82}/></mesh>
     {beams.map((pts,i)=><Line key={i} points={pts} color={i%4===0?'#ffffff':i%3===0?'#8df7ff':'#00bfff'} lineWidth={i%4===0?2.2:1} transparent opacity={i%4===0?.92:.65}/>)}
     {Array.from({length:3},(_,i)=><mesh key={i} rotation={[i*.7,0,i*.4]}><torusGeometry args={[1.35+i*.19,.008,6,180]}/><meshBasicMaterial color={i===1?'#1a77ff':'#00cfff'} transparent opacity={.5}/></mesh>)}
+    {selected?.id==='core-nexus'&&<Html position={[0,1.45,0]} center distanceFactor={9} zIndexRange={[80,0]}><div className="world-telemetry"><strong>CORE NEXUS</strong><span>RAYCAST SELECTED</span><small>Runtime data is shown only when supplied by the telemetry bridge.</small></div></Html>}
     <pointLight color="#00cfff" intensity={18} distance={11}/><pointLight color="#e7ffff" intensity={9} distance={5}/>
   </group>;
 }
-function WaveFloor() {
-  const ref=useRef();
-  // Keep base coordinates flat and numeric, matching BufferAttribute layout [x,y,z,...].
-  // Never destructure base[i]: each indexed value is a number, not a coordinate tuple.
-  const {positions,base}=useMemo(()=>{const arr=[];for(let x=-14;x<=14;x+=.32)for(let z=-10;z<=5;z+=.32)arr.push(x,-2.5,z);const initial=new Float32Array(arr);return {positions:initial,base:initial.slice()};},[]);
-  useFrame(({clock})=>{
-    if(!ref.current)return;
-    const attribute=ref.current.geometry.attributes.position;
-    const p=attribute.array,t=clock.elapsedTime;
-    for(let i=0;i<base.length;i+=3){
-      const x=base[i],z=base[i+2];
-      p[i+1]=-2.5+Math.sin(x*.48+t*.8)*.18+Math.cos(z*.55-t*.6)*.14;
-    }
-    attribute.needsUpdate=true;
-  });
-  return <points ref={ref}><bufferGeometry><bufferAttribute attach="attributes-position" count={positions.length/3} array={positions} itemSize={3}/></bufferGeometry><pointsMaterial color="#087eff" size={.022} sizeAttenuation transparent opacity={.82}/></points>;
+function WaveFloor(){
+ const ref=useRef();
+ const {positions,base}=useMemo(()=>{const a=[];for(let x=-14;x<=14;x+=.32)for(let z=-10;z<=5;z+=.32)a.push(x,-2.5,z);const p=new Float32Array(a);return{positions:p,base:p.slice()};},[]);
+ useFrame(({clock})=>{if(!ref.current)return;const attr=ref.current.geometry.attributes.position,p=attr.array,t=clock.elapsedTime;for(let i=0;i<base.length;i+=3){const x=base[i],z=base[i+2];p[i+1]=-2.5+Math.sin(x*.48+t*.8)*.18+Math.cos(z*.55-t*.6)*.14;}attr.needsUpdate=true;});
+ return <points ref={ref}><bufferGeometry><bufferAttribute attach="attributes-position" count={positions.length/3} array={positions} itemSize={3}/></bufferGeometry><pointsMaterial color="#087eff" size={.022} sizeAttenuation transparent opacity={.82}/></points>;
 }
-function Dome({onNode}) {
- const pts=useMemo(()=>{const p=[];const n=14;for(let i=0;i<=n;i++){const phi=Math.PI*i/n;for(let j=0;j<n*2;j++){const theta=Math.PI*2*j/(n*2);p.push([4.8*Math.sin(phi)*Math.cos(theta),4.8*Math.cos(phi),4.8*Math.sin(phi)*Math.sin(theta)]);}}return p;},[]);
- const lines=useMemo(()=>{const out=[];for(let i=0;i<pts.length;i+=28){const row=[];for(let j=0;j<12;j++)row.push(pts[(i+j*2)%pts.length]);out.push(row);}return out;},[pts]);
- return <group>{lines.map((p,i)=><Line key={i} points={p} color="#075aff" lineWidth={.5} transparent opacity={.2}/>)}<mesh onClick={e=>{e.stopPropagation();onNode({id:'geodesic-dome',state:'visualization-node',source:'R3F scene'});}}><icosahedronGeometry args={[4.7,2]}/><meshBasicMaterial color="#0077ff" wireframe transparent opacity={.055}/></mesh></group>;
+function ContainmentDome({onNode}){
+ const select=e=>{e.stopPropagation();onNode({id:'containment-dome',kind:'MESH',source:'three-raycast'});};
+ return <group><mesh onClick={select} onPointerDown={e=>{if(e.pointerType==='touch')select(e);}}><icosahedronGeometry args={[4.7,2]}/><meshBasicMaterial color="#0077ff" wireframe transparent opacity={.055}/></mesh>
+ {Array.from({length:14},(_,i)=><mesh key={i} rotation={[i*.17,i*.31,i*.12]}><torusGeometry args={[3.8+i*.055,.004,4,180]}/><meshBasicMaterial color="#075aff" transparent opacity={.14}/></mesh>)}</group>;
 }
-function Filaments({onNode}) {
- const nodes=useMemo(()=>Array.from({length:96},(_,i)=>{const a=i*2.39996,r=1.2+(i%13)*.29;return [Math.cos(a)*r,Math.sin(i*1.71)*2.9,Math.sin(a)*r];}),[]);
- const edges=useMemo(()=>nodes.map((p,i)=>[p,nodes[(i+1)%nodes.length],nodes[(i+7)%nodes.length]]),[nodes]);
+function BokehFilaments({onNode,selected}){
+ const nodes=useMemo(()=>Array.from({length:120},(_,i)=>{const a=i*2.39996,r=1.2+(i%13)*.29;return[Math.cos(a)*r,Math.sin(i*1.71)*2.9,Math.sin(a)*r];}),[]);
  const group=useRef();
  useFrame(({clock})=>{if(group.current)group.current.rotation.y=Math.sin(clock.elapsedTime*.12)*.12;});
- return <group ref={group}>{edges.map((pts,i)=><Line key={'e'+i} points={pts} color={i%7===0?'#ff9d24':'#006dff'} lineWidth={i%7===0?1.25:.55} transparent opacity={i%7===0?.48:.3}/>)}{nodes.map((p,i)=><mesh key={i} position={p} onClick={e=>{e.stopPropagation();onNode({id:'mesh-node-'+i,state:'rendered-node',source:'R3F scene'});}}><sphereGeometry args={[i%9===0?.07:.028,10,10]}/><meshBasicMaterial color={i%7===0?'#ff9d24':i%5===0?'#37e5ff':'#087dff'}/></mesh>)}</group>;
+ return <group ref={group}>{nodes.map((p,i)=><mesh key={i} position={p} onClick={e=>{e.stopPropagation();onNode({id:'mesh-node-'+i,kind:'PEER-NODE',source:'three-raycast',position:p});}} onPointerDown={e=>{if(e.pointerType==='touch'){e.stopPropagation();onNode({id:'mesh-node-'+i,kind:'PEER-NODE',source:'three-raycast',position:p});}}}><sphereGeometry args={[i%9===0?.07:.028,10,10]}/><meshBasicMaterial color={i%7===0?'#ffad2f':i%5===0?'#37e5ff':'#087dff'}/>{selected?.id==='mesh-node-'+i&&<Html position={[0,.16,0]} center distanceFactor={8} zIndexRange={[80,0]}><div className="world-telemetry"><strong>{selected.id}</strong><span>RAYCAST SELECTED</span><small>{selected.source}</small></div></Html>}</mesh>)}
+ {nodes.filter((_,i)=>i%3===0).map((p,i)=><Line key={'filament-'+i} points={[p,nodes[(i*3+7)%nodes.length],nodes[(i*3+19)%nodes.length]]} color={i%4===0?'#ffad2f':'#006dff'} lineWidth={i%4===0?1.1:.55} transparent opacity={i%4===0?.42:.26}/>)}</group>;
 }
-function BinaryHighways() {
- const paths=useMemo(()=>Array.from({length:9},(_,i)=>Array.from({length:150},(_,j)=>{const t=j/149*Math.PI*2;const r=5.1+i*.115;return [Math.cos(t)*r,Math.sin(t*2+i*.7)*.16,Math.sin(t)*r];})),[]);
- const ribbons=useRef();
- useFrame(({clock})=>{if(ribbons.current)ribbons.current.rotation.y=clock.elapsedTime*.025;});
- return <group ref={ribbons}>{paths.map((p,i)=><group key={i}><Line points={p} color={i%2?'#00d9ff':'#f5a623'} lineWidth={i%2?1.5:1.2} transparent opacity={.72}/>{Array.from({length:18},(_,j)=>{const q=p[(j*8+i*5)%p.length];return <mesh key={j} position={q}><meshBasicMaterial color={i%2?'#58eaff':'#ffc25c'}/>{(i+j)%2?<boxGeometry args={[.025,.14,.025]}/>:<torusGeometry args={[.045,.009,4,8]}/>}</mesh>;})}</group>)}
- {Array.from({length:5},(_,i)=><mesh key={'ring'+i} rotation={[Math.PI/2+i*.08,0,i*.12]}><torusGeometry args={[5.6+i*.18,.009,6,240]}/><meshBasicMaterial color={i%2?'#ffad2f':'#00bfff'} transparent opacity={.55}/></mesh>)}
- </group>;
+function BinaryHighways(){
+ const paths=useMemo(()=>Array.from({length:9},(_,i)=>Array.from({length:150},(_,j)=>{const t=j/149*Math.PI*2,r=5.1+i*.115;return[Math.cos(t)*r,Math.sin(t*2+i*.7)*.16,Math.sin(t)*r];})),[]);
+ const ref=useRef();
+ useFrame(({clock})=>{if(ref.current)ref.current.rotation.y=clock.elapsedTime*.025;});
+ return <group ref={ref}>{paths.map((p,i)=><group key={i}><Line points={p} color={i%2?'#00d9ff':'#f5a623'} lineWidth={i%2?1.5:1.2} transparent opacity={.72}/>{Array.from({length:18},(_,j)=>{const q=p[(j*8+i*5)%p.length];return <mesh key={j} position={q}><sphereGeometry args={[.025,6,6]}/><meshBasicMaterial color={i%2?'#58eaff':'#ffc25c'}/></mesh>;})}</group>)}
+ {Array.from({length:5},(_,i)=><mesh key={'ring'+i} rotation={[Math.PI/2+i*.08,0,i*.12]}><torusGeometry args={[5.6+i*.18,.009,6,240]}/><meshBasicMaterial color={i%2?'#ffad2f':'#00bfff'} transparent opacity={.55}/></mesh>)}</group>;
 }
-function Scene({onNode}) { return <><color attach="background" args={['#000000']}/><fog attach="fog" args={['#000000',13,34]}/><ambientLight intensity={.18}/><Stars radius={90} depth={55} count={2200} factor={2.2} saturation={0}/><Float speed={.45} rotationIntensity={.025} floatIntensity={.06}><Core/></Float><WaveFloor/><Dome onNode={onNode}/><Filaments onNode={onNode}/><BinaryHighways/><OrbitControls enablePan={false} minDistance={8} maxDistance={20} enableDamping dampingFactor={.045}/></>; }
-function Drawer({side,close,children}) { return <section className={'drawer '+side} role="dialog" aria-modal="true"><button className="close" onClick={close} aria-label="Close drawer">×</button>{children}</section>; }
-class SceneErrorBoundary extends React.Component {
+function Scene({onNode,selected}){return <><color attach="background" args={['#000000']}/><fog attach="fog" args={['#000000',13,34]}/><ambientLight intensity={.18}/><Stars radius={90} depth={55} count={1800} factor={2.2} saturation={0}/><Float speed={.45} rotationIntensity={.025} floatIntensity={.06}><CoreNexus onNode={onNode} selected={selected}/></Float><WaveFloor/><ContainmentDome onNode={onNode}/><BokehFilaments onNode={onNode} selected={selected}/><BinaryHighways/><OrbitControls enablePan={false} minDistance={8} maxDistance={20} enableDamping dampingFactor={.045}/></>;}
+function Drawer({side,close,children}){return <section className={'drawer '+side} role="dialog" aria-modal="true"><button className="close" onClick={close} aria-label="Close drawer">×</button>{children}</section>;}
+class SceneErrorBoundary extends React.Component{
  constructor(props){super(props);this.state={failed:false,message:'',stack:''};}
- static getDerivedStateFromError(error){return {failed:true,message:String(error?.message??error),stack:String(error?.stack??'No stack supplied')};}
- componentDidCatch(error,info){console.error('KERNEL 3D scene failed:',error,info);this.setState({stack:[error?.stack,info?.componentStack].filter(Boolean).join('\\n\\nREACT COMPONENT STACK\\n')});}
- render(){if(this.state.failed)return <div className="scene-fallback" role="alert"><strong>KERNEL 3D RENDERER FAILURE</strong><span>{this.state.message}</span><pre style={{maxWidth:'100%',maxHeight:'55vh',overflow:'auto',whiteSpace:'pre-wrap',overflowWrap:'anywhere',textAlign:'left',fontSize:11}}>{this.state.stack}</pre><button onClick={()=>this.setState({failed:false,message:'',stack:''})}>RETRY RENDERER</button></div>;return this.props.children;}
+ static getDerivedStateFromError(error){return{failed:true,message:String(error?.message??error),stack:String(error?.stack??'No stack supplied')};}
+ componentDidCatch(error,info){console.error('KERNEL 3D scene failed:',error,info);this.setState({stack:[error?.stack,info?.componentStack].filter(Boolean).join('\n\nREACT COMPONENT STACK\n')});}
+ render(){if(this.state.failed)return <div className="scene-fallback" role="alert"><strong>KERNEL 3D RENDERER FAILURE</strong><span>{this.state.message}</span><pre>{this.state.stack}</pre><button onClick={()=>this.setState({failed:false,message:'',stack:''})}>RETRY RENDERER</button></div>;return this.props.children;}
 }
 export default function App(){
  const [drawer,setDrawer]=useState(null),[node,setNode]=useState(null),[snapshot,setSnapshot]=useState(null),touchX=useRef(0);
- useEffect(()=>{
-  let alive=true;
-  const readInitial=()=>{
-   try {
-    const source=window.KERNEL_TELEMETRY;
-    const candidate=typeof source==='function'?source():source;
-    if(candidate&&typeof candidate==='object'&&alive)setSnapshot(candidate);
-   } catch(error){console.error('KERNEL telemetry snapshot read failed',error);}
-  };
-  const receive=e=>{if(alive&&e.detail&&typeof e.detail==='object')setSnapshot(e.detail);};
-  readInitial();
-  window.addEventListener('kernel:telemetry',receive);
-  const poll=window.setInterval(readInitial,1500);
-  return()=>{alive=false;window.clearInterval(poll);window.removeEventListener('kernel:telemetry',receive);};
- },[]);
- const read=(...paths)=>{for(const path of paths){const v=path.split('.').reduce((o,k)=>o==null?undefined:o[k],snapshot);if(v!==undefined&&v!==null&&v!=='')return typeof v==='object'?JSON.stringify(v):String(v);}return 'NO LIVE TELEMETRY';};
+ useEffect(()=>{let alive=true;const readInitial=()=>{try{const source=window.KERNEL_TELEMETRY;const value=typeof source==='function'?source():source;if(value&&typeof value==='object'&&alive)setSnapshot(value);}catch(error){console.error('KERNEL telemetry snapshot read failed',error);}};const receive=e=>{if(alive&&e.detail&&typeof e.detail==='object')setSnapshot(e.detail);};readInitial();window.addEventListener('kernel:telemetry',receive);const timer=window.setInterval(readInitial,1500);return()=>{alive=false;window.clearInterval(timer);window.removeEventListener('kernel:telemetry',receive);};},[]);
+ const read=(...paths)=>{for(const path of paths){const value=path.split('.').reduce((o,k)=>o==null?undefined:o[k],snapshot);if(value!==undefined&&value!==null&&value!=='')return typeof value==='object'?JSON.stringify(value):String(value);}return'NO LIVE TELEMETRY';};
  const openNode=useCallback(n=>{setNode(n);setDrawer('bottom');},[]);
- const touchStart=useCallback(e=>{touchX.current=e.touches?.[0]?.clientX??0;},[]);
- const touchEnd=useCallback(e=>{const start=touchX.current,x=e.changedTouches?.[0]?.clientX??start,dx=x-start;if(start<28&&dx>65)setDrawer('left');else if(start>window.innerWidth-28&&dx< -65)setDrawer('right');touchX.current=0;},[]);
+ const selectPod=useCallback(([name,id])=>{setNode({id,kind:'APP-POD',name,source:'pod-selector'});setDrawer('bottom');},[]);
+ const touchStart=e=>{touchX.current=e.touches?.[0]?.clientX??0;};
+ const touchEnd=e=>{const start=touchX.current,x=e.changedTouches?.[0]?.clientX??start,dx=x-start;if(start<28&&dx>65)setDrawer('left');else if(start>window.innerWidth-28&&dx< -65)setDrawer('right');touchX.current=0;};
  return <main className="app" onTouchStart={touchStart} onTouchEnd={touchEnd}>
-  <SceneErrorBoundary><Canvas fallback={<div className="scene-fallback"><strong>KERNEL MESH</strong><span>WebGL renderer unavailable on this device.</span></div>} onPointerMissed={()=>setDrawer(null)} className="mesh-canvas" style={{position:'fixed',inset:0,width:'100vw',height:'100vh',zIndex:0,display:'block'}} dpr={[1,1.7]} camera={{position:[0,1.2,12],fov:52}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}>
-   <Scene onNode={openNode}/>
-  </Canvas></SceneErrorBoundary>
-  {drawer==='bottom'&&<Drawer side="bottom" close={()=>setDrawer(null)}><h2>NODE TELEMETRY</h2><p className="selected">Selected visual node: {node?.id??'unknown'}</p><dl><dt>WebRTC peers</dt><dd>{read('network.peerCount','peerCount','network.peers.length')}</dd><dt>Workers</dt><dd>{read('workers.active','workerCount','workers.activeCount')} / 10,000 target</dd><dt>OPFS bytes</dt><dd>{read('storage.opfsBytes','storage.bytes','opfsBytes')}</dd><dt>Ring-WAL</dt><dd>{read('storage.ringWalStatus','storage.walStatus','ringWalStatus')}</dd></dl></Drawer>}
+  <div className="mesh-viewport"><SceneErrorBoundary><Canvas fallback={<div className="scene-fallback"><strong>KERNEL MESH</strong><span>WebGL renderer unavailable on this device.</span></div>} onPointerMissed={()=>{setNode(null);setDrawer(null);}} className="mesh-canvas" dpr={[1,1.7]} camera={{position:[0,1.2,12],fov:52}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}><Scene onNode={openNode} selected={node}/></Canvas></SceneErrorBoundary></div>
+  {drawer==='bottom'&&<Drawer side="bottom" close={()=>setDrawer(null)}><h2>NODE TELEMETRY</h2><p className="selected">{node?.name??node?.id??'unknown'} · {node?.kind??'NODE'} · {node?.source??'unknown source'}</p><dl><dt>WebRTC peers</dt><dd>{read('network.peerCount','peerCount','network.peers.length')}</dd><dt>Workers</dt><dd>{read('workers.active','workerCount','workers.activeCount')} / 10,000 target</dd><dt>OPFS bytes</dt><dd>{read('storage.opfsBytes','storage.bytes','opfsBytes')}</dd><dt>OPFS shard target</dt><dd>3,145,728 bytes (target; not a live measurement)</dd><dt>Ring-WAL status</dt><dd>{read('storage.ringWalStatus','storage.walStatus','ringWalStatus')}</dd><dt>Ring-WAL file</dt><dd>Server-local path is not browser-readable without an authorized API bridge.</dd><dt>SHA-256 read-back</dt><dd>{read('security.readbackStatus','storage.readbackStatus','readbackStatus')}</dd></dl></Drawer>}
   {drawer==='left'&&<Drawer side="left" close={()=>setDrawer(null)}><h2>SOVEREIGN LEDGER</h2><p>Authority security records</p><p>Authority: {read('security.authorityStatus','authorityStatus')} · Signature: {read('security.signatureStatus','signatureStatus')}</p><p>SHA-256: {read('security.lastSha256','security.lastHash','lastSha256','lastHash')}</p><p>Read-back: {read('security.readbackStatus','storage.readbackStatus','readbackStatus')} · Receipts: {read('security.receiptCount','storage.receiptCount','receiptCount')}</p></Drawer>}
-  {drawer==='right'&&<Drawer side="right" close={()=>setDrawer(null)}><h2>APPLICATION PODS</h2><div className="pods">{PODS.map(([name,id])=><article key={id}><strong>{name}</strong><small>{id}</small><span>STATUS {read('pods.'+id+'.status','apps.'+id+'.status')}</span></article>)}</div></Drawer>}
+  {drawer==='right'&&<Drawer side="right" close={()=>setDrawer(null)}><h2>APPLICATION PODS</h2><div className="pods">{PODS.map(pod=><button className="pod-card" key={pod[1]} onClick={()=>selectPod(pod)}><strong>{pod[0]}</strong><small>{pod[1]}</small><span>STATUS {read('pods.'+pod[1]+'.status','apps.'+pod[1]+'.status')}</span></button>)}</div></Drawer>}
  </main>;
 }
