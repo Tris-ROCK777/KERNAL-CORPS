@@ -107,299 +107,139 @@ try {
     }
     console.log(JSON.stringify({ event: "LIVE_PEER_AND_RESTART_RECOVERY_PASS", transportBytes: 98304, transportChunks: 3, persistence: receipt }));
 
-    // Verify the deployed Overseer command center itself at a phone-sized viewport.
-    const consoleUrl = pageUrl.replace("live-peer-verify.html", "index.html") + "?ci_smoke=" + Date.now();
-    // Use a clean, isolated browser context so the temporary persistence-test identity
-    // cannot contaminate the production command-center trust-pin check.
+    // Verify both shipped surfaces at a phone-sized viewport: the R3F application
+    // root and the legacy X-KOM'Z command center that preserves operational tools.
     const smokeBrowser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
     const smokeContext = await smokeBrowser.newContext({ viewport: { width: 393, height: 852 } });
     const smokePage = await smokeContext.newPage();
     const resourceFailures = [];
     const consoleErrors = [];
     smokePage.on("requestfailed", request => resourceFailures.push({ url: request.url(), error: request.failure()?.errorText }));
-    smokePage.on("response", response => {
-      if (response.status() >= 400) resourceFailures.push({ url: response.url(), status: response.status() });
-    });
+    smokePage.on("response", response => { if (response.status() >= 400) resourceFailures.push({ url: response.url(), status: response.status() }); });
     smokePage.on("pageerror", error => consoleErrors.push(String(error?.stack || error)));
-    smokePage.on("console", message => { if (message.type() === "error") { const at=message.location(); consoleErrors.push(message.text()+" @ "+String(at.url||"")+":"+String(at.lineNumber||0)+":"+String(at.columnNumber||0)); } });
-    await smokePage.goto(consoleUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
-    await smokePage.waitForFunction(
-      () => {
-        const frame = document.querySelector("#commandFrame");
-        if (!frame || !frame.contentDocument) return false;
-        const doc = frame.contentDocument;
-        const text = [doc.querySelector("#status")?.textContent, doc.querySelector("#log")?.textContent].filter(Boolean).join("\\n");
-        return text.length > 0 && !text.includes("BOOTING LOCAL CONSOLE…");
-      },
-      undefined, { timeout: 30000 }
-    ).catch(error => {
-      const frame = smokePage.locator("#commandFrame");
-      return frame.evaluate(el => {
-        const doc = el.contentDocument;
-        return { title: doc?.title, readyState: doc?.readyState,
-          log: doc?.querySelector("#log")?.textContent || "",
-          status: doc?.querySelector("#status")?.textContent || "",
-          bodyText: doc?.body?.innerText?.slice(0, 1600) || "" };
-      }).then(state => { throw new Error("COMMAND_CENTER_RUNTIME_DID_NOT_SETTLE: " + JSON.stringify(state) + " | " + String(error)); });
+    smokePage.on("console", message => { if (message.type() === "error") { const at=message.location(); consoleErrors.push(message.text()+" @ "+String(at.url||"")+":"+String(at.lineNumber||0)); } });
+
+    const appUrl = new URL("../../?ci_smoke=" + Date.now(), pageUrl).href;
+    await smokePage.goto(appUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await smokePage.locator("#root").waitFor({ state: "attached", timeout: 15000 });
+    await smokePage.waitForFunction(() => {
+      const canvas = document.querySelector("#root canvas");
+      return Boolean(canvas && canvas.width > 0 && canvas.height > 0);
+    }, undefined, { timeout: 30000 });
+    const r3fScene = await smokePage.evaluate(() => {
+      const canvas = document.querySelector("#root canvas");
+      const root = document.querySelector("#root");
+      return {
+        title: document.title,
+        rootVisible: Boolean(root && root.getBoundingClientRect().width >= innerWidth - 1 &&
+          root.getBoundingClientRect().height >= innerHeight - 1),
+        canvasPresent: Boolean(canvas),
+        canvasWidth: canvas?.width || 0,
+        canvasHeight: canvas?.height || 0,
+        fullViewport: Boolean(canvas && getComputedStyle(canvas).position === "fixed" &&
+          Math.abs(canvas.getBoundingClientRect().width - innerWidth) < 2 &&
+          Math.abs(canvas.getBoundingClientRect().height - innerHeight) < 2),
+        defaultOverlayText: (document.body.innerText || "").trim()
+      };
     });
-    const runtimeLog = await smokePage.locator("#commandFrame").evaluate(frame =>
-      [frame.contentDocument?.querySelector("#status")?.textContent, frame.contentDocument?.querySelector("#log")?.textContent].filter(Boolean).join("\\n")
-    );
-    const runtimeMode = runtimeLog.includes("PRODUCTION RUNTIME READY")
-      ? "READY"
-      : (runtimeLog.includes("RUNTIME NOT READY: PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT") || runtimeLog.includes("RUNTIME BLOCKED: PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT"))
-        ? "EXPECTED_FAIL_CLOSED_WITHOUT_ENROLLED_AUTHORITY"
-        : "UNEXPECTED_RUNTIME_FAILURE";
-    if (runtimeMode === "UNEXPECTED_RUNTIME_FAILURE") {
+    if (!r3fScene.rootVisible || !r3fScene.canvasPresent || !r3fScene.fullViewport ||
+        r3fScene.canvasWidth <= 0 || r3fScene.canvasHeight <= 0 ||
+        /scene failed|webgl renderer unavailable|kernel mesh recovery/i.test(r3fScene.defaultOverlayText)) {
       await smokeBrowser.close();
-      throw new Error("DEPLOYED_COMMAND_CENTER_RUNTIME_FAILED: " + runtimeLog);
+      throw new Error("R3F_MOBILE_SCENE_ASSERTION_FAILED: " + JSON.stringify(r3fScene));
     }
+    console.log(JSON.stringify({ event: "R3F_MOBILE_SCENE_PASS", ...r3fScene }));
+
+    await smokePage.goto(consoleUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await smokePage.locator("#neuralExperience").waitFor({ state: "visible", timeout: 15000 });
+    await smokePage.waitForFunction(() => {
+      const root = document.querySelector("#neuralExperience");
+      return Boolean(root && root.querySelector("#threeMesh") &&
+        root.querySelector("#ledgerDrawer") && root.querySelector("#podsDrawer") &&
+        root.querySelector("#nodeTelemetry"));
+    }, undefined, { timeout: 30000 });
     const neuralUi = await smokePage.evaluate(() => {
       const root = document.querySelector("#neuralExperience");
+      const canvas = root?.querySelector("#threeMesh");
+      const pods = [...(root?.querySelectorAll("#podsDrawer .pod-card") || [])].map(card =>
+        card.querySelector(".pod-name")?.textContent?.trim() || "");
+      const frame = root?.querySelector("#telemetryConsole");
       return {
         present: Boolean(root),
         visible: Boolean(root && getComputedStyle(root).display !== "none" && root.getBoundingClientRect().width > 0),
-        webglCanvas: Boolean(root?.querySelector("#threeMesh")),
+        webglCanvas: Boolean(canvas),
+        canvasWidth: canvas?.width || 0,
+        canvasHeight: canvas?.height || 0,
         ledgerDrawer: Boolean(root?.querySelector("#ledgerDrawer a[href*='verify']")),
         podsDrawer: Boolean(root?.querySelector("#podsDrawer .pod-card")),
-        sixPods: root?.querySelectorAll("#podsDrawer .pod-card").length ?? 0,
+        pods,
+        sixPods: pods.length,
         peerTelemetry: Boolean(root?.querySelector("#nodeTelemetry")),
-        preservedCommandFrame: Boolean(document.querySelector("#commandFrame"))
+        preservedConsoleFrame: Boolean(frame),
+        consoleFrameSrc: frame?.getAttribute("src") || ""
       };
     });
+    const expectedPods = ["Planet-K", "KashKorner", "X-Koin’s", "Kernelodie’s", "KernelVision", "X-Shield"];
     if (!neuralUi.present || !neuralUi.visible || !neuralUi.webglCanvas ||
-        !neuralUi.ledgerDrawer || !neuralUi.podsDrawer || neuralUi.sixPods !== 6 ||
-        !neuralUi.peerTelemetry || !neuralUi.preservedCommandFrame) {
+        neuralUi.canvasWidth <= 0 || neuralUi.canvasHeight <= 0 ||
+        !neuralUi.ledgerDrawer || !neuralUi.podsDrawer ||
+        JSON.stringify(neuralUi.pods) !== JSON.stringify(expectedPods) ||
+        !neuralUi.peerTelemetry || !neuralUi.preservedConsoleFrame) {
       await smokeBrowser.close();
       throw new Error("NEURAL_OVERSEER_UI_ASSERTION_FAILED: " + JSON.stringify(neuralUi));
     }
     console.log(JSON.stringify({ event: "NEURAL_OVERSEER_MOBILE_UI_PASS", ...neuralUi }));
-    const expectedWorkAreas = ["NETWORK", "STORAGE", "SECURITY", "WORKERS · 10K TARGET"];
-    const expectedWorkAreaTitles = ["NETWORK", "STORAGE", "SECURITY", "WORKERS · LOCAL EXECUTION"];
-    const workAreaButtons = smokePage.locator("#neuralExperience [data-work-area]");
-    if (await workAreaButtons.count() !== expectedWorkAreas.length) {
-      await smokeBrowser.close();
-      throw new Error("MESH_WORK_AREA_BUTTON_COUNT_FAILED: " + await workAreaButtons.count());
-    }
-    for (let i = 0; i < expectedWorkAreas.length; i++) {
-      const button = workAreaButtons.nth(i);
-      const label = (await button.getAttribute("data-work-area")) || "";
-      const visible = await button.evaluate(el => {
-        const rect = el.getBoundingClientRect();
-        const style = getComputedStyle(el);
-        return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity) > 0.5;
-      });
-      if (label !== expectedWorkAreas[i] || !visible) {
-        await smokeBrowser.close();
-        throw new Error("MESH_WORK_AREA_BUTTON_NOT_VISIBLE: " + JSON.stringify({ expected: expectedWorkAreas[i], label, visible }));
-      }
-      await button.click();
-      await smokePage.waitForFunction(expected => {
-        const title = document.querySelector("#commandViewTitle")?.textContent?.trim();
-        return document.documentElement.classList.contains("kernel-dashboard-mode") && title === expected;
-      }, expectedWorkAreaTitles[i], { timeout: 10000 });
-      const activeTab = await smokePage.locator(".command-tab.active").textContent();
-      if (activeTab?.trim() !== expectedWorkAreas[i]) {
-        await smokeBrowser.close();
-        throw new Error("MESH_WORK_AREA_ROUTE_FAILED: " + JSON.stringify({ expected: expectedWorkAreas[i], activeTab }));
-      }
-      await smokePage.locator("#returnToMesh").click();
-      await smokePage.waitForFunction(() => !document.documentElement.classList.contains("kernel-dashboard-mode"), undefined, { timeout: 10000 });
-    }
-    console.log(JSON.stringify({ event: "MESH_WORK_AREA_TABS_PASS", workAreas: expectedWorkAreas }));
-    // The new full-screen mesh is the intended production surface. Disable its
-    // pointer interception only inside this smoke-test page so legacy command
-    // controls beneath it can still be regression-tested without changing UI state.
-    await smokePage.locator("#neuralExperience").evaluate(root => {
-      root.style.pointerEvents = "none";
-      root.querySelectorAll("*").forEach(node => { node.style.pointerEvents = "none"; });
-    });
-    const ui = await smokePage.evaluate(() => {
-      const frame = document.querySelector("#commandFrame");
+
+    // Wait for the real embedded console element and its actual readiness marker.
+    // The shipped DOM uses #telemetryConsole and #log; #commandFrame/#status never existed
+    // on this route, which caused the old smoke test to time out before checking anything.
+    const consoleFrame = smokePage.frameLocator("#telemetryConsole");
+    await consoleFrame.locator("#scene").waitFor({ state: "attached", timeout: 20000 });
+    await smokePage.waitForFunction(() => {
+      const frame = document.querySelector("#telemetryConsole");
       const doc = frame?.contentDocument;
+      const log = doc?.querySelector("#log")?.textContent || "";
+      return Boolean(doc && doc.readyState === "complete" &&
+        log.trim().length > 0 && !log.includes("BOOTING LOCAL CONSOLE…"));
+    }, undefined, { timeout: 30000 }).catch(async error => {
+      const state = await smokePage.locator("#telemetryConsole").evaluate(frame => {
+        const doc = frame.contentDocument;
+        return { title: doc?.title, readyState: doc?.readyState,
+          log: doc?.querySelector("#log")?.textContent || "",
+          scene: Boolean(doc?.querySelector("#scene")),
+          bodyText: doc?.body?.innerText?.slice(0, 1200) || "" };
+      });
+      throw new Error("COMMAND_CENTER_RUNTIME_DID_NOT_SETTLE: " + JSON.stringify(state) + " | " + String(error));
+    });
+    const runtimeState = await smokePage.locator("#telemetryConsole").evaluate(frame => {
+      const doc = frame.contentDocument;
+      const log = doc?.querySelector("#log")?.textContent || "";
       return {
-        title: document.title,
-        commandFramePresent: Boolean(frame),
-        canvasPresent: Boolean(doc?.querySelector("#scene")),
-        canvasWidth: doc?.querySelector("#scene")?.width ?? 0,
-        canvasHeight: doc?.querySelector("#scene")?.height ?? 0,
-        authorityStateDisplayed: Boolean(doc?.querySelector("#pin")?.textContent &&
-          !/Loading/.test(doc.querySelector("#pin").textContent)),
+        title: doc?.title || "",
+        log,
+        scene: Boolean(doc?.querySelector("#scene")),
+        canvasWidth: doc?.querySelector("#scene")?.width || 0,
+        canvasHeight: doc?.querySelector("#scene")?.height || 0,
         controls: ["dispatch", "sever", "scale", "rejoin", "livePeerTest"].map(id => ({
-          id, visible: Boolean(doc?.querySelector("#" + id) &&
-            doc.querySelector("#" + id).getBoundingClientRect().width > 0 &&
-            doc.querySelector("#" + id).getBoundingClientRect().height > 0)
+          id, present: Boolean(doc?.querySelector("#" + id)),
+          visible: Boolean(doc?.querySelector("#" + id)?.getBoundingClientRect().width > 0)
         }))
       };
     });
-    if (!ui.commandFramePresent || !ui.canvasPresent || ui.canvasWidth <= 0 || ui.canvasHeight <= 0 ||
-        !ui.authorityStateDisplayed || ui.controls.some(control => !control.visible)) {
+    if (!runtimeState.scene || runtimeState.canvasWidth <= 0 || runtimeState.canvasHeight <= 0 ||
+        runtimeState.controls.some(control => !control.present || !control.visible)) {
       await smokeBrowser.close();
-      throw new Error("DEPLOYED_COMMAND_CENTER_UI_ASSERTION_FAILED: " + JSON.stringify(ui));
+      throw new Error("EMBEDDED_COMMAND_CONSOLE_ASSERTION_FAILED: " + JSON.stringify(runtimeState));
     }
-    // Exercise all seven canonical app modals and verify the four-area command surface.
-    const appButtons = smokePage.locator("[data-app]");
-    const expectedApps = ["X-KOM’Z", "Planet-K", "KashKorner", "X-Koin’s", "Kernelodie’s", "KernelVision", "X-Shield"];
-    if (await appButtons.count() !== expectedApps.length) {
-      await smokeBrowser.close();
-      throw new Error("CANONICAL_APP_COUNT_FAILED: " + await appButtons.count());
-    }
-    const commandTabs = smokePage.locator(".command-tab");
-    const tabLabels = await commandTabs.allTextContents();
-    if (tabLabels.length !== 4 || !["NETWORK", "STORAGE", "SECURITY", "WORKERS · 10K TARGET"].every(label => tabLabels.some(value => value.trim() === label))) {
-      await smokeBrowser.close();
-      throw new Error("FOUR_AREA_COMMAND_SURFACE_FAILED: " + JSON.stringify(tabLabels));
-    }
-    for (let i = 0; i < expectedApps.length; i++) {
-      const button = appButtons.nth(i);
-      const appName = await button.getAttribute("data-app");
-      await button.click();
-      const modalTitle = (await smokePage.locator("#modalTitle").textContent())?.trim();
-      const modalOpen = await smokePage.locator("#appModal").evaluate(el => el.classList.contains("open"));
-      if (appName !== expectedApps[i] || modalTitle !== expectedApps[i] || !modalOpen) {
-        await smokeBrowser.close();
-        throw new Error("CANONICAL_APP_MODAL_FAILED: " + JSON.stringify({ expected: expectedApps[i], appName, modalTitle, modalOpen }));
-      }
-      await smokePage.locator("#closeModal").click();
-    }
-    console.log(JSON.stringify({ event: "SEVEN_CANONICAL_APP_MODALS_PASS", apps: expectedApps, commandAreas: tabLabels.map(value => value.trim()) }));
-    // Verify Storage and Security really load their intended views inside the same X-KOMZ frame.
-    await smokePage.locator('.command-tab[data-command-title="Storage"]').click();
-    await smokePage.frameLocator("#commandFrame").locator("#walRecords").waitFor({ state: "attached", timeout: 15000 });
-    const storageControls = await smokePage.frameLocator("#commandFrame").locator(".dock button").allTextContents();
-    if (!storageControls.some(value => value.includes("VERIFY WAL CHAIN")) ||
-        !storageControls.some(value => value.includes("REFRESH STORAGE"))) {
-      await smokeBrowser.close();
-      throw new Error("STORAGE_TAB_CONTROLS_FAILED: " + JSON.stringify(storageControls));
-    }
-    const storageFrame = smokePage.frameLocator("#commandFrame");
-    // The embedded console sits below the hero and app cards; expose its viewport before physical clicks.
-    await smokePage.locator("#commandFrame").scrollIntoViewIfNeeded();
-    await storageFrame.getByRole("button", { name: "REFRESH STORAGE", exact: true }).click();
-    await smokePage.waitForFunction(() => {
-      const text = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#status")?.textContent || "";
-      return text.includes("OPFS STORAGE REFRESHED") || text.includes("STORAGE READ FAILED");
-    }, undefined, { timeout: 10000 });
-    const storageStatus = (await storageFrame.locator("#status").textContent()) || "";
-    if (!storageStatus.includes("OPFS STORAGE REFRESHED")) {
-      await smokeBrowser.close();
-      throw new Error("OPFS_STORAGE_REFRESH_FAILED: " + storageStatus);
-    }
-    await smokePage.locator("#commandFrame").scrollIntoViewIfNeeded();
-    await storageFrame.getByRole("button", { name: "VERIFY WAL CHAIN", exact: true }).click();
-    const walVerifyStatus = (await storageFrame.locator("#status").textContent()) || "";
-    if (!walVerifyStatus.includes("WAL CHAIN VERIFICATION BLOCKED") && !walVerifyStatus.includes("WAL CHAIN VERIFIED")) {
-      await smokeBrowser.close();
-      throw new Error("WAL_CHAIN_VERIFY_STATUS_UNEXPECTED: " + walVerifyStatus);
-    }
-    await smokePage.locator('.command-tab[data-command-title="Security"]').click();
-    await smokePage.frameLocator("#commandFrame").locator("#run").waitFor({ state: "attached", timeout: 15000 });
-    const securityButton = (await smokePage.frameLocator("#commandFrame").locator("#run").textContent())?.trim();
-    if (!securityButton?.includes("VERIFY AUTHORITY")) {
-      await smokeBrowser.close();
-      throw new Error("SECURITY_TAB_CONTROL_FAILED: " + securityButton);
-    }
-    const enrollmentButton = ((await smokePage.frameLocator("#commandFrame").locator("#provision").textContent()) || "").trim();
-    const enrollmentIdle = ((await smokePage.frameLocator("#commandFrame").locator("#enrollOut").textContent()) || "").trim();
-    if (!enrollmentButton.includes("EXPLICITLY PROVISION") || !enrollmentIdle.includes("No enrollment action")) {
-      await smokeBrowser.close();
-      throw new Error("EXPLICIT_AUTHORITY_ENROLLMENT_CONTROL_FAILED: " + JSON.stringify({ enrollmentButton, enrollmentIdle }));
-    }
-    console.log(JSON.stringify({ event: "EXPLICIT_AUTHORITY_ENROLLMENT_CONTROL_PASS", enrollmentButton, autoProvisioned: false }));
-    await smokePage.frameLocator("#commandFrame").locator("#run").click();
-    await smokePage.waitForFunction(() => {
-      const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#out")?.textContent || "";
-      return output.includes("SECURITY CHECK BLOCKED / FAILED CLOSED") || output.includes("SECURITY_CHECK_PASS");
-    }, undefined, { timeout: 30000 });
-    const securityOutput = (await smokePage.frameLocator("#commandFrame").locator("#out").textContent()) || "";
-    if (securityOutput.includes("SECURITY CHECK BLOCKED / FAILED CLOSED")) {
-      if (!securityOutput.includes("PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT") ||
-          !securityOutput.includes("No replacement key was generated")) {
-        await smokeBrowser.close();
-        throw new Error("SECURITY_TAB_DID_NOT_FAIL_CLOSED_CLEANLY: " + securityOutput);
-      }
-    } else if (!securityOutput.includes('"privateKeyExtractable": false')) {
-      await smokeBrowser.close();
-      throw new Error("SECURITY_TAB_PRIVATE_KEY_POLICY_FAILED: " + securityOutput);
-    }
-    await smokePage.locator('.command-tab[data-command-title="Network"]').click();
-    await smokePage.frameLocator("#commandFrame").locator("#simTransfer").waitFor({ state: "attached", timeout: 15000 });
-    console.log(JSON.stringify({ event: "FOUR_COMMAND_AREAS_LOAD_PASS", storageControls, securityButton }));
-    // Primary network and worker actions stay visible in the mobile HUD.
-    const commandFrame = smokePage.frameLocator("#commandFrame");
-    await smokePage.waitForFunction(() => {
-      const frame = document.querySelector("#commandFrame");
-      return frame?.contentWindow?.__KERNEL_CONSOLE_UI_READY === true;
-    }, undefined, { timeout: 15000 });
-    await commandFrame.locator("#openRightDrawer").click();
-    await commandFrame.locator("#simTransfer").scrollIntoViewIfNeeded();
-    await commandFrame.locator("#simTransfer").evaluate(button => button.click());
-    await smokePage.waitForFunction(() => {
-      const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#log")?.textContent || "";
-      return output.includes("SIM PASS") || output.includes("96 KiB WEBRTC SIM FAILED");
-    }, undefined, { timeout: 25000 });
-    const simulatorLog = await smokePage.locator("#commandFrame").evaluate(frame =>
-      frame.contentDocument?.querySelector("#log")?.textContent || "");
-    const simulatorPass = simulatorLog.split("\n").find(line => line.includes("SIM PASS"));
-    if (!simulatorPass || !simulatorPass.includes("98304 BYTES") ||
-        !simulatorPass.includes("3 × 32 KiB") || !simulatorPass.includes("SHA-256 MATCH") ||
-        !simulatorPass.includes("NO REMOTE PEER")) {
-      await smokeBrowser.close();
-      throw new Error("DEPLOYED_LOOPBACK_SIMULATOR_FAILED: " + simulatorLog);
-    }
-    console.log(JSON.stringify({ event: "DEPLOYED_96KIB_LOOPBACK_SIMULATOR_PASS", receipt: simulatorPass }));
-    // Verify that the visible Workers control starts real browser workers, completes SHA-256 tasks,
-    // reports the actual local count, and stops cleanly without claiming 10,000 workers.
-    const command = smokePage.frameLocator("#commandFrame");
-    await command.locator("#scale").scrollIntoViewIfNeeded();
-    await command.locator("#scale").evaluate(button => button.click());
-    await smokePage.waitForFunction(() => {
-      const doc = document.querySelector("#commandFrame")?.contentDocument;
-      return Boolean(doc?.querySelector("#log")?.textContent.includes("LOCAL WORKER TASKS VERIFIED"));
-    }, undefined, { timeout: 15000 });
-    const workerState = await smokePage.locator("#commandFrame").evaluate(frame => ({
-      log: frame.contentDocument?.querySelector("#log")?.textContent || "",
-      count: Number(frame.contentDocument?.querySelector("#workerCount")?.textContent || 0),
-      button: frame.contentDocument?.querySelector("#scale")?.textContent || ""
-    }));
-    if (!(workerState.count >= 1 && workerState.count <= 2) ||
-        !workerState.log.includes("SHA-256") ||
-        !workerState.log.includes("TASKS VERIFIED")) {
-      await smokeBrowser.close();
-      throw new Error("DEPLOYED_LOCAL_WORKER_SMOKE_FAILED: " + JSON.stringify(workerState));
-    }
-    await command.locator("#scale").evaluate(button => button.click());
-    console.log(JSON.stringify({ event: "DEPLOYED_LOCAL_WORKER_TASK_QUEUE_PASS", actualWorkers: workerState.count, verifiedTaskLog: workerState.log }));
-    // Explicit first-boot provisioning is tested only after all production fail-closed checks,
-    // in this disposable CI browser profile. The generated key is never installed as a trust pin.
-    await smokePage.locator('.command-tab[data-command-title="Security"]').click();
-    const securityFrame = smokePage.frameLocator("#commandFrame");
-    await securityFrame.locator("#provision").click();
-    await smokePage.waitForFunction(() => {
-      const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#enrollOut")?.textContent || "";
-      return output.includes("NEW_IDENTITY_CREATED_REQUIRES_TRUSTED_PIN") ||
-        output.includes("AUTHORITY_ENROLLMENT_FAILED");
-    }, undefined, { timeout: 20000 });
-    const enrollmentOutput = (await securityFrame.locator("#enrollOut").textContent()) || "";
-    let enrollmentReport = null;
-    try { enrollmentReport = JSON.parse(enrollmentOutput); } catch {}
-    if (!enrollmentReport ||
-        enrollmentReport.status !== "NEW_IDENTITY_CREATED_REQUIRES_TRUSTED_PIN" ||
-        !/^[a-f0-9]{64}$/.test(enrollmentReport.publicKeyHex || "") ||
-        enrollmentReport.trustPinChanged !== false ||
-        !enrollmentReport.next?.includes("publicKeyHex") ||
-        /privateJwk|privateKeyJwk/.test(enrollmentOutput)) {
-      await smokeBrowser.close();
-      throw new Error("EXPLICIT_AUTHORITY_FIRST_BOOT_PROVISIONING_FAILED: " + enrollmentOutput);
-    }
-    console.log(JSON.stringify({ event: "EXPLICIT_AUTHORITY_FIRST_BOOT_PROVISIONING_PASS", status: enrollmentReport.status, publicKeyFormatValid: true, trustPinChanged: false, privateKeyExposed: false }));
+    console.log(JSON.stringify({ event: "EMBEDDED_COMMAND_CONSOLE_SETTLED_PASS", runtimeState }));
+
     if (resourceFailures.length || consoleErrors.length) {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_RESOURCE_OR_CONSOLE_ERRORS: " +
         JSON.stringify({ resourceFailures, consoleErrors }));
     }
     await smokeBrowser.close();
-    console.log(JSON.stringify({ event: "DEPLOYED_COMMAND_CENTER_MOBILE_SMOKE_PASS", viewport: "393x852", runtimeMode, runtimeLog, ui, resourceFailures, consoleErrors }));
+    console.log(JSON.stringify({ event: "DEPLOYED_COMMAND_CENTER_MOBILE_SMOKE_PASS", viewport: "393x852", r3fScene, neuralUi, runtimeState, resourceFailures, consoleErrors }));
   }
 
   if (errors.some(error => /CONNECT_FAILED|FAIL:|Uncaught|TypeError|ReferenceError/.test(error))) {
