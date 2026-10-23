@@ -88,6 +88,11 @@ header>div:first-child small{display:none}
   body.left-drawer-open #drawer,body.right-drawer-open #rightDrawer{transform:translateY(0)}
 }
 
+
+#systemModules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;flex:none}
+#systemModules a{display:flex;align-items:center;justify-content:center;min-height:36px;padding:7px 6px;text-align:center;text-decoration:none;color:#cfe4ff;background:rgba(18,29,45,.72);border:1px solid rgba(157,190,224,.2);border-radius:8px;font-size:8px;letter-spacing:.045em;line-height:1.35}
+#systemModules a:active{background:rgba(53,91,130,.7)}
+
 </style></head>
 <body>
 <canvas id="scene" aria-label="Full-screen interactive neural network visualization"></canvas><div id="shade"></div>
@@ -104,6 +109,16 @@ header>div:first-child small{display:none}
 <aside id="drawer" aria-label="Network information and controls" aria-hidden="true">
 <div class="drawer-head"><div><h2>KERNEL // MESH CONSOLE</h2><p>DIAGNOSTICS · CONTROLS · TRUST</p></div><button id="closeDrawer">CLOSE ✕</button></div>
 <div id="drawerClock" style="font-size:9px;color:#74869c">LOCAL CLOCK —</div>
+<nav id="systemModules" aria-label="KERNEL system modules">
+  <a href="./ringwal-console.html">RING-WAL CONSOLE</a>
+  <a href="./pod-command-drawer.html">POD / OPFS INSPECTOR</a>
+  <a href="./live-peer-verify.html">LIVE PEER TEST</a>
+  <a href="./live-peer-persistence-verify.html">RESTART RECOVERY</a>
+  <a href="./authenticated-shard-verify.html">SHARD AUTHENTICATION</a>
+  <a href="./storage-verify.html">REAL OPFS CHECK</a>
+  <a href="./authority-enroll.html">AUTHORITY ENROLLMENT</a>
+  <a href="./authority-migrate.html">AUTHORITY MIGRATION</a>
+</nav>
 <nav class="drawer-tabs" aria-label="Console sections"><button class="active" data-tab="status">STATUS</button><button data-tab="logs">LOGS</button><button data-tab="keys">KEYS</button></nav>
 <div class="drawer-content">
 <section class="drawer-section active" data-section="status" id="statusSection"></section>
