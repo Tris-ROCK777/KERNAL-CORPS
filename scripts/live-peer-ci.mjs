@@ -41,7 +41,7 @@ try {
       undefined, { timeout: 60000 }
     );
     const senderLog = await log.textContent();
-    const ackLine = senderLog.split("\\n").find(line => line.includes("LIVE_PEER_RECEIPT_ACK "));
+    const ackLine = senderLog.split("\n").find(line => line.includes("LIVE_PEER_RECEIPT_ACK "));
     const ackJson = ackLine?.slice(ackLine.indexOf("LIVE_PEER_RECEIPT_ACK ") + "LIVE_PEER_RECEIPT_ACK ".length);
     const ack = ackJson ? JSON.parse(ackJson) : null;
     if (!ack || ack.byteLength !== 98304 || ack.totalChunks !== 3 || !/^[a-f0-9]{64}$/.test(ack.sha256 || "")) {
@@ -92,9 +92,9 @@ try {
       }, undefined, { timeout: 60000 }
     );
     const persistenceLog = await page.locator("#log").textContent();
-    const failureLine = persistenceLog.split("\\n").find(line => line.includes("PERSISTENCE_RESTART_RECOVERY_FAIL"));
+    const failureLine = persistenceLog.split("\n").find(line => line.includes("PERSISTENCE_RESTART_RECOVERY_FAIL"));
     if (failureLine) throw new Error("PERSISTENCE_RESTART_RECOVERY_FAILED: " + failureLine);
-    const passLine = persistenceLog.split("\\n").find(line => line.includes("PERSISTENCE_RESTART_RECOVERY_PASS"));
+    const passLine = persistenceLog.split("\n").find(line => line.includes("PERSISTENCE_RESTART_RECOVERY_PASS"));
     const passJson = passLine?.slice(passLine.indexOf("PERSISTENCE_RESTART_RECOVERY_PASS ") + "PERSISTENCE_RESTART_RECOVERY_PASS ".length);
     const receipt = passJson ? JSON.parse(passJson) : null;
     if (!receipt || receipt.authorityRestored !== true || receipt.authorityPinMatched !== true ||
