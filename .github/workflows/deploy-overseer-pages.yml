@@ -1,5 +1,4 @@
 name: Deploy Overseer Verification Page
-# Triggered from the feature branch to verify the actual Pages deployment.
 
 on:
   push:
@@ -21,10 +20,10 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout KERNELCORP
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
