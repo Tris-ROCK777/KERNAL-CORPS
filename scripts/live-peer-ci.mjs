@@ -266,7 +266,7 @@ try {
     }, undefined, { timeout: 15000 });
     await commandFrame.locator("#openRightDrawer").click();
     await commandFrame.locator("#simTransfer").scrollIntoViewIfNeeded();
-    await commandFrame.locator("#simTransfer").click();
+    await commandFrame.locator("#simTransfer").evaluate(button => button.click());
     await smokePage.waitForFunction(() => {
       const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#log")?.textContent || "";
       return output.includes("SIM PASS") || output.includes("96 KiB WEBRTC SIM FAILED");
