@@ -212,12 +212,45 @@ try {
       await smokeBrowser.close();
       throw new Error("STORAGE_TAB_CONTROLS_FAILED: " + JSON.stringify(storageControls));
     }
+    const storageFrame = smokePage.frameLocator("#commandFrame");
+    await storageFrame.getByRole("button", { name: "REFRESH STORAGE", exact: true }).click();
+    await smokePage.waitForFunction(() => {
+      const text = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#status")?.textContent || "";
+      return text.includes("OPFS STORAGE REFRESHED") || text.includes("STORAGE READ FAILED");
+    }, undefined, { timeout: 10000 });
+    const storageStatus = (await storageFrame.locator("#status").textContent()) || "";
+    if (!storageStatus.includes("OPFS STORAGE REFRESHED")) {
+      await smokeBrowser.close();
+      throw new Error("OPFS_STORAGE_REFRESH_FAILED: " + storageStatus);
+    }
+    await storageFrame.getByRole("button", { name: "VERIFY WAL CHAIN", exact: true }).click();
+    const walVerifyStatus = (await storageFrame.locator("#status").textContent()) || "";
+    if (!walVerifyStatus.includes("WAL CHAIN VERIFICATION BLOCKED") && !walVerifyStatus.includes("WAL CHAIN VERIFIED")) {
+      await smokeBrowser.close();
+      throw new Error("WAL_CHAIN_VERIFY_STATUS_UNEXPECTED: " + walVerifyStatus);
+    }
     await smokePage.getByRole("button", { name: "SECURITY", exact: true }).click();
     await smokePage.frameLocator("#commandFrame").locator("#run").waitFor({ state: "attached", timeout: 15000 });
     const securityButton = (await smokePage.frameLocator("#commandFrame").locator("#run").textContent())?.trim();
     if (!securityButton?.includes("VERIFY AUTHORITY")) {
       await smokeBrowser.close();
       throw new Error("SECURITY_TAB_CONTROL_FAILED: " + securityButton);
+    }
+    await smokePage.frameLocator("#commandFrame").locator("#run").click();
+    await smokePage.waitForFunction(() => {
+      const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#out")?.textContent || "";
+      return output.includes("SECURITY CHECK BLOCKED / FAILED CLOSED") || output.includes("SECURITY_CHECK_PASS");
+    }, undefined, { timeout: 30000 });
+    const securityOutput = (await smokePage.frameLocator("#commandFrame").locator("#out").textContent()) || "";
+    if (securityOutput.includes("SECURITY CHECK BLOCKED / FAILED CLOSED")) {
+      if (!securityOutput.includes("PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT") ||
+          !securityOutput.includes("No replacement key was generated")) {
+        await smokeBrowser.close();
+        throw new Error("SECURITY_TAB_DID_NOT_FAIL_CLOSED_CLEANLY: " + securityOutput);
+      }
+    } else if (!securityOutput.includes('"privateKeyExtractable": false')) {
+      await smokeBrowser.close();
+      throw new Error("SECURITY_TAB_PRIVATE_KEY_POLICY_FAILED: " + securityOutput);
     }
     await smokePage.getByRole("button", { name: "NETWORK", exact: true }).click();
     await smokePage.frameLocator("#commandFrame").locator("#simTransfer").waitFor({ state: "attached", timeout: 15000 });
