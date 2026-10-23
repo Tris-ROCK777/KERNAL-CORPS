@@ -265,6 +265,7 @@ try {
       return frame?.contentWindow?.__KERNEL_CONSOLE_UI_READY === true;
     }, undefined, { timeout: 15000 });
     await commandFrame.locator("#openRightDrawer").click();
+    await commandFrame.locator("#simTransfer").scrollIntoViewIfNeeded();
     await commandFrame.locator("#simTransfer").click();
     await smokePage.waitForFunction(() => {
       const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#log")?.textContent || "";
@@ -283,6 +284,7 @@ try {
     // Verify that the visible Workers control starts real browser workers, completes SHA-256 tasks,
     // reports the actual local count, and stops cleanly without claiming 10,000 workers.
     const command = smokePage.frameLocator("#commandFrame");
+    await command.locator("#scale").scrollIntoViewIfNeeded();
     await command.locator("#scale").click();
     await smokePage.waitForFunction(() => {
       const doc = document.querySelector("#commandFrame")?.contentDocument;
