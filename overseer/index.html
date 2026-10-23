@@ -180,6 +180,88 @@ button.primary{background:rgba(17,64,84,.75);border-color:rgba(90,202,236,.6);co
 }
 @media(prefers-reduced-motion:reduce){#consolePanel,#peersPanel{transition:none}}
 
+
+/* Command-center completion: distinct hierarchy, legible telemetry, and touch-first controls. */
+:root{--gridline:rgba(83,174,207,.11);--edge:rgba(106,199,230,.36);--glow:rgba(43,169,218,.12)}
+body:before{content:"";position:fixed;inset:7px;z-index:2;pointer-events:none;border:1px solid rgba(85,164,193,.12);clip-path:polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,20px 100%,0 calc(100% - 20px))}
+#scene{filter:saturate(.86) contrast(1.08)}
+#shade{background:linear-gradient(90deg,transparent 49.85%,rgba(66,174,213,.075) 50%,transparent 50.15%),linear-gradient(0deg,transparent 49.85%,rgba(66,174,213,.055) 50%,transparent 50.15%),radial-gradient(ellipse at 50% 47%,rgba(13,57,75,.12),transparent 62%)}
+header{border-bottom:1px solid var(--edge);box-shadow:0 12px 34px rgba(0,0,0,.22)}
+header:after{content:"CONTROL PLANE / LIVE";position:absolute;right:12px;bottom:-18px;font-size:7px;letter-spacing:.2em;color:#4d8399}
+#criticalHud .strip{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;padding:0;overflow:hidden}
+#criticalHud .hudstat,#criticalHud .trust-badge{min-width:0;padding:10px 9px;border:0;border-right:1px solid rgba(90,166,196,.19);border-radius:0;display:flex;flex-direction:column;gap:5px;justify-content:center;white-space:normal;font-size:7px;letter-spacing:.12em}
+#criticalHud .hudstat b{font-size:12px;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis}
+#criticalHud .trust-badge{border-right:0;align-items:flex-start;font-size:7px}
+#consolePanel,#peersPanel{border-top:2px solid #51b7d9;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%);box-shadow:0 22px 75px rgba(0,0,0,.82),0 0 35px rgba(28,137,180,.08)}
+.drawer-head h2{font-size:12px;letter-spacing:.18em}
+.drawer-head p{font-size:8px;letter-spacing:.16em}
+.drawer-tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.drawer-tabs button{min-height:38px;border:1px solid rgba(84,164,194,.19);background:rgba(7,18,27,.9);font-size:8px;letter-spacing:.13em}
+.drawer-tabs button.active{background:rgba(20,82,105,.42);border-color:rgba(88,207,238,.72);color:#dff8ff;box-shadow:inset 0 -2px #5bd2f3}
+.module-search{display:grid;gap:6px;flex:none}
+.module-search label{display:flex;justify-content:space-between;gap:8px;font-size:8px;letter-spacing:.14em;color:#8ca9bb}
+.module-search label span{color:#4e8094;font-size:7px}
+.module-search input{width:100%;min-height:39px;padding:9px 11px;border:1px solid rgba(95,174,203,.34);border-radius:2px;outline:none;background:#050d14;color:#d9f3ff;font:inherit;font-size:11px}
+.module-search input:focus{border-color:#69d9f4;box-shadow:0 0 0 2px rgba(71,195,226,.12)}
+#systemModules{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+#systemModules a{position:relative;min-height:52px;padding:10px 9px 10px 25px;border-left:2px solid rgba(75,187,218,.45);line-height:1.45}
+#systemModules a:before{position:absolute;left:9px;top:10px;margin:0;color:#5acbe9}
+#systemModules a[hidden]{display:none}
+#systemModules a:hover,#systemModules a:focus-visible{border-color:#70ddf8;background:rgba(17,57,75,.96);color:#effcff;outline:none}
+#systemModules a:after{content:"OPEN ↗";display:block;margin-top:5px;font-size:7px;color:#5b94a9;letter-spacing:.12em}
+#systemModules a:focus-visible{outline:1px solid #8de7ff;outline-offset:2px}
+.drawer-content{gap:12px}
+.drawer-section.active{gap:12px}
+.node-note{padding:8px 10px;margin:0;border-left:2px solid #4eabc9;background:rgba(7,20,29,.8);font-size:8px;line-height:1.55;color:#8da8b8}
+.node-counts>div{padding:12px 9px;border-top:2px solid rgba(81,183,217,.4)}
+.node-counts b{font-size:25px;font-weight:500}
+.node-counts span{display:block;line-height:1.45;margin-top:4px}
+.node-row{min-height:49px;border-left:2px solid rgba(80,171,205,.3);padding:8px 10px}
+.analytics .metric{position:relative;padding:13px 12px;border-top:2px solid rgba(81,183,217,.38)}
+.analytics .metric b{font-size:20px;font-weight:500;letter-spacing:-.04em}
+.analytics .metric span{font-size:8px;letter-spacing:.1em}
+.analytics .metric small{font-size:8px;color:#718fa2}
+.readout>div{border-left:1px solid rgba(87,175,205,.3);padding-left:9px;line-height:1.6}
+.readout .value{font-size:11px;line-height:1.5}
+#lens{border:1px solid rgba(85,166,198,.25)!important;background:rgba(3,10,16,.82)!important}
+#lens button{border:1px solid transparent;letter-spacing:.12em}
+#lens button.active{background:#103448;border-color:#4eabc9;color:#d8f8ff}
+.controls button{min-height:43px;font-size:8px;letter-spacing:.11em}
+#dispatch{border-left:3px solid #65d5f2}
+#log{border-left:2px solid #4babc9!important;border-radius:0!important;min-height:42px}
+@media(max-width:759px){
+ body:before{inset:4px}
+ header:after{display:none}
+ #criticalHud{top:calc(96px + min(env(safe-area-inset-top,0px),24px));}
+ #criticalHud .strip{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #criticalHud .hudstat,#criticalHud .trust-badge{padding:7px 7px;min-height:43px}
+ #criticalHud .hudstat b{font-size:10px}
+ #criticalHud .hudstat:nth-child(4){display:none}
+ #criticalHud .trust-badge{grid-column:span 1}
+ #consolePanel,#peersPanel{top:auto;bottom:calc(7px + env(safe-area-inset-bottom,0px));height:min(70dvh,650px);max-height:calc(100dvh - 168px);padding:10px;gap:9px}
+ .drawer-head{min-height:39px}
+ .drawer-tabs button{min-height:36px}
+ .module-search input{min-height:42px;font-size:12px}
+ #systemModules{gap:6px}
+ #systemModules a{min-height:47px;font-size:8px;padding:8px 7px 8px 22px}
+ #systemModules a:before{left:7px;top:8px}
+ .analytics .metric{padding:10px 8px}
+ .analytics .metric b{font-size:17px}
+ .readout{gap:10px 8px;padding:10px}
+ .readout .value{font-size:10px}
+}
+@media(max-width:390px){
+ #criticalHud .hudstat,#criticalHud .trust-badge{font-size:6px;padding:6px 5px}
+ #criticalHud .hudstat b{font-size:9px}
+ #consolePanel,#peersPanel{max-height:calc(100dvh - 158px)}
+ #systemModules a{font-size:7px}
+}
+@media(min-width:760px){
+ #criticalHud .strip{max-width:980px}
+ #consolePanel,#peersPanel{height:min(78dvh,790px)}
+ #systemModules{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 </style></head>
 <body>
 <canvas id="scene" aria-label="Full-screen interactive neural network visualization"></canvas><div id="shade"></div>
@@ -194,13 +276,14 @@ button.primary{background:rgba(17,64,84,.75);border-color:rgba(90,202,236,.6);co
 <div id="runtimeWarning"><span id="runtimeWarningText">RUNTIME BLOCKED · AUTHORITY / DURABILITY GATE NOT READY</span><button id="dismissWarning">DISMISS</button></div>
 <section id="consolePanel" class="command-panel" aria-label="Network information and controls" aria-hidden="true">
 <div class="drawer-head"><div><h2>KERNEL // MESH CONSOLE</h2><p>DIAGNOSTICS · CONTROLS · TRUST</p></div><button id="closeDrawer">CLOSE ✕</button></div>
+<div class="module-search"><label for="moduleSearch">MODULE DIRECTORY <span>08 SYSTEM TOOLS</span></label><input id="moduleSearch" type="search" placeholder="Find a module…" autocomplete="off" spellcheck="false" aria-label="Filter system modules"></div>
 <nav id="systemModules" aria-label="KERNEL system modules">
 <a href="./ringwal-console.html">RING-WAL CONSOLE</a><a href="./pod-command-drawer.html">POD / OPFS INSPECTOR</a>
 <a href="./live-peer-verify.html">LIVE PEER TEST</a><a href="./live-peer-persistence-verify.html">RESTART RECOVERY</a>
 <a href="./authenticated-shard-verify.html">SHARD AUTHENTICATION</a><a href="./storage-verify.html">REAL OPFS CHECK</a>
 <a href="./authority-enroll.html">AUTHORITY ENROLLMENT</a><a href="./authority-migrate.html">AUTHORITY MIGRATION</a>
 </nav>
-<div class="drawer-tabs" aria-label="Console sections"><button class="active" data-tab="status">STATUS</button><button data-tab="logs">LOGS</button><button data-tab="keys">KEYS</button></div>
+<div class="drawer-tabs" aria-label="Console sections"><button class="active" data-tab="status">STATUS</button><button data-tab="controls">OPS</button><button data-tab="logs">LOGS</button><button data-tab="keys">KEYS</button></div>
 <div class="drawer-content"><section class="drawer-section active" data-section="status" id="statusSection"></section><section class="drawer-section" data-section="controls" id="controlsSection"></section><section class="drawer-section" data-section="logs" id="logsSection"></section><section class="drawer-section" data-section="keys" id="keysSection"></section></div>
 </section>
 <section id="peersPanel" class="command-panel" aria-label="Live nodes and network controls" aria-hidden="true">
@@ -235,7 +318,8 @@ $("openDrawer").addEventListener("click",()=>setDrawer("left"));$("openRightDraw
 
 $("dismissWarning").addEventListener("click",()=>{$("runtimeWarning").style.display="none";warningDismissed=true});
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll("[data-section]").forEach(x=>x.classList.toggle("active",x.dataset.section===b.dataset.tab))}));
-addEventListener("keydown",e=>{if(e.key==="Escape")setDrawer(null)});let touchStartX=null;addEventListener("touchstart",e=>{if(e.touches.length===1)touchStartX=e.touches[0].clientX},{passive:true});addEventListener("touchend",e=>{touchStartX=null},{passive:true});
+const moduleSearch=$("moduleSearch");if(moduleSearch){moduleSearch.addEventListener("input",()=>{const q=moduleSearch.value.trim().toLowerCase();document.querySelectorAll("#systemModules a").forEach(a=>{a.hidden=!a.textContent.toLowerCase().includes(q)});});moduleSearch.addEventListener("keydown",e=>{if(e.key==="Escape"){moduleSearch.value="";moduleSearch.dispatchEvent(new Event("input"));moduleSearch.blur()}})}
+addEventListener("keydown",e=>{if(e.key==="Escape")setDrawer(null)});$("closeInspect")?.addEventListener("click",()=>{$("inspect").style.display="none"});let touchStartX=null;addEventListener("touchstart",e=>{if(e.touches.length===1)touchStartX=e.touches[0].clientX},{passive:true});addEventListener("touchend",e=>{touchStartX=null},{passive:true});
 let warningDismissed=false;
 const livePeerHealth=new Map();
 const pageStartedAt=Date.now();
