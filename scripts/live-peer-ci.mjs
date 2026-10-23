@@ -127,7 +127,7 @@ try {
       () => {
         const frame = document.querySelector("#commandFrame");
         const log = frame?.contentDocument?.querySelector("#status")?.textContent || frame?.contentDocument?.querySelector("#log")?.textContent || "";
-        return log.includes("PRODUCTION RUNTIME READY") || log.includes("RUNTIME BLOCKED:");
+        return log.includes("PRODUCTION RUNTIME READY") || log.includes("RUNTIME NOT READY:") || log.includes("RUNTIME BLOCKED:");
       },
       undefined, { timeout: 60000 }
     );
@@ -136,7 +136,7 @@ try {
     );
     const runtimeMode = runtimeLog.includes("PRODUCTION RUNTIME READY")
       ? "READY"
-      : runtimeLog.includes("RUNTIME BLOCKED: PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT")
+      : (runtimeLog.includes("RUNTIME NOT READY: PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT") || runtimeLog.includes("RUNTIME BLOCKED: PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT"))
         ? "EXPECTED_FAIL_CLOSED_WITHOUT_ENROLLED_AUTHORITY"
         : "UNEXPECTED_RUNTIME_FAILURE";
     if (runtimeMode === "UNEXPECTED_RUNTIME_FAILURE") {
