@@ -541,6 +541,10 @@ export class XKomzMasterInterface {
     if (this.destroyed || !this.renderer || document.hidden) return;
     this.raf = requestAnimationFrame(() => this.animate());
     const t = performance.now() * .001;
+    if (this.cameraTargetPosition) {
+      this.camera.position.lerp(this.cameraTargetPosition, 0.085);
+      this.camera.lookAt(this.cameraLookTarget || new THREE.Vector3(0, 0, 0));
+    }
     if (this.coreGroup) { this.coreGroup.rotation.x = Math.sin(t * .17) * .12; this.coreGroup.rotation.y = t * .14; }
     if (this.coreHalo) { const pulse = 1 + Math.sin(t * 1.4) * .055; this.coreHalo.scale.setScalar(pulse); this.coreHalo.material.opacity = .055 + (Math.sin(t * 1.4) + 1) * .018; }
     if (this.coreOrbit) this.coreOrbit.rotation.z = t * .12;
@@ -560,6 +564,12 @@ export class XKomzMasterInterface {
       attr.needsUpdate = true;
     }
     this.renderer.render(this.scene, this.camera);
+  }
+
+  resetCamera() {
+    if (!this.camera) return;
+    this.cameraTargetPosition = new THREE.Vector3(0, 9, 30);
+    this.cameraLookTarget = new THREE.Vector3(0, 0, 0);
   }
 
   resize() {
@@ -637,8 +647,8 @@ export class XKomzMasterInterface {
     const target = hits[0].object.position.clone();
     const direction = target.clone().normalize();
     const end = target.clone().add(direction.multiplyScalar(4));
-    this.camera.position.lerp(end, .35);
-    this.camera.lookAt(target);
+    this.cameraTargetPosition = end;
+    this.cameraLookTarget = target;
     this.dispatch('xkomz:node-selected', { node: this.selectedNode });
   }
 
