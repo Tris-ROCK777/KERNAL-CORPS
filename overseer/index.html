@@ -72,7 +72,10 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline-color:#a0efea}
 /* Immersive neural interface — original command plane is retained below. */
 #neuralExperience{position:fixed;inset:0;z-index:9999;overflow:hidden;background:#02050d;color:#eaf5ff;font-family:Inter,ui-sans-serif,system-ui,sans-serif;touch-action:pan-y;isolation:isolate}
 #neuralExperience *{box-sizing:border-box}
-#neuralExperience .mesh-layer{position:absolute;inset:0;width:100%;height:100%;display:block}
+#neuralExperience .mesh-layer{position:absolute;inset:0;width:100%;height:100%;display:block;transition:filter .32s ease,transform .32s ease}
+#neuralExperience.telemetry-active #meshGL,#neuralExperience.telemetry-active #binaryFlow{filter:blur(5px) brightness(.58);transform:scale(1.025)}
+#neuralExperience.telemetry-active .mesh-vignette{background:rgba(1,4,12,.28)}
+body:has(#neuralExperience){overflow:hidden}
 #neuralExperience #binaryFlow{pointer-events:none;mix-blend-mode:screen;opacity:.92}
 #neuralExperience .mesh-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 20%,rgba(2,5,13,.18) 58%,#02050d 100%),linear-gradient(180deg,rgba(2,5,13,.12),transparent 20%,transparent 76%,rgba(2,5,13,.34)}
 #neuralExperience .drawer{position:absolute;top:0;bottom:0;width:min(430px,88vw);padding:calc(22px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));overflow:auto;background:rgba(5,9,17,.91);backdrop-filter:blur(28px) saturate(125%);-webkit-backdrop-filter:blur(28px) saturate(125%);border-color:rgba(175,205,235,.16);transition:transform .38s cubic-bezier(.2,.8,.2,1);z-index:4;box-shadow:0 0 70px rgba(0,0,0,.48)}
@@ -239,7 +242,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline-color:#a0efea}
   <p class="telemetry-copy">This view does not substitute estimates for live telemetry. Open the existing console to inspect current peer, storage, and toll state.</p>
   <a class="telemetry-link" href="./mesh-console.html">OPEN MESH CONSOLE ↗</a><a class="telemetry-link" href="./live-peer-verify.html">VERIFY LIVE PEER ↗</a><a class="telemetry-link" href="./storage-verify.html">VERIFY STORAGE ↗</a><a class="telemetry-link" href="./ringwal-console.html">OPEN RINGWAL ↗</a>
  </section>
- <div class="gesture-hint" id="gestureHint">Tap a node · pull edges to explore</div>
+ <div class="sr-only" id="gestureHint">Tap a bright node to inspect. Pull from the left edge for the Sovereign Ledger or the right edge for Dual-State Pods. Pinch to zoom out.</div>
 </div>
 
 <script>
@@ -333,14 +336,18 @@ function clock(){$("clock").textContent=new Date().toLocaleTimeString([], {hour1
  }
  function renderFlow(t){
   flow.setTransform(1,0,0,1,0,0);flow.clearRect(0,0,flowCanvas.width,flowCanvas.height);flow.save();flow.scale(D,D);flow.globalCompositeOperation='lighter';
+  if(!gl||!program){
+   edges.forEach((e,i)=>{const a=project(nodes[e.a],t),b=project(nodes[e.b],t);flow.beginPath();flow.moveTo(a.x,a.y);flow.lineTo(b.x,b.y);flow.strokeStyle='rgba(44,151,255,.34)';flow.lineWidth=.8;flow.stroke()});
+   nodes.forEach((n,i)=>{const p=project(n,t);flow.beginPath();flow.arc(p.x,p.y,n.bright?4.5:1.8,0,Math.PI*2);flow.fillStyle=n.bright?'rgba(255,157,45,.96)':'rgba(76,182,255,.78)';flow.shadowBlur=n.bright?14:4;flow.shadowColor=n.bright?'#ff9d2d':'#2b9fff';flow.fill()});
+  }
   flow.font='bold 12px ui-monospace,SFMono-Regular,Menlo,monospace';
   streams.forEach((s,k)=>{const a=project(nodes[s.edge.a],t),b=project(nodes[s.edge.b],t);const phase=(t*.0001*s.speed+s.offset)%1;for(let j=0;j<5;j++){let q=(phase+j*.19)%1,x=a.x+(b.x-a.x)*q,y=a.y+(b.y-a.y)*q;flow.fillStyle=s.orange?'rgba(255,154,43,'+(0.75-j*.12)+')':'rgba(89,197,255,'+(0.72-j*.12)+')';flow.shadowBlur=9;flow.shadowColor=s.orange?'#ff8a23':'#2b9fff';flow.fillText((k+j)%2?'0':'1',x,y)}});flow.restore();
  }
- function tick(t){frame=requestAnimationFrame(tick);if(!prefersReduced){tiltX+=(targetX-tiltX)*.055;tiltY+=(targetY-tiltY)*.055;zoom+=(zoomTarget-zoom)*.07}renderGL(t);renderFlow(t);if(t-lastHint>5200)document.getElementById('gestureHint').classList.add('fade')}
+ function tick(t){frame=requestAnimationFrame(tick);if(!prefersReduced){tiltX+=(targetX-tiltX)*.055;tiltY+=(targetY-tiltY)*.055;zoom+=(zoomTarget-zoom)*.07}renderGL(t);renderFlow(t);}
  function closeDrawers(){document.querySelectorAll('#neuralExperience .drawer').forEach(d=>{d.classList.remove('open');d.setAttribute('aria-hidden','true')});document.getElementById('drawerScrim').classList.remove('open');drawer=null}
  function openDrawer(which){closeDrawers();closeTelemetry();drawer=which;const el=document.getElementById(which==='left'?'ledgerDrawer':'podsDrawer');el.classList.add('open');el.setAttribute('aria-hidden','false');document.getElementById('drawerScrim').classList.add('open');document.getElementById('gestureHint').classList.add('fade')}
- function closeTelemetry(){const el=document.getElementById('nodeTelemetry');el.classList.remove('open');el.setAttribute('aria-hidden','true');zoomTarget=1;selected=-1}
- function openTelemetry(index){closeDrawers();selected=index;zoomTarget=1.65;const n=nodes[index];document.getElementById('nodeLabel').textContent='MESH NODE / '+String(index+1).padStart(3,'0');const el=document.getElementById('nodeTelemetry');el.classList.add('open');el.setAttribute('aria-hidden','false');document.getElementById('meshAnnouncement').textContent='Selected mesh node '+(index+1)+'. Open the live console to inspect verified telemetry.';document.getElementById('gestureHint').classList.add('fade')}
+ function closeTelemetry(){const el=document.getElementById('nodeTelemetry');el.classList.remove('open');el.setAttribute('aria-hidden','true');root.classList.remove('telemetry-active');zoomTarget=1;selected=-1}
+ function openTelemetry(index){closeDrawers();selected=index;root.classList.add('telemetry-active');zoomTarget=1.65;const n=nodes[index];document.getElementById('nodeLabel').textContent='MESH NODE / '+String(index+1).padStart(3,'0');const el=document.getElementById('nodeTelemetry');el.classList.add('open');el.setAttribute('aria-hidden','false');document.getElementById('meshAnnouncement').textContent='Selected mesh node '+(index+1)+'. Open the live console to inspect verified telemetry.';document.getElementById('gestureHint').classList.add('fade')}
  document.querySelectorAll('#neuralExperience [data-close-drawer]').forEach(b=>b.addEventListener('click',closeDrawers));
  document.getElementById('drawerScrim').addEventListener('click',closeDrawers);
  document.getElementById('closeTelemetry').addEventListener('click',closeTelemetry);
@@ -352,7 +359,7 @@ function clock(){$("clock").textContent=new Date().toLocaleTimeString([], {hour1
   if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.2){if(sx<34&&dx>0){openDrawer('left');return}if(sx>W-34&&dx<0){openDrawer('right');return}if(drawer){closeDrawers();return}}
   if(Math.abs(dx)<12&&Math.abs(dy)<12&&!drawer&&!document.getElementById('nodeTelemetry').classList.contains('open')){
    let best=-1,bd=Infinity;nodes.forEach((n,i)=>{const p=project(n,performance.now()),d=Math.hypot(p.x-e.clientX,p.y-e.clientY);if(d<bd){bd=d;best=i}});
-   if(best>=0&&bd<Math.max(26,44*D/2))openTelemetry(best);
+   if(best>=0&&bd<28)openTelemetry(best);
   }
  },{passive:true});
  let pinchStart=0;
