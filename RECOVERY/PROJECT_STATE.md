@@ -64,3 +64,30 @@ The MQTT/WebRTC branches are also old snapshots. Current `main` was checked dire
 ### Integration rule
 
 Keep all future UI and runtime fixes directly on `main`, with no new branches or routine pull requests. Extend the canonical workbench, preserve existing modules and tests, and distinguish verified runtime measurements from architecture targets or product briefs.
+
+
+## Current X-KOM’Z recovery checkpoint (2026-10-23)
+
+The canonical live entry remains `/overseer/index.html`; the root entry redirects to it. The main UI now exposes only four primary work areas: **Network, Storage, Security, and Workers · 10K target**, and has the AYE•YAE core visual plus interactive modals for all seven canonical pods: X-KOM’Z, Planet-K, KashKorner, X-Koin’s, Kernelodie’s, KernelVision, and X-Shield.
+
+### Functional status — do not inflate simulated counts
+
+- **Storage:** `overseer/ringwal-console.html` reads the browser origin’s OPFS `ring-wal.jsonl`, displays recent records, and distinguishes an OPFS read failure from an empty WAL. The production runtime appends signed durability receipts through the authoritative commit pipeline. Device storage verification previously passed four times (recorded above); those results do not mean every device shares the same OPFS.
+- **Network:** `overseer/mesh-console.html` has a 96 KiB local RTCDataChannel loopback simulator that sends exactly three 32 KiB binary chunks and checks received length and SHA-256. The simulator explicitly reports that it is local loopback, not a remote peer. Separate `overseer/live-peer-verify.html` exercises real two-browser MQTT-signaled WebRTC. A previous run passed the 96 KiB/3-chunk transfer and restart recovery; a newer run is also checking the deployed mobile console and simulator.
+- **Security:** the X-KOM’Z Security tab opens a read-only authority/durability check. It verifies the pinned Ed25519 authority and non-exportable-key policy without silently creating a new identity. Fail-closed behavior is intentional.
+- **Workers:** the live console starts at most two actual browser Web Workers on the current device and continuously feeds them SHA-256 tasks until stopped. The visible count is the number of those actual local workers. **10,000 workers is a system target, not a current active-worker count.** No remote workers are claimed from decorative cells.
+- **UI:** the four tabs stay inside the existing X-KOM’Z command center; worker mode deep-links to the shared network console. Module URLs are cache-busted when a view opens to reduce stale iOS WebView assets.
+
+### Current verification boundaries
+
+- Authority security tests and Node end-to-end mesh tests passed on recent commits.
+- Real remote WebRTC has passed on an earlier commit; the latest CI run must finish before declaring the newest embedded simulator/worker smoke checks passed.
+- GitHub Pages deployments are checked per commit; a successful deployment alone is not a runtime pass.
+- No claim of 10,000 simultaneously active workers, a production-scale decentralized mesh, or always-on replication is authorized without measurements that demonstrate it.
+
+### Resume order
+
+1. Finish the current CI run for the deployed mobile command center, 96 KiB simulator, and local worker task queue.
+2. Keep Storage, Network, Security, and Workers as the only primary work areas inside X-KOM’Z.
+3. Recover/merge only verified useful features from historical UI snapshots; do not create branches or replace the canonical UI with a divergent snapshot.
+4. Preserve these notes and the existing verification records when continuing work.

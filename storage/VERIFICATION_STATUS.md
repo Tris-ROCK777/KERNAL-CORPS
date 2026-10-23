@@ -15,3 +15,10 @@ The storage verification was completed successfully on the user's device four ti
 ## Scope
 
 This status records the completed storage verification reported by the user. It does not claim that every production authority/bootstrap integration or live multi-device WebRTC scenario is verified.
+
+
+## Current runtime integration (2026-10-23)
+
+The live X-KOM’Z Storage view reads the production OPFS file `ring-wal.jsonl`, renders recent parsed rows, and shows an explicit `OPFS READ FAILED` message when access fails. The production durability bridge appends to this same OPFS filename in browser mode. The UI does not treat a missing file or a read error as proof of recovery.
+
+The existing four device passes remain the user's reported device evidence. They are distinct from the newest automated checks and do not imply shared OPFS across phones. Recent Node end-to-end mesh and authority security workflows passed; the newest deployment and live-peer workflow must finish before the latest mobile smoke checks are called verified.

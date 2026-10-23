@@ -2,7 +2,7 @@ name: Overseer Hot-Swap & Mesh Verification
 
 on:
   push:
-    branches: [main, master, security/zero-trust-live-storage-gate]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
