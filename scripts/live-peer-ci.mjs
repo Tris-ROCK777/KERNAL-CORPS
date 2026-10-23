@@ -222,10 +222,9 @@ try {
     await smokePage.getByRole("button", { name: "NETWORK", exact: true }).click();
     await smokePage.frameLocator("#commandFrame").locator("#simTransfer").waitFor({ state: "attached", timeout: 15000 });
     console.log(JSON.stringify({ event: "FOUR_COMMAND_AREAS_LOAD_PASS", storageControls, securityButton }));
-    // Network operations are housed in the live-peer drawer on mobile.
-    // Exercise the local RTCDataChannel simulator separately from the two-browser peer test.
+    // Exercise the local RTCDataChannel simulator in the visible Network controls.
+    // Do not open a drawer over the controls; peer connection UI has its own in-console overlay.
     const commandFrame = smokePage.frameLocator("#commandFrame");
-    await commandFrame.locator("#openRightDrawer").click();
     await commandFrame.locator("#simTransfer").click();
     await smokePage.waitForFunction(() => {
       const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#log")?.textContent || "";
