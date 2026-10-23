@@ -191,6 +191,10 @@ html.kernel-dashboard-mode .return-to-mesh{display:block!important}
 #neuralExperience{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;background:#020305!important}
 #meshViewportMount{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important}
 #meshViewportMount canvas#threeMesh{display:block;width:100%!important;height:100%!important;touch-action:none}
+#neuralExperience .mesh-work-tabs{position:absolute!important;z-index:4!important;left:12px!important;right:12px!important;bottom:calc(82px + env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important;pointer-events:auto!important}
+#neuralExperience .mesh-work-tabs button{min-width:0!important;min-height:38px!important;padding:9px 5px!important;border:1px solid rgba(105,210,255,.36)!important;border-radius:9px!important;background:rgba(2,10,22,.84)!important;color:#c5edff!important;font:8px/1.2 ui-monospace,monospace!important;letter-spacing:.04em!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;touch-action:manipulation!important}
+#neuralExperience .mesh-work-tabs button:active,#neuralExperience .mesh-work-tabs button:focus-visible{outline:2px solid #65cfff!important;outline-offset:2px;background:rgba(8,35,62,.96)!important}
+@media(max-width:600px){#neuralExperience .mesh-work-tabs{left:7px!important;right:7px!important;bottom:calc(116px + env(safe-area-inset-bottom))!important;gap:4px!important}#neuralExperience .mesh-work-tabs button{min-height:35px!important;padding:8px 2px!important;font-size:7px!important;letter-spacing:0!important}}
 /* Keep the core, live readouts and navigation visible; the mesh is the backdrop, not an empty shell. */
 #neuralExperience .mesh-top-hud{display:flex!important}
 #neuralExperience .mesh-bottom-hud{display:grid!important}
@@ -291,6 +295,12 @@ html.kernel-dashboard-mode .return-to-mesh{display:block!important}
   <div class="mesh-brand"><span class="mesh-brand-mark" aria-hidden="true">K</span><div class="mesh-brand-copy"><strong>KERNEL / X-KOM’Z</strong><small>PHANTOM BLACK · LIVE MESH VIEW</small></div></div>
   <div class="mesh-status-pill">FAIL-CLOSED · ZERO-TRUST</div>
  </header>
+ <nav class="mesh-work-tabs" aria-label="Primary work areas">
+  <button type="button" data-work-area="NETWORK">NETWORK</button>
+  <button type="button" data-work-area="STORAGE">STORAGE</button>
+  <button type="button" data-work-area="SECURITY">SECURITY</button>
+  <button type="button" data-work-area="WORKERS · 10K TARGET">WORKERS · 10K</button>
+ </nav>
  <nav class="mesh-edge-controls" aria-label="Mesh drawers"><button type="button" id="openLedgerDrawer">LEDGER / EVIDENCE</button><button type="button" id="openNetworkDrawer">NETWORK / STORAGE</button><button type="button" id="openPodsDrawer">APPLICATION PODS</button></nav>
  <div class="mesh-core-caption" aria-label="AYE-YAE KERNEL AI core">AYE•YAE / KERNEL CORE</div>
  <section class="mesh-bottom-hud" aria-label="Live mesh status">
@@ -658,6 +668,12 @@ document.querySelectorAll('[data-live-tool]').forEach(button=>button.addEventLis
  };
  open?.addEventListener('click',()=>setMode(true));
  back?.addEventListener('click',()=>setMode(false));
+ document.querySelectorAll('[data-work-area]').forEach(button=>button.addEventListener('click',()=>{
+  setMode(true);
+  const wanted=button.dataset.workArea;
+  const target=[...document.querySelectorAll('.command-tab')].find(tab=>tab.textContent.trim()===wanted);
+  if(target)target.click();
+ }));
  window.addEventListener('keydown',event=>{if(event.key==='Escape'&&html.classList.contains('kernel-dashboard-mode'))setMode(false)});
 })();
 </script>
