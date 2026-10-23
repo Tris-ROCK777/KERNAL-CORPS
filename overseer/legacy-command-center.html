@@ -354,7 +354,7 @@ function publishParentTelemetry(){
    storage:{shardCount:Number(telemetry.verifiedShards)||0,verifiedShardBytes:Number(telemetry.verifiedShardBytes)||0,ringWalStatus:state.runtime?"RUNTIME INITIALIZED · WAL EVIDENCE UNAVAILABLE":"UNAVAILABLE",commitCount:telemetry.localCommits===undefined?undefined:Number(telemetry.localCommits),recoveryStatus:state.runtime?"RUNTIME INITIALIZED · RECOVERY NOT YET TESTED":"UNAVAILABLE"},
    security:{authorityStatus:authorityReady?(state.runtime.authorityRestored?"AUTHORITY RESTORED":"AUTHORITY PINNED"):(String(state.authority).startsWith("FAILED")?"FAIL-CLOSED":"UNAVAILABLE"),signatureStatus:receipt?(receipt.signatureVerified===true&&receipt.authorityPinMatched===true?"VERIFIED":"NOT VERIFIED"):"UNAVAILABLE",lastSha256:/^[a-f0-9]{64}$/i.test(String(state.lastHash||""))?state.lastHash:undefined,receiptCount:state.receiptHistory?.length||0,readbackStatus:receipt?.readBackVerified===true?"VERIFIED":"UNAVAILABLE",gateStatus:receipt?(receipt.signatureVerified===true&&receipt.authorityPinMatched===true&&receipt.readBackVerified===true?"PASS":"BLOCKED"):"UNAVAILABLE",records:(state.receiptHistory||[]).map(item=>({at:item.at,source:item.source,sha256:item.receipt?.sha256,byteLength:item.receipt?.byteLength,signatureVerified:item.receipt?.signatureVerified,authorityPinMatched:item.receipt?.authorityPinMatched,readBackVerified:item.receipt?.readBackVerified}))}
   };
-  window.parent.dispatchEvent(new CustomEvent("kernel:telemetry",{detail:snapshot}));
+  window.parent.dispatchEvent(new window.parent.CustomEvent("kernel:telemetry",{detail:snapshot}));
  }catch{}
 }
 
