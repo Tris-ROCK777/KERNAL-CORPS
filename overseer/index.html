@@ -114,11 +114,11 @@ function openCommandView(url,title,source="command deck"){
  const resolved=new URL(url,location.href);
  // GitHub Pages and mobile WebViews can retain an old embedded module document after a deploy.
  // Bust the document cache whenever a command view is opened, without changing its canonical path.
- resolved.searchParams.set("kernelBuild", "xkomz-20261023-r1");
+ resolved.searchParams.set("kernelBuild", String(Date.now()));
  if(resolved.origin!==location.origin){event("Blocked a command view outside this repository origin.","error");return}
  commandFrame.src=resolved.href;commandFrame.title="KERNEL "+title;commandTitle.textContent=title.toUpperCase();commandStatus.textContent="Opening "+title+" · source: "+source+".";
  standalone.href=resolved.href;
- document.querySelectorAll(".command-tab").forEach(b=>{const active=new URL(b.dataset.commandView,location.href).href===resolved.href;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active))});
+ document.querySelectorAll(".command-tab").forEach(b=>{const tabUrl=new URL(b.dataset.commandView,location.href);const active=tabUrl.pathname===resolved.pathname&&tabUrl.hash===resolved.hash;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active))});
  document.querySelectorAll("#toolGrid .tool-link").forEach(a=>{if(new URL(a.getAttribute("href"),location.href).href===resolved.href)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
 }
 document.querySelectorAll("[data-command-view]").forEach(b=>b.addEventListener("click",()=>openCommandView(b.dataset.commandView,b.dataset.commandTitle)));
