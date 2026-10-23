@@ -181,6 +181,11 @@ html.kernel-dashboard-mode #neuralExperience{display:none!important}
 html.kernel-dashboard-mode .return-to-mesh{display:block!important}
 @media(max-width:600px){.mesh-mode-toggle{font-size:8px;padding:9px 10px;right:8px}.return-to-mesh{right:8px;bottom:max(8px,env(safe-area-inset-bottom))}}
 
+/* Keep invisible edge hit zones usable for swipes; drawers retain their normal frosted-glass presentation. */
+#neuralExperience .mesh-edge-controls{z-index:4!important}
+#neuralExperience .mesh-edge-controls button{min-width:30px!important}
+#neuralExperience .kernel-core-summary{margin:0 0 16px;padding:14px;border:1px solid rgba(90,190,255,.22);border-radius:14px;background:rgba(3,9,18,.78);box-shadow:0 12px 32px #0004}
+#neuralExperience .kernel-core-summary .mesh-context-head{margin:0 0 10px;color:#9ddfff;font-size:10px;letter-spacing:.12em}
 /* X-KOM'Z immersive mesh-first presentation; existing drawers and operational tools remain in the DOM. */
 #neuralExperience{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;background:#020305!important}
 #meshViewportMount{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important}
@@ -314,16 +319,27 @@ html.kernel-dashboard-mode .return-to-mesh{display:block!important}
   <div class="drawer-head"><div><div class="eyebrow">X-KOM’Z / ECOSYSTEM</div><h2>Dual-State Pods</h2></div><button class="close-drawer" data-close-drawer aria-label="Close applications">×</button></div>
   <p class="ledger-note">Tap a card to flip between its consumer-facing purpose and its network role. Back-side descriptions are architecture roles, not live health claims.</p>
   <div class="pod-grid">
-   <article class="pod-card" tabindex="0" role="button" aria-label="Planet-K, tap to flip" style="--accent:#73d8ff"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 01</div><div class="pod-name">Planet-K</div><div class="pod-desc">A connected home for the KERNEL ecosystem.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Ecosystem surface</div><div class="pod-desc">Consumer entry point coordinated through shared KERNEL infrastructure.</div></div><a class="pod-open" href="./index.html#network">OPEN COMMAND PLANE ↗</a></div></div></article>
+   <article class="pod-card" tabindex="0" role="button" aria-label="Planet-K, tap to flip" style="--accent:#73d8ff"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 01</div><div class="pod-name">PlanetApeX / Planet-K</div><div class="pod-desc">A connected home for the KERNEL ecosystem.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Ecosystem surface</div><div class="pod-desc">Consumer entry point coordinated through shared KERNEL infrastructure.</div></div><a class="pod-open" href="./index.html#network">OPEN COMMAND PLANE ↗</a></div></div></article>
    <article class="pod-card" tabindex="0" role="button" aria-label="KashKorner, tap to flip" style="--accent:#e8bb72"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 02</div><div class="pod-name">KashKorner</div><div class="pod-desc">A finance-focused ecosystem experience.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Transaction surface</div><div class="pod-desc">Financial interactions belong to verified shared services; no transaction state is implied here.</div></div><a class="pod-open" href="./mesh-console.html">OPEN MESH CONSOLE ↗</a></div></div></article>
-   <article class="pod-card" tabindex="0" role="button" aria-label="X-Koin’s, tap to flip" style="--accent:#f3d35b"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 03</div><div class="pod-name">X-Koin’s</div><div class="pod-desc">K-KOINZ and ecosystem value flows.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Toll / value layer</div><div class="pod-desc">Inspect actual toll-lock state through the running mesh console.</div></div><a class="pod-open" href="./mesh-console.html">INSPECT LIVE CONSOLE ↗</a></div></div></article>
-   <article class="pod-card" tabindex="0" role="button" aria-label="Kernelodie’s, tap to flip" style="--accent:#d7a3ff"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 04</div><div class="pod-name">Kernelodie’s</div><div class="pod-desc">The audio and listening experience.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Media surface</div><div class="pod-desc">A consumer media layer connected to shared ecosystem services.</div></div><a class="pod-open" href="./index.html#network">OPEN COMMAND PLANE ↗</a></div></div></article>
+   <article class="pod-card" tabindex="0" role="button" aria-label="X-Koin’s, tap to flip" style="--accent:#f3d35b"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 03</div><div class="pod-name">KoinKob's / X-Koin’s</div><div class="pod-desc">K-KOINZ and ecosystem value flows.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Toll / value layer</div><div class="pod-desc">Inspect actual toll-lock state through the running mesh console.</div></div><a class="pod-open" href="./mesh-console.html">INSPECT LIVE CONSOLE ↗</a></div></div></article>
+   <article class="pod-card" tabindex="0" role="button" aria-label="Kernelodie’s, tap to flip" style="--accent:#d7a3ff"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 04</div><div class="pod-name">Kernelodie'z / Kernelodie’s</div><div class="pod-desc">The audio and listening experience.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Media surface</div><div class="pod-desc">A consumer media layer connected to shared ecosystem services.</div></div><a class="pod-open" href="./index.html#network">OPEN COMMAND PLANE ↗</a></div></div></article>
    <article class="pod-card" tabindex="0" role="button" aria-label="KernelVision, tap to flip" style="--accent:#42e2d0"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 05</div><div class="pod-name">KernelVision</div><div class="pod-desc">Cinematic visual media and discovery.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Media delivery</div><div class="pod-desc">Delivery and storage status must come from live services, not this visual layer.</div></div><a class="pod-open" href="./storage-verify.html">OPEN STORAGE VERIFY ↗</a></div></div></article>
-   <article class="pod-card" tabindex="0" role="button" aria-label="X-Shield, tap to flip" style="--accent:#ff8c62"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 06</div><div class="pod-name">X-Shield</div><div class="pod-desc">Privacy and security-focused tools.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Security layer</div><div class="pod-desc">Inspect the actual authority and security workflows; tunnel status is not assumed.</div></div><a class="pod-open" href="./authority-enroll.html">OPEN AUTHORITY TOOLS ↗</a></div></div></article>
+   <article class="pod-card" tabindex="0" role="button" aria-label="X-Shield, tap to flip" style="--accent:#ff8c62"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 06</div><div class="pod-name">XShield / X-Shield</div><div class="pod-desc">Privacy and security-focused tools.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Security layer</div><div class="pod-desc">Inspect the actual authority and security workflows; tunnel status is not assumed.</div></div><a class="pod-open" href="./authority-enroll.html">OPEN AUTHORITY TOOLS ↗</a></div></div></article>
   </div>
  </aside>
  <section class="telemetry" id="nodeTelemetry" aria-label="Peer node details" aria-hidden="true">
   <div class="telemetry-top"><div><div class="eyebrow" id="nodeLabel">NETWORK NODE / SELECTED</div><h2>Peer telemetry</h2></div><button class="telemetry-close" id="closeTelemetry" aria-label="Zoom back to mesh">×</button></div>
+   <section class="kernel-core-summary" aria-label="AYE-YAE KERNEL CORE telemetry">
+    <div class="mesh-context-head">AYE•YAE / KERNEL CORE · LIVE SYSTEM TELEMETRY</div>
+    <div class="selected-node-grid mesh-global-grid">
+     <div><small>LIVE PEERS</small><strong data-live-value="peers">UNAVAILABLE</strong></div>
+     <div><small>ACTIVE WORKERS / TARGET</small><strong><span data-live-value="workers">UNAVAILABLE</span> / 10,000</strong></div>
+     <div><small>VERIFIED SHARDS / BYTES</small><strong><span data-live-value="shards">UNAVAILABLE</span> / <span data-live-value="verifiedBytes">UNAVAILABLE</span></strong></div>
+     <div><small>RING-WAL / RECOVERY</small><strong><span data-live-value="wal">UNAVAILABLE</span> / <span data-live-value="recovery">UNAVAILABLE</span></strong></div>
+     <div><small>AUTHORITY / SIGNATURE</small><strong><span data-live-value="authority">UNAVAILABLE</span> / <span data-live-value="signature">UNAVAILABLE</span></strong></div>
+     <div class="selected-node-wide"><small>OPFS READ-BACK / LAST SHA-256</small><strong><span data-live-value="readback">UNAVAILABLE</span> / <span data-live-value="lastHash">UNAVAILABLE</span></strong></div>
+    </div>
+   </section>
    <section class="selected-node-panel" id="selectedNodePanel" aria-live="polite" aria-label="Selected mesh node details">
 <div class="selected-node-panel-head"><span class="selected-node-indicator"></span><div><small>SELECTED NODE / SOURCE DATA</small><strong id="selectedNodeTitle">Tap a mesh node</strong></div><span class="selected-node-state" id="selectedNodeState">NO SELECTION</span></div>
 <div class="selected-node-grid" id="selectedNodeGrid"><div><small>NODE ID</small><strong>UNAVAILABLE</strong></div><div><small>CONNECTION</small><strong>UNAVAILABLE</strong></div><div><small>LATENCY</small><strong>UNAVAILABLE</strong></div><div><small>RX / TX BYTES</small><strong>UNAVAILABLE</strong></div><div><small>SHARDS / VERIFIED BYTES</small><strong>UNAVAILABLE</strong></div><div><small>AUTHORITY / SIGNATURE</small><strong>UNAVAILABLE</strong></div><div class="selected-node-wide"><small>SHA-256 / RECEIPT</small><strong>UNAVAILABLE</strong></div></div>
@@ -431,6 +447,29 @@ document.getElementById('closeTelemetry').addEventListener('click', closeMeshDra
 document.getElementById('openLedgerDrawer').addEventListener('click', () => openMeshDrawer('left'));
 document.getElementById('openNetworkDrawer').addEventListener('click', () => openMeshDrawer('telemetry'));
 document.getElementById('openPodsDrawer').addEventListener('click', () => openMeshDrawer('right'));
+
+// Gesture-first controls: the default scene stays clean; drawers are revealed only by node taps or edge swipes.
+let edgeGestureStart = null;
+experience.addEventListener('pointerdown', event => {
+  if (event.pointerType === 'mouse' && event.button !== 0) return;
+  const width = window.innerWidth, height = window.innerHeight;
+  const edge = 24;
+  const fromLeft = event.clientX <= edge;
+  const fromRight = event.clientX >= width - edge;
+  const fromBottom = event.clientY >= height - edge;
+  if (fromLeft || fromRight || fromBottom) edgeGestureStart = {x:event.clientX,y:event.clientY,fromLeft,fromRight,fromBottom,id:event.pointerId};
+}, {passive:true});
+experience.addEventListener('pointerup', event => {
+  if (!edgeGestureStart || edgeGestureStart.id !== event.pointerId) return;
+  const start = edgeGestureStart; edgeGestureStart = null;
+  const dx = event.clientX - start.x, dy = event.clientY - start.y;
+  if (Math.abs(dx) < 54 && Math.abs(dy) < 54) return;
+  if (Math.abs(dx) > Math.abs(dy) * 1.15) {
+    if (start.fromLeft && dx > 0) openMeshDrawer('left');
+    else if (start.fromRight && dx < 0) openMeshDrawer('right');
+  } else if (start.fromBottom && dy < -54) openMeshDrawer('telemetry');
+}, {passive:true});
+experience.addEventListener('pointercancel', () => { edgeGestureStart = null; }, {passive:true});
 document.querySelectorAll('#neuralExperience .pod-card').forEach(card => {
   const flip = () => card.classList.toggle('flipped');
   card.addEventListener('click', e => { if (!e.target.closest('a')) flip(); });
