@@ -10,7 +10,7 @@ permissions:
 jobs:
   sender:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -42,7 +42,7 @@ jobs:
       - name: Install browser test dependency
         run: |
           npm install --no-save playwright
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
       - name: Receive and verify live WebRTC shard
         env:
           KERNEL_PEER_ROLE: receiver
