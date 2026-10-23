@@ -10,8 +10,10 @@ class MockMqttClient extends EventEmitter {
     this.unsubscriptions = [];
     this.connected = true;
   }
-  subscribe(topic, options) {
+  subscribe(topic, options, callback) {
     this.subscriptions.push({ topic, options });
+    // Match MQTT.js: subscription readiness is confirmed through the callback.
+    queueMicrotask(() => callback?.(null, [{ topic, qos: options?.qos ?? 0 }]));
   }
   publish(topic, payload, options, callback) {
     this.publications.push({ topic, payload: String(payload), options });
