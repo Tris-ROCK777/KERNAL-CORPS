@@ -60,7 +60,6 @@
         output.textContent = "SECURITY CHECK BLOCKED / FAILED CLOSED\n" + (error?.stack || error?.message || String(error)) +
           "\n\nNo replacement key was generated and no trust pin was changed.";
       } finally {
-        try { await runtime?.close?.(); } catch {}
         button.disabled = false;
       }
     });
