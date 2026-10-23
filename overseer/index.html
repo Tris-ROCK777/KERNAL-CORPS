@@ -182,7 +182,7 @@ html.kernel-dashboard-mode .return-to-mesh{display:block!important}
 @media(max-width:600px){.mesh-mode-toggle{font-size:8px;padding:9px 10px;right:8px}.return-to-mesh{right:8px;bottom:max(8px,env(safe-area-inset-bottom))}}
 </style>
 
-<style id="selected-node-panel-styles">#neuralExperience .selected-node-panel{margin:12px 0 18px;padding:14px;border:1px solid #5ccfff4d;border-radius:15px;background:linear-gradient(145deg,#09192af2,#030810f5);box-shadow:inset 0 1px #cef4ff0a,0 10px 32px #0004}#neuralExperience .selected-node-panel-head{display:flex;align-items:center;gap:9px;min-width:0;padding-bottom:12px;border-bottom:1px solid #83dfff20}#neuralExperience .selected-node-indicator{width:8px;height:8px;flex:none;border-radius:50%;background:#55d9ff;box-shadow:0 0 14px #55d9ff88}#neuralExperience .selected-node-panel-head>div{min-width:0;flex:1}#neuralExperience .selected-node-panel-head small,#neuralExperience .selected-node-grid small{display:block;color:#789ab4;font:8px/1.5 ui-monospace,monospace;letter-spacing:.1em}#neuralExperience .selected-node-panel-head strong{display:block;margin-top:4px;color:#e0f7ff;font:600 12px/1.4 ui-monospace,monospace;overflow-wrap:anywhere}#neuralExperience .selected-node-state{flex:none;padding:5px 7px;border:1px solid #6acfff35;border-radius:7px;color:#9edfff;font:8px ui-monospace,monospace;letter-spacing:.04em}#neuralExperience .selected-node-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:11px}#neuralExperience .selected-node-grid>div{min-width:0;padding:9px;border:1px solid #7ecfff19;border-radius:9px;background:#06101c}#neuralExperience .selected-node-grid strong{display:block;margin-top:6px;color:#d7f3ff;font:500 10px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;word-break:break-word}#neuralExperience .selected-node-grid .selected-node-wide{grid-column:1/-1}#neuralExperience .selected-node-note{margin:10px 0 0;color:#7f9bb2;font-size:10px;line-height:1.55}@media(max-width:420px){#neuralExperience .selected-node-panel{padding:11px}#neuralExperience .selected-node-grid{gap:6px}#neuralExperience .selected-node-grid>div{padding:8px}}</style></style>
+<style id="selected-node-panel-styles">#neuralExperience .selected-node-panel{margin:12px 0 18px;padding:14px;border:1px solid #5ccfff4d;border-radius:15px;background:linear-gradient(145deg,#09192af2,#030810f5);box-shadow:inset 0 1px #cef4ff0a,0 10px 32px #0004}#neuralExperience .selected-node-panel-head{display:flex;align-items:center;gap:9px;min-width:0;padding-bottom:12px;border-bottom:1px solid #83dfff20}#neuralExperience .selected-node-indicator{width:8px;height:8px;flex:none;border-radius:50%;background:#55d9ff;box-shadow:0 0 14px #55d9ff88}#neuralExperience .selected-node-panel-head>div{min-width:0;flex:1}#neuralExperience .selected-node-panel-head small,#neuralExperience .selected-node-grid small{display:block;color:#789ab4;font:8px/1.5 ui-monospace,monospace;letter-spacing:.1em}#neuralExperience .selected-node-panel-head strong{display:block;margin-top:4px;color:#e0f7ff;font:600 12px/1.4 ui-monospace,monospace;overflow-wrap:anywhere}#neuralExperience .selected-node-state{flex:none;padding:5px 7px;border:1px solid #6acfff35;border-radius:7px;color:#9edfff;font:8px ui-monospace,monospace;letter-spacing:.04em}#neuralExperience .selected-node-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:11px}#neuralExperience .selected-node-grid>div{min-width:0;padding:9px;border:1px solid #7ecfff19;border-radius:9px;background:#06101c}#neuralExperience .selected-node-grid strong{display:block;margin-top:6px;color:#d7f3ff;font:500 10px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;word-break:break-word}#neuralExperience .selected-node-grid .selected-node-wide{grid-column:1/-1}#neuralExperience .selected-node-note{margin:10px 0 0;color:#7f9bb2;font-size:10px;line-height:1.55}@media(max-width:420px){#neuralExperience .selected-node-panel{padding:11px}#neuralExperience .selected-node-grid{gap:6px}#neuralExperience .selected-node-grid>div{padding:8px}}</style><style id="mesh-global-grid-styles">#neuralExperience .mesh-context-head{margin-top:15px;padding-top:12px;border-top:1px solid #83dfff20;color:#81b5d1;font:8px ui-monospace,monospace;letter-spacing:.14em}#neuralExperience .mesh-global-grid{margin-top:9px}#neuralExperience .mesh-global-grid>div{background:linear-gradient(145deg,#071625,#040b14)}#neuralExperience .mesh-global-grid strong{color:#9fdcf5}</style></style>
 </head>
 <body>
 <div class="shell">
@@ -313,7 +313,13 @@ html.kernel-dashboard-mode .return-to-mesh{display:block!important}
    <section class="selected-node-panel" id="selectedNodePanel" aria-live="polite" aria-label="Selected mesh node details">
 <div class="selected-node-panel-head"><span class="selected-node-indicator"></span><div><small>SELECTED NODE / SOURCE DATA</small><strong id="selectedNodeTitle">Tap a mesh node</strong></div><span class="selected-node-state" id="selectedNodeState">NO SELECTION</span></div>
 <div class="selected-node-grid" id="selectedNodeGrid"><div><small>NODE ID</small><strong>UNAVAILABLE</strong></div><div><small>CONNECTION</small><strong>UNAVAILABLE</strong></div><div><small>LATENCY</small><strong>UNAVAILABLE</strong></div><div><small>RX / TX BYTES</small><strong>UNAVAILABLE</strong></div><div><small>SHARDS / VERIFIED BYTES</small><strong>UNAVAILABLE</strong></div><div><small>AUTHORITY / SIGNATURE</small><strong>UNAVAILABLE</strong></div><div class="selected-node-wide"><small>SHA-256 / RECEIPT</small><strong>UNAVAILABLE</strong></div></div>
-<p id="selectedNodeNote" class="selected-node-note">Tap any mesh node to inspect its reported fields. Global values are not substituted for missing peer-level values.</p></section>
+<p id="selectedNodeNote" class="selected-node-note">Tap any mesh node to inspect its reported fields. Global values are not substituted for missing peer-level values.</p>
+<div class="mesh-context-head">SYSTEM CONTEXT / GLOBAL SNAPSHOT</div>
+<div class="selected-node-grid mesh-global-grid" id="meshGlobalContext">
+ <div><small>LIVE PEERS</small><strong>UNAVAILABLE</strong></div><div><small>ACTIVE WORKERS / TARGET</small><strong>UNAVAILABLE / 10,000</strong></div>
+ <div><small>STORAGE SHARDS / OPFS BYTES</small><strong>UNAVAILABLE</strong></div><div><small>RING-WAL / RECOVERY</small><strong>UNAVAILABLE</strong></div>
+ <div><small>AUTHORITY / SIGNATURE</small><strong>UNAVAILABLE</strong></div><div class="selected-node-wide"><small>READ-BACK / LAST SHA-256</small><strong>UNAVAILABLE</strong></div>
+</div></section>
 <div class="telemetry-grid">
     <div class="telemetry-cell"><small>LIVE NETWORK</small><strong>Peers <span data-live-value="peers">UNAVAILABLE</span><br>Workers active <span data-live-value="workers">UNAVAILABLE</span> · target 10,000<br>Latency <span data-live-value="latency">UNAVAILABLE</span><br>RX bytes <span data-live-value="rxBytes">UNAVAILABLE</span></strong></div>
     <div class="telemetry-cell"><small>VERIFIED STORAGE</small><strong>Shards <span data-live-value="shards">UNAVAILABLE</span><br>Verified bytes <span data-live-value="verifiedBytes">UNAVAILABLE</span><br>Read-back <span data-live-value="readback">UNAVAILABLE</span></strong></div>
@@ -423,6 +429,33 @@ const inspectorValue = (source, paths) => {
  return undefined;
 };
 const inspectorText = value => { if(value===undefined||value===null||value==='')return 'UNAVAILABLE';if(typeof value==='object'){try{return JSON.stringify(value)}catch{return '[structured value]'}}return String(value); };
+function renderMeshGlobalContext(snapshot) {
+ const target=document.getElementById('meshGlobalContext');
+ if(!target||!snapshot)return;
+ const fields=[
+  ['LIVE PEERS',['network.livePeerCount','network.peerCount','livePeerCount','peerCount']],
+  ['ACTIVE WORKERS / TARGET',['network.workers.localActive','workers.localActive','localWorkersActive']],
+  ['STORAGE SHARDS / OPFS BYTES',['storage.shardCount','shardCount','storage.opfsBytes','storage.bytes','opfsBytes']],
+  ['RING-WAL / RECOVERY',['storage.ringWalStatus','storage.walStatus','ringWalStatus','storage.recoveryStatus']],
+  ['AUTHORITY / SIGNATURE',['security.authorityStatus','security.authority','authorityStatus','security.signatureStatus','security.signatureVerified']],
+  ['READ-BACK / LAST SHA-256',['security.readbackStatus','storage.readbackStatus','security.lastSha256','security.lastHash','lastSha256','lastHash']]
+ ];
+ target.replaceChildren();
+ for(const [caption,paths] of fields){
+  let value;
+  for(const path of paths){value=path.split('.').reduce((current,part)=>current==null?undefined:current[part],snapshot);if(value!==undefined&&value!==null&&value!=='')break;}
+  const cell=document.createElement('div');if(caption.startsWith('READ-BACK'))cell.className='selected-node-wide';
+  const small=document.createElement('small');small.textContent=caption;
+  const strong=document.createElement('strong');
+  if(caption==='ACTIVE WORKERS / TARGET') strong.textContent=(value===undefined?'UNAVAILABLE':String(value))+' / 10,000';
+  else if(caption==='STORAGE SHARDS / OPFS BYTES'&&value!==undefined){const shards=inspectorValue(snapshot,['storage.shardCount','shardCount']);const bytes=inspectorValue(snapshot,['storage.opfsBytes','storage.bytes','opfsBytes']);strong.textContent=inspectorText(shards)+' shards / '+inspectorText(bytes)+' bytes';}
+  else if(caption==='AUTHORITY / SIGNATURE'&&value!==undefined){const auth=inspectorValue(snapshot,['security.authorityStatus','security.authority','authorityStatus']);const sig=inspectorValue(snapshot,['security.signatureStatus','security.signatureVerified']);strong.textContent=inspectorText(auth)+' / '+(typeof sig==='boolean'?(sig?'VERIFIED':'NOT VERIFIED'):inspectorText(sig));}
+  else if(caption==='READ-BACK / LAST SHA-256'&&value!==undefined){const readback=inspectorValue(snapshot,['security.readbackStatus','storage.readbackStatus']);const hash=inspectorValue(snapshot,['security.lastSha256','security.lastHash','lastSha256','lastHash']);strong.textContent=inspectorText(readback)+' / '+inspectorText(hash);}
+  else if(caption==='RING-WAL / RECOVERY'&&value!==undefined){const wal=inspectorValue(snapshot,['storage.ringWalStatus','storage.walStatus','ringWalStatus']);const recovery=inspectorValue(snapshot,['storage.recoveryStatus']);strong.textContent=inspectorText(wal)+' / '+inspectorText(recovery);}
+  else strong.textContent=inspectorText(value);
+  cell.append(small,strong);target.append(cell);
+ }
+}
 function renderSelectedMeshNode(node,snapshot) {
  const title=document.getElementById('selectedNodeTitle'),state=document.getElementById('selectedNodeState'),grid=document.getElementById('selectedNodeGrid'),note=document.getElementById('selectedNodeNote');
  if(!title||!state||!grid||!note)return;
@@ -445,6 +478,7 @@ const mesh = new XKomzMasterInterface(mount, {
   viewportOnly: true,
   onSnapshot(snapshot) {
     latestMeshSnapshot = snapshot;
+    renderMeshGlobalContext(snapshot);
     if (selectedMeshNode) {
       const peers = inspectorValue(snapshot, ['network.peers','peers','nodes']);
       const selectedId = inspectorValue(selectedMeshNode, ['id','peerId','peer_id','nodeId','connectionId']);
