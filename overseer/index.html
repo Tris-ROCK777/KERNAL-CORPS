@@ -182,7 +182,7 @@ html.kernel-dashboard-mode .return-to-mesh{display:block!important}
 @media(max-width:600px){.mesh-mode-toggle{font-size:8px;padding:9px 10px;right:8px}.return-to-mesh{right:8px;bottom:max(8px,env(safe-area-inset-bottom))}}
 </style>
 
-</style>
+<style id="selected-node-panel-styles">#neuralExperience .selected-node-panel{margin:12px 0 18px;padding:14px;border:1px solid #5ccfff4d;border-radius:15px;background:linear-gradient(145deg,#09192af2,#030810f5);box-shadow:inset 0 1px #cef4ff0a,0 10px 32px #0004}#neuralExperience .selected-node-panel-head{display:flex;align-items:center;gap:9px;min-width:0;padding-bottom:12px;border-bottom:1px solid #83dfff20}#neuralExperience .selected-node-indicator{width:8px;height:8px;flex:none;border-radius:50%;background:#55d9ff;box-shadow:0 0 14px #55d9ff88}#neuralExperience .selected-node-panel-head>div{min-width:0;flex:1}#neuralExperience .selected-node-panel-head small,#neuralExperience .selected-node-grid small{display:block;color:#789ab4;font:8px/1.5 ui-monospace,monospace;letter-spacing:.1em}#neuralExperience .selected-node-panel-head strong{display:block;margin-top:4px;color:#e0f7ff;font:600 12px/1.4 ui-monospace,monospace;overflow-wrap:anywhere}#neuralExperience .selected-node-state{flex:none;padding:5px 7px;border:1px solid #6acfff35;border-radius:7px;color:#9edfff;font:8px ui-monospace,monospace;letter-spacing:.04em}#neuralExperience .selected-node-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:11px}#neuralExperience .selected-node-grid>div{min-width:0;padding:9px;border:1px solid #7ecfff19;border-radius:9px;background:#06101c}#neuralExperience .selected-node-grid strong{display:block;margin-top:6px;color:#d7f3ff;font:500 10px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;word-break:break-word}#neuralExperience .selected-node-grid .selected-node-wide{grid-column:1/-1}#neuralExperience .selected-node-note{margin:10px 0 0;color:#7f9bb2;font-size:10px;line-height:1.55}@media(max-width:420px){#neuralExperience .selected-node-panel{padding:11px}#neuralExperience .selected-node-grid{gap:6px}#neuralExperience .selected-node-grid>div{padding:8px}}</style></style>
 </head>
 <body>
 <div class="shell">
@@ -310,7 +310,11 @@ html.kernel-dashboard-mode .return-to-mesh{display:block!important}
  </aside>
  <section class="telemetry" id="nodeTelemetry" aria-label="Peer node details" aria-hidden="true">
   <div class="telemetry-top"><div><div class="eyebrow" id="nodeLabel">NETWORK NODE / SELECTED</div><h2>Peer telemetry</h2></div><button class="telemetry-close" id="closeTelemetry" aria-label="Zoom back to mesh">×</button></div>
-   <div class="telemetry-grid">
+   <section class="selected-node-panel" id="selectedNodePanel" aria-live="polite" aria-label="Selected mesh node details">
+<div class="selected-node-panel-head"><span class="selected-node-indicator"></span><div><small>SELECTED NODE / SOURCE DATA</small><strong id="selectedNodeTitle">Tap a mesh node</strong></div><span class="selected-node-state" id="selectedNodeState">NO SELECTION</span></div>
+<div class="selected-node-grid" id="selectedNodeGrid"><div><small>NODE ID</small><strong>UNAVAILABLE</strong></div><div><small>CONNECTION</small><strong>UNAVAILABLE</strong></div><div><small>LATENCY</small><strong>UNAVAILABLE</strong></div><div><small>RX / TX BYTES</small><strong>UNAVAILABLE</strong></div><div><small>SHARDS / VERIFIED BYTES</small><strong>UNAVAILABLE</strong></div><div><small>AUTHORITY / SIGNATURE</small><strong>UNAVAILABLE</strong></div><div class="selected-node-wide"><small>SHA-256 / RECEIPT</small><strong>UNAVAILABLE</strong></div></div>
+<p id="selectedNodeNote" class="selected-node-note">Tap any mesh node to inspect its reported fields. Global values are not substituted for missing peer-level values.</p></section>
+<div class="telemetry-grid">
     <div class="telemetry-cell"><small>LIVE NETWORK</small><strong>Peers <span data-live-value="peers">UNAVAILABLE</span><br>Workers active <span data-live-value="workers">UNAVAILABLE</span> · target 10,000<br>Latency <span data-live-value="latency">UNAVAILABLE</span><br>RX bytes <span data-live-value="rxBytes">UNAVAILABLE</span></strong></div>
     <div class="telemetry-cell"><small>VERIFIED STORAGE</small><strong>Shards <span data-live-value="shards">UNAVAILABLE</span><br>Verified bytes <span data-live-value="verifiedBytes">UNAVAILABLE</span><br>Read-back <span data-live-value="readback">UNAVAILABLE</span></strong></div>
     <div class="telemetry-cell"><small>RING-WAL DURABILITY</small><strong>Status <span data-live-value="wal">UNAVAILABLE</span><br>Local commits <span data-live-value="commits">UNAVAILABLE</span><br>Recovery <span data-live-value="recovery">UNAVAILABLE</span></strong></div>
@@ -412,9 +416,36 @@ document.querySelectorAll('#neuralExperience .pod-card').forEach(card => {
   card.addEventListener('click', e => { if (!e.target.closest('a')) flip(); });
   card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
 });
+let latestMeshSnapshot = null;
+let selectedMeshNode = null;
+const inspectorValue = (source, paths) => {
+ for (const path of paths) { const value=path.split('.').reduce((current,part)=>current==null?undefined:current[part],source); if(value!==undefined&&value!==null&&value!=='')return value; }
+ return undefined;
+};
+const inspectorText = value => { if(value===undefined||value===null||value==='')return 'UNAVAILABLE';if(typeof value==='object'){try{return JSON.stringify(value)}catch{return '[structured value]'}}return String(value); };
+function renderSelectedMeshNode(node,snapshot) {
+ const title=document.getElementById('selectedNodeTitle'),state=document.getElementById('selectedNodeState'),grid=document.getElementById('selectedNodeGrid'),note=document.getElementById('selectedNodeNote');
+ if(!title||!state||!grid||!note)return;
+ if(!node){title.textContent='Tap a mesh node';state.textContent='NO SELECTION';note.textContent='Tap any mesh node to inspect its reported fields. Global values are not substituted for missing peer-level values.';return;}
+ const label=inspectorValue(node,['name','label','id','peerId','peer_id','nodeId'])??'Selected mesh node';
+ const status=inspectorValue(node,['state','status','connectionState','readyState','health']);
+ const latency=inspectorValue(node,['latencyMs','latency','rttMs','metrics.latencyMs']);
+ const rx=inspectorValue(node,['bytesReceived','rxBytes','bytesIn','network.bytesReceived']),tx=inspectorValue(node,['bytesSent','txBytes','bytesOut','network.bytesSent']);
+ const shards=inspectorValue(node,['shardCount','shards','storage.shardCount']),bytes=inspectorValue(node,['verifiedShardBytes','storage.verifiedShardBytes','opfsBytes','storage.opfsBytes']);
+ const authority=inspectorValue(node,['authorityStatus','security.authorityStatus','authority']),signature=inspectorValue(node,['signatureStatus','signatureVerified','security.signatureStatus','security.signatureVerified']);
+ const hash=inspectorValue(node,['lastSha256','sha256','hash','receipt.sha256','security.lastSha256']),receipt=inspectorValue(node,['receiptId','receipt.id','receiptCount','security.receiptCount']);
+ const fields=[['NODE ID',inspectorValue(node,['id','peerId','peer_id','nodeId','connectionId'])],['CONNECTION',status],['LATENCY',latency===undefined?undefined:(typeof latency==='number'?latency+' ms':latency)],['RX / TX BYTES',rx===undefined&&tx===undefined?undefined:'RX '+inspectorText(rx)+' / TX '+inspectorText(tx)],['SHARDS / VERIFIED BYTES',shards===undefined&&bytes===undefined?undefined:inspectorText(shards)+' / '+inspectorText(bytes)+' bytes'],['AUTHORITY / SIGNATURE',authority===undefined&&signature===undefined?undefined:inspectorText(authority)+' / '+(typeof signature==='boolean'?(signature?'VERIFIED':'NOT VERIFIED'):inspectorText(signature))],['SHA-256 / RECEIPT',hash===undefined&&receipt===undefined?undefined:inspectorText(hash)+' / '+inspectorText(receipt)]];
+ title.textContent=String(label);state.textContent=status===undefined?'STATE UNAVAILABLE':String(status).toUpperCase();grid.replaceChildren();
+ for(const [caption,value] of fields){const cell=document.createElement('div');if(caption==='SHA-256 / RECEIPT')cell.className='selected-node-wide';const small=document.createElement('small');small.textContent=caption;const strong=document.createElement('strong');strong.textContent=inspectorText(value);cell.append(small,strong);grid.append(cell);}
+ const peers=inspectorValue(snapshot,['network.peers','peers','nodes']);const id=inspectorValue(node,['id','peerId','peer_id','nodeId']);
+ const match=Array.isArray(peers)&&peers.some(peer=>String(peer.id??peer.peerId??peer.peer_id??'')===String(id??''));
+ note.textContent=match?'Selected node matches an entry in the latest peer snapshot. Missing fields were not supplied by that peer.':'Selected mesh node is shown with its own reported fields. Global metrics are not copied into missing peer fields.';
+}
 const mesh = new XKomzMasterInterface(mount, {
   viewportOnly: true,
   onSnapshot(snapshot) {
+    latestMeshSnapshot = snapshot;
+    if (selectedMeshNode) renderSelectedMeshNode(selectedMeshNode, latestMeshSnapshot);
     const paths = {
       peers: ['network.livePeerCount','network.peerCount'],
       latency: ['network.latencyMs'],
@@ -442,10 +473,12 @@ const mesh = new XKomzMasterInterface(mount, {
     }
   },
   onNodeSelected(node) {
+    selectedMeshNode = node || null;
     openMeshDrawer('telemetry');
-    const label = node?.name || node?.id || node?.peerId || 'SELECTED MESH NODE';
+    renderSelectedMeshNode(selectedMeshNode, latestMeshSnapshot);
+    const label = node?.name || node?.label || node?.id || node?.peerId || node?.peer_id || 'SELECTED MESH NODE';
     camFocusLabel.textContent = 'PEER NODE / ' + String(label).toUpperCase();
-    document.getElementById('meshAnnouncement').textContent = 'Selected peer node ' + label + '. Use the existing operations workbench below to inspect source-of-truth telemetry.';
+    document.getElementById('meshAnnouncement').textContent = 'Selected peer node ' + label + '. The inspector shows reported peer-level fields only.';
   },
   onGesture(edge) {
     if (edge === 'left') openMeshDrawer('left');
