@@ -194,6 +194,27 @@ try {
       throw new Error("DEPLOYED_LOOPBACK_SIMULATOR_FAILED: " + simulatorLog);
     }
     console.log(JSON.stringify({ event: "DEPLOYED_96KIB_LOOPBACK_SIMULATOR_PASS", receipt: simulatorPass }));
+    // Verify that the visible Workers control starts real browser workers, completes SHA-256 tasks,
+    // reports the actual local count, and stops cleanly without claiming 10,000 workers.
+    const command = smokePage.frameLocator("#commandFrame");
+    await command.locator("#scale").click();
+    await smokePage.waitForFunction(() => {
+      const doc = document.querySelector("#commandFrame")?.contentDocument;
+      return Boolean(doc?.querySelector("#log")?.textContent.includes("LOCAL WORKER TASKS VERIFIED"));
+    }, undefined, { timeout: 15000 });
+    const workerState = await smokePage.locator("#commandFrame").evaluate(frame => ({
+      log: frame.contentDocument?.querySelector("#log")?.textContent || "",
+      count: Number(frame.contentDocument?.querySelector("#workerCount")?.textContent || 0),
+      button: frame.contentDocument?.querySelector("#scale")?.textContent || ""
+    }));
+    if (!(workerState.count >= 1 && workerState.count <= 2) ||
+        !workerState.log.includes("SHA-256") ||
+        !workerState.log.includes("REAL BROWSER WORKER")) {
+      await smokeBrowser.close();
+      throw new Error("DEPLOYED_LOCAL_WORKER_SMOKE_FAILED: " + JSON.stringify(workerState));
+    }
+    await command.locator("#scale").click();
+    console.log(JSON.stringify({ event: "DEPLOYED_LOCAL_WORKER_TASK_QUEUE_PASS", actualWorkers: workerState.count, verifiedTaskLog: workerState.log }));
     if (resourceFailures.length || consoleErrors.length) {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_RESOURCE_OR_CONSOLE_ERRORS: " +
