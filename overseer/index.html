@@ -160,6 +160,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#020712}body{padding
 #neuralExperience .mesh-edge-controls{position:absolute;z-index:3;top:48%;left:0;right:0;display:flex;justify-content:space-between;padding:0 9px;pointer-events:none}
 #neuralExperience .mesh-edge-controls button{pointer-events:auto;min-height:76px;padding:11px 8px;border:1px solid rgba(109,209,255,.24);border-radius:11px;background:rgba(3,9,18,.65);color:#a9d9ef;font:8px ui-monospace,monospace;letter-spacing:.13em;writing-mode:vertical-rl;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);touch-action:manipulation}
 #neuralExperience .mesh-edge-controls button:active,#neuralExperience .mesh-edge-controls button:focus-visible{outline:2px solid #85e5ff;outline-offset:2px;background:rgba(11,39,60,.92)}
+#neuralExperience .mesh-core-caption{position:absolute;z-index:2;top:55%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:9px;padding:8px 12px;border:1px solid rgba(112,211,255,.22);border-radius:999px;background:rgba(3,10,20,.48);color:#c9edff;font:9px ui-monospace,monospace;letter-spacing:.2em;white-space:nowrap;pointer-events:none;text-shadow:0 0 18px #3bafff66;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#neuralExperience .mesh-core-caption:before{content:"";width:5px;height:5px;border-radius:50%;background:#7be5ff;box-shadow:0 0 12px #55cfff;flex:none}
+@media(max-width:600px){#neuralExperience .mesh-core-caption{top:56%;font-size:8px;letter-spacing:.14em;padding:7px 10px}}
 #neuralExperience .mesh-bottom-hud{position:absolute;z-index:3;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;pointer-events:none}
 #neuralExperience .mesh-readout{min-width:0;padding:10px 12px;border:1px solid rgba(100,197,255,.18);border-radius:12px;background:rgba(3,9,18,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 8px 30px #0004}
 #neuralExperience .mesh-readout small{display:block;color:#7898b1;font:8px/1.3 ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
@@ -253,6 +256,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#020712}body{padding
   <div class="mesh-status-pill">FAIL-CLOSED · ZERO-TRUST</div>
  </header>
  <nav class="mesh-edge-controls" aria-label="Mesh drawers"><button type="button" id="openLedgerDrawer">LEDGER / EVIDENCE</button><button type="button" id="openPodsDrawer">APPLICATION PODS</button></nav>
+ <div class="mesh-core-caption" aria-label="AYE-YAE KERNEL AI core">AYE•YAE / KERNEL CORE</div>
  <section class="mesh-bottom-hud" aria-label="Live mesh status">
   <div class="mesh-readout"><small>LIVE PEERS</small><strong data-live-value="peers">UNAVAILABLE</strong></div>
   <div class="mesh-readout"><small>VERIFIED SHARDS</small><strong data-live-value="shards">UNAVAILABLE</strong></div>
