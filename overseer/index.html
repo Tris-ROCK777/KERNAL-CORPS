@@ -424,6 +424,7 @@ document.querySelectorAll('#neuralExperience .pod-card').forEach(card => {
 });
 let latestMeshSnapshot = null;
 let selectedMeshNode = null;
+let selectedMeshKey = null;
 const inspectorValue = (source, paths) => {
  for (const path of paths) { const value=path.split('.').reduce((current,part)=>current==null?undefined:current[part],source); if(value!==undefined&&value!==null&&value!=='')return value; }
  return undefined;
@@ -490,7 +491,22 @@ const mesh = new XKomzMasterInterface(mount, {
     if (selectedMeshNode) {
       const peers = inspectorValue(snapshot, ['network.peers','peers','nodes']);
       const selectedId = inspectorValue(selectedMeshNode, ['id','peerId','peer_id','nodeId','connectionId']);
-      const refreshed = Array.isArray(peers) ? peers.find(peer => String(inspectorValue(peer,['id','peerId','peer_id','nodeId','connectionId']) ?? '') === String(selectedId ?? '')) : null;
+      let refreshed = null;
+      if (Array.isArray(peers)) {
+        if (selectedId !== undefined && selectedId !== null && String(selectedId).trim() !== '') {
+          refreshed = peers.find(peer => {
+            const id = inspectorValue(peer, ['id','peerId','peer_id','nodeId','connectionId']);
+            return id !== undefined && id !== null && String(id).trim() !== '' && String(id) === String(selectedId);
+          }) || null;
+        } else if (selectedMeshKey && selectedMeshKey.startsWith('index:')) {
+          const index = Number(selectedMeshKey.slice(6));
+          if (Number.isInteger(index) && index >= 0 && index < peers.length) {
+            const candidate = peers[index];
+            const candidateId = inspectorValue(candidate, ['id','peerId','peer_id','nodeId','connectionId']);
+            if (candidateId === undefined || candidateId === null || String(candidateId).trim() === '') refreshed = candidate;
+          }
+        }
+      }
       if (refreshed) selectedMeshNode = refreshed;
       renderSelectedMeshNode(selectedMeshNode, latestMeshSnapshot);
     }
@@ -522,13 +538,29 @@ const mesh = new XKomzMasterInterface(mount, {
     }
   },
   onNodeSelected(node) {
-    // Resolve the clicked mesh marker to the latest source snapshot immediately.
+    // The mesh passes its explicit key for anonymous nodes. Never match two
+    // missing IDs as equal: that cross-wires the inspector to an unrelated peer.
     const clicked = node?.raw && typeof node.raw === 'object' ? node.raw : (node || null);
     const clickedId = inspectorValue(clicked, ['id','peerId','peer_id','nodeId','connectionId']);
     const peers = inspectorValue(latestMeshSnapshot, ['network.peers','peers','nodes']);
-    selectedMeshNode = Array.isArray(peers)
-      ? (peers.find(peer => String(inspectorValue(peer, ['id','peerId','peer_id','nodeId','connectionId']) ?? '') === String(clickedId ?? '')) || clicked)
-      : clicked;
+    selectedMeshKey = typeof node?.meshKey === 'string' ? node.meshKey : null;
+    let resolved = null;
+    if (Array.isArray(peers)) {
+      if (clickedId !== undefined && clickedId !== null && String(clickedId).trim() !== '') {
+        resolved = peers.find(peer => {
+          const id = inspectorValue(peer, ['id','peerId','peer_id','nodeId','connectionId']);
+          return id !== undefined && id !== null && String(id).trim() !== '' && String(id) === String(clickedId);
+        }) || null;
+      } else if (selectedMeshKey && selectedMeshKey.startsWith('index:')) {
+        const index = Number(selectedMeshKey.slice(6));
+        if (Number.isInteger(index) && index >= 0 && index < peers.length) {
+          const candidate = peers[index];
+          const id = inspectorValue(candidate, ['id','peerId','peer_id','nodeId','connectionId']);
+          if (id === undefined || id === null || String(id).trim() === '') resolved = candidate;
+        }
+      }
+    }
+    selectedMeshNode = resolved || clicked;
     openMeshDrawer('telemetry');
     renderSelectedMeshNode(selectedMeshNode, latestMeshSnapshot);
     const label = selectedMeshNode?.name || selectedMeshNode?.label || selectedMeshNode?.id || selectedMeshNode?.peerId || selectedMeshNode?.peer_id || 'SELECTED MESH NODE';
