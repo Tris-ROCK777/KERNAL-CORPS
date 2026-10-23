@@ -51,6 +51,12 @@ function BinaryHighways() {
 }
 function Scene({onNode}) { return <><color attach="background" args={['#000000']}/><fog attach="fog" args={['#000000',13,34]}/><ambientLight intensity={.18}/><Stars radius={90} depth={55} count={2200} factor={2.2} saturation={0}/><Float speed={.45} rotationIntensity={.025} floatIntensity={.06}><Core/></Float><WaveFloor/><Dome onNode={onNode}/><Filaments onNode={onNode}/><BinaryHighways/><OrbitControls enablePan={false} minDistance={8} maxDistance={20} enableDamping dampingFactor={.045}/></>; }
 function Drawer({side,close,children}) { return <section className={'drawer '+side} role="dialog" aria-modal="true"><button className="close" onClick={close} aria-label="Close drawer">×</button>{children}</section>; }
+class SceneErrorBoundary extends React.Component {
+ constructor(props){super(props);this.state={failed:false,message:''};}
+ static getDerivedStateFromError(error){return {failed:true,message:String(error?.message??error)};}
+ componentDidCatch(error){console.error('KERNEL 3D scene failed:',error);}
+ render(){if(this.state.failed)return <div className="scene-fallback"><strong>KERNEL MESH RECOVERY</strong><span>The 3D renderer encountered an error.</span><small>{this.state.message}</small><button onClick={()=>this.setState({failed:false,message:''})}>RETRY RENDERER</button></div>;return this.props.children;}
+}
 export default function App(){
  const [drawer,setDrawer]=useState(null),[node,setNode]=useState(null),[snapshot,setSnapshot]=useState(()=>{try{return typeof window.KERNEL_TELEMETRY==='function'?window.KERNEL_TELEMETRY():window.KERNEL_TELEMETRY??null;}catch{return null;}}),touchX=useRef(0);
  useEffect(()=>{const receive=e=>setSnapshot(e.detail??null);const readInitial=()=>{try{setSnapshot(typeof window.KERNEL_TELEMETRY==='function'?window.KERNEL_TELEMETRY():window.KERNEL_TELEMETRY??null);}catch{setSnapshot(null);}};readInitial();window.addEventListener('kernel:telemetry',receive);return()=>window.removeEventListener('kernel:telemetry',receive);},[]);
@@ -59,7 +65,7 @@ export default function App(){
  const touchStart=useCallback(e=>{touchX.current=e.touches?.[0]?.clientX??0;},[]);
  const touchEnd=useCallback(e=>{const start=touchX.current,x=e.changedTouches?.[0]?.clientX??start,dx=x-start;if(start<28&&dx>65)setDrawer('left');else if(start>window.innerWidth-28&&dx< -65)setDrawer('right');touchX.current=0;},[]);
  return <main className="app" onTouchStart={touchStart} onTouchEnd={touchEnd}>
-  <Canvas onPointerMissed={()=>setDrawer(null)} className="mesh-canvas" dpr={[1,1.7]} camera={{position:[0,1.2,12],fov:52}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}>
+  <SceneErrorBoundary><Canvas fallback={<div className="scene-fallback"><strong>KERNEL MESH</strong><span>WebGL renderer unavailable on this device.</span></div>} onPointerMissed={()=>setDrawer(null)} className="mesh-canvas" dpr={[1,1.7]} camera={{position:[0,1.2,12],fov:52}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}>
    <Scene onNode={openNode}/>
   </Canvas>
   {drawer==='bottom'&&<Drawer side="bottom" close={()=>setDrawer(null)}><h2>NODE TELEMETRY</h2><p className="selected">Selected visual node: {node?.id??'unknown'}</p><dl><dt>WebRTC peers</dt><dd>{read('network.peerCount','peerCount','network.peers.length')}</dd><dt>Workers</dt><dd>{read('workers.active','workerCount','workers.activeCount')} / 10,000 target</dd><dt>OPFS bytes</dt><dd>{read('storage.opfsBytes','storage.bytes','opfsBytes')}</dd><dt>Ring-WAL</dt><dd>{read('storage.ringWalStatus','storage.walStatus','ringWalStatus')}</dd></dl></Drawer>}
