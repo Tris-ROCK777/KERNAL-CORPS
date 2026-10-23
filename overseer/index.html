@@ -334,10 +334,10 @@ function draw(){
   ctx.shadowBlur=0;
   for(let i=0;i<ps.length;i++){
     const p=ps[i],n=neuralNodes[i],pulse=reduceMotion?.5:.5+.5*Math.sin(motion*4+n.phase),important=i<24,slot=i%24,dead=important&&state.dead.has(slot),r=(important?1.7:.55+n.size*.25)+pulse*(important?1:.25);
-    if(!dead){ctx.beginPath();ctx.arc(p.x,p.y,r*3,0,Math.PI*2);ctx.fillStyle="rgba(62,143,255,"+(important?.075:.025)+")";ctx.fill()}
-    ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);
-    ctx.fillStyle=dead?"rgba(133,157,191,.045)":important?"rgba(174,215,255,.78)":(i%13===0?"rgba(220,216,255,.86)":"rgba(101,168,255,"+(.2+pulse*.28)+")");ctx.fill();
-    if(important){ctx.beginPath();ctx.arc(p.x,p.y,4+pulse,0,Math.PI*2);ctx.strokeStyle=i===state.selected?"rgba(226,239,255,.9)":"rgba(122,177,255,.19)";ctx.stroke()}
+    if(!dead){angularMark(p.x,p.y,r*3,Math.PI/4);ctx.fillStyle="rgba(62,143,255,"+(important?.075:.025)+")";ctx.fill()}
+    angularMark(p.x,p.y,important?2.3+pulse*.8:r,Math.PI/4);
+    ctx.fillStyle=dead?"rgba(133,157,191,.045)":important?"rgba(174,215,255,.9)":(i%13===0?"rgba(220,216,255,.9)":"rgba(101,168,255,"+(.2+pulse*.28)+")");ctx.fill();
+    if(important){angularMark(p.x,p.y,4+pulse,0);ctx.strokeStyle=i===state.selected?"rgba(226,239,255,.95)":"rgba(122,177,255,.35)";ctx.stroke()}
   }
   const liveEntries=[...(state.mesh?.peers?.entries?.()||[])];
   // Activity pulses are driven only by observed inbound data-channel messages or verified shard receipts.
