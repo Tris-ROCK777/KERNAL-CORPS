@@ -310,6 +310,29 @@ try {
     }
     await command.locator("#scale").click();
     console.log(JSON.stringify({ event: "DEPLOYED_LOCAL_WORKER_TASK_QUEUE_PASS", actualWorkers: workerState.count, verifiedTaskLog: workerState.log }));
+    // Explicit first-boot provisioning is tested only after all production fail-closed checks,
+    // in this disposable CI browser profile. The generated key is never installed as a trust pin.
+    await smokePage.getByRole("button", { name: "SECURITY", exact: true }).click();
+    const securityFrame = smokePage.frameLocator("#commandFrame");
+    await securityFrame.locator("#provision").click();
+    await smokePage.waitForFunction(() => {
+      const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#enrollOut")?.textContent || "";
+      return output.includes("NEW_IDENTITY_CREATED_REQUIRES_TRUSTED_PIN") ||
+        output.includes("AUTHORITY_ENROLLMENT_FAILED");
+    }, undefined, { timeout: 20000 });
+    const enrollmentOutput = (await securityFrame.locator("#enrollOut").textContent()) || "";
+    let enrollmentReport = null;
+    try { enrollmentReport = JSON.parse(enrollmentOutput); } catch {}
+    if (!enrollmentReport ||
+        enrollmentReport.status !== "NEW_IDENTITY_CREATED_REQUIRES_TRUSTED_PIN" ||
+        !/^[a-f0-9]{64}$/.test(enrollmentReport.publicKeyHex || "") ||
+        enrollmentReport.trustPinChanged !== false ||
+        !enrollmentReport.next?.includes("publicKeyHex") ||
+        /privateJwk|privateKeyJwk/.test(enrollmentOutput)) {
+      await smokeBrowser.close();
+      throw new Error("EXPLICIT_AUTHORITY_FIRST_BOOT_PROVISIONING_FAILED: " + enrollmentOutput);
+    }
+    console.log(JSON.stringify({ event: "EXPLICIT_AUTHORITY_FIRST_BOOT_PROVISIONING_PASS", status: enrollmentReport.status, publicKeyFormatValid: true, trustPinChanged: false, privateKeyExposed: false }));
     if (resourceFailures.length || consoleErrors.length) {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_RESOURCE_OR_CONSOLE_ERRORS: " +
