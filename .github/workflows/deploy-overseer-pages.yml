@@ -1,13 +1,8 @@
 name: Deploy Overseer Verification Page
 
 on:
-  push:
-    branches:
-      - main
-      - 3d-mesh-rebuild
-    paths:
-      - "overseer/**"
-      - ".github/workflows/deploy-overseer-pages.yml"
+  # The root Pages workflow publishes ./overseer as part of the complete site.
+  # Keep this manual-only to prevent two workflows racing to deploy the same Pages environment.
   workflow_dispatch:
 
 permissions:
