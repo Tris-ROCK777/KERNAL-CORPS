@@ -127,6 +127,7 @@ body:has(#neuralExperience){overflow:hidden}
 /* True perspective particle mesh; the legacy 2D renderer remains only as a fallback. */
 #neuralExperience #meshGL,#neuralExperience #binaryFlow{display:none!important}
 #neuralExperience #threeMesh{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:auto;touch-action:pan-y;background:radial-gradient(ellipse at 50% 48%,#061b3b 0%,#020712 68%,#01030a 100%)}
+#neuralExperience #meshViewportMount{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:auto;overflow:hidden}#neuralExperience #meshViewportMount .xk-root{position:absolute;inset:0;width:100%;height:100%;min-height:0;background:transparent}#neuralExperience #meshViewportMount .xk-viewport{position:absolute;inset:0;width:100%;height:100%;z-index:0;touch-action:none}#neuralExperience #meshViewportMount canvas{display:block;width:100%;height:100%;touch-action:none}
 #neuralExperience .mesh-vignette{z-index:2;pointer-events:none}
 #neuralExperience .drawer-scrim,#neuralExperience .drawer,#neuralExperience #nodeTelemetry{z-index:5}
 
