@@ -25,8 +25,19 @@ function Core() {
 }
 function WaveFloor() {
   const ref=useRef();
-  const {positions,base}=useMemo(()=>{const arr=[],original=[];for(let x=-14;x<=14;x+=.32)for(let z=-10;z<=5;z+=.32){arr.push(x,-2.5,z);original.push(x,-2.5,z);}return {positions:new Float32Array(arr),base:original};},[]);
-  useFrame(({clock})=>{if(!ref.current)return;const p=ref.current.geometry.attributes.position.array,t=clock.elapsedTime;for(let i=0;i<base.length;i++){const [x,,z]=base[i];p[i*3+1]=-2.5+Math.sin(x*.48+t*.8)*.18+Math.cos(z*.55-t*.6)*.14;}ref.current.geometry.attributes.position.needsUpdate=true;});
+  // Keep base coordinates flat and numeric, matching BufferAttribute layout [x,y,z,...].
+  // Never destructure base[i]: each indexed value is a number, not a coordinate tuple.
+  const {positions,base}=useMemo(()=>{const arr=[];for(let x=-14;x<=14;x+=.32)for(let z=-10;z<=5;z+=.32)arr.push(x,-2.5,z);const initial=new Float32Array(arr);return {positions:initial,base:initial.slice()};},[]);
+  useFrame(({clock})=>{
+    if(!ref.current)return;
+    const attribute=ref.current.geometry.attributes.position;
+    const p=attribute.array,t=clock.elapsedTime;
+    for(let i=0;i<base.length;i+=3){
+      const x=base[i],z=base[i+2];
+      p[i+1]=-2.5+Math.sin(x*.48+t*.8)*.18+Math.cos(z*.55-t*.6)*.14;
+    }
+    attribute.needsUpdate=true;
+  });
   return <points ref={ref}><bufferGeometry><bufferAttribute attach="attributes-position" count={positions.length/3} array={positions} itemSize={3}/></bufferGeometry><pointsMaterial color="#087eff" size={.022} sizeAttenuation transparent opacity={.82}/></points>;
 }
 function Dome({onNode}) {
