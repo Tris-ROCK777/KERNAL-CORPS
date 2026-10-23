@@ -395,6 +395,7 @@ export class XKomzMasterInterface {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.matchMedia('(max-width: 700px)').matches ? 1.25 : 1.6));
     this.renderer.setSize(this.viewport.clientWidth || window.innerWidth, this.viewport.clientHeight || window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.domElement.id = 'threeMesh';
     this.renderer.domElement.setAttribute('aria-label', 'Interactive 3D mesh; select a glowing peer node');
     this.renderer.domElement.tabIndex = 0;
     this.viewport.appendChild(this.renderer.domElement);
