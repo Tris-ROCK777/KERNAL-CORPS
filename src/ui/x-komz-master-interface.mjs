@@ -93,7 +93,7 @@ export class XKomzMasterInterface {
         </header>
         <div class="xk-side-hints"><button type="button" data-open="ledger">← LEDGER / EVIDENCE</button><button type="button" data-open="pods">APP PODS / →</button></div>
         <div class="xk-bottom-bar">
-          <div class="xk-mini-stats"><span>LIVE PEERS <b data-xk="peerCount">UNAVAILABLE</b></span><span>SHARDS <b data-xk="shardCount">UNAVAILABLE</b></span><span>RING-WAL <b data-xk="walStatus">UNAVAILABLE</b></span></div>
+          <div class="xk-mini-stats"><span>LIVE PEERS <b data-xk="peerCount">UNAVAILABLE</b></span><span>SHARDS <b data-xk="shardCount">UNAVAILABLE</b></span><span>WORKERS ACTIVE <b data-xk="workerCount">UNAVAILABLE</b> / 10,000 TARGET</span><span>RING-WAL <b data-xk="walStatus">UNAVAILABLE</b></span></div>
           <div class="xk-actions"><button type="button" data-open="telemetry">NODE / CONSOLE</button><button type="button" data-open="tools">OPERATIONS</button></div>
         </div>
         <div class="xk-scrim" data-xk-scrim hidden></div>
@@ -222,6 +222,14 @@ export class XKomzMasterInterface {
     if (this.options.viewportOnly) {
       const peers = readPath(snapshot, ['network.peers','peers','nodes']);
       if (Array.isArray(peers)) this.syncNodes(peers);
+      const workers = readPath(snapshot, ['network.workers.localActive','workers.localActive','localWorkersActive']);
+      this.set('workerCount', workers === undefined ? UNKNOWN : fmt(workers));
+      const peerCount = readPath(snapshot, ['network.livePeerCount','network.peerCount','livePeerCount','peerCount']);
+      this.set('peerCount', peerCount === undefined ? (Array.isArray(peers) ? String(peers.filter(peer => /open|connected|live|active/.test(String(peer.state ?? peer.status ?? peer.connectionState ?? '').toLowerCase())).length) : UNKNOWN) : fmt(peerCount));
+      const shardCount = readPath(snapshot, ['storage.shardCount','shardCount']);
+      this.set('shardCount', shardCount === undefined ? UNKNOWN : fmt(shardCount));
+      const walStatus = readPath(snapshot, ['storage.ringWalStatus','storage.walStatus','ringWalStatus']);
+      this.set('walStatus', walStatus === undefined ? UNKNOWN : fmt(walStatus));
       this.options.onSnapshot?.(snapshot, source);
       return;
     }
@@ -306,6 +314,14 @@ export class XKomzMasterInterface {
       state: String(peer.state ?? peer.status ?? peer.connectionState ?? 'unknown').toLowerCase(),
       raw: peer
     }));
+    const unchanged = normalized.length === this.nodes.length && normalized.every((node, index) =>
+      node.id === this.nodes[index]?.id && node.state === this.nodes[index]?.state
+    );
+    if (unchanged) {
+      this.nodes = normalized;
+      normalized.forEach((node, index) => { if (this.sceneObjects[index]) this.sceneObjects[index].userData.node = node; });
+      return;
+    }
     this.nodes = normalized;
     if (!this.nodeGroup) return;
     while (this.nodeGroup.children.length) {
