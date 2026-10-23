@@ -208,10 +208,7 @@ function draw(){
     ctx.font="8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=unhealthy?"rgba(228,210,124,.9)":"rgba(183,218,255,.95)";ctx.fillText(String(id).slice(0,12),p.x,p.y-11);
   });
   const core=project(0,0,0),pulse=reduceMotion?.5:.5+.5*Math.sin(motion*3.2);
-  ctx.beginPath();ctx.arc(core.x,core.y,20+pulse*4,0,Math.PI*2);ctx.strokeStyle="rgba(168,205,255,.24)";ctx.lineWidth=1;ctx.stroke();
-  ctx.beginPath();ctx.arc(core.x,core.y,11+pulse*2,0,Math.PI*2);ctx.fillStyle="rgba(8,20,39,.94)";ctx.fill();ctx.strokeStyle="rgba(192,224,255,.82)";ctx.stroke();
-  ctx.beginPath();ctx.arc(core.x,core.y,3.2,0,Math.PI*2);ctx.fillStyle="#e0f1ff";ctx.fill();
-  ctx.font="8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="rgba(189,214,240,.72)";ctx.fillText("LOCAL AUTHORITY",core.x,core.y+31);
+  ctx.save();ctx.translate(core.x,core.y);ctx.rotate(reduceMotion?0:motion*.22);for(let ring=0;ring<3;ring++){ctx.beginPath();ctx.ellipse(0,0,25+ring*7,10+ring*4,ring*.58,0,Math.PI*2);ctx.strokeStyle=["rgba(177,222,255,.5)","rgba(142,164,255,.35)","rgba(208,224,245,.22)"][ring];ctx.lineWidth=ring===0?1.2:.8;ctx.stroke()}ctx.restore();ctx.beginPath();ctx.arc(core.x,core.y,27+pulse*4,0,Math.PI*2);ctx.strokeStyle="rgba(168,205,255,.22)";ctx.lineWidth=1;ctx.stroke();ctx.beginPath();ctx.arc(core.x,core.y,15+pulse*2,0,Math.PI*2);ctx.fillStyle="rgba(8,20,39,.97)";ctx.fill();ctx.strokeStyle="rgba(192,224,255,.9)";ctx.stroke();ctx.beginPath();ctx.arc(core.x,core.y,5.2,0,Math.PI*2);ctx.fillStyle="#e0f1ff";ctx.shadowColor="#83baff";ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0;ctx.font="bold 8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="rgba(220,236,255,.9)";ctx.fillText("KERNEL CORE",core.x,core.y+43);
   requestAnimationFrame(draw);
 }
 }
