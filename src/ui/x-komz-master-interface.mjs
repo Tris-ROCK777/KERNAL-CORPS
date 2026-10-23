@@ -347,11 +347,22 @@ export class XKomzMasterInterface {
       glowPositions.push(pos.x, pos.y, pos.z);
       const glow = live ? new THREE.Color(0x5edfff) : new THREE.Color(0x173450);
       glowColors.push(glow.r, glow.g, glow.b);
+      // Keep the visible point small, but give touch users a much larger invisible raycast target.
       const geometry = new THREE.SphereGeometry(live ? .17 : .12, 10, 10);
       const material = new THREE.MeshBasicMaterial({ color: live ? 0x8eeaff : 0x31465e, transparent: true, opacity: live ? .98 : .38 });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.copy(pos); mesh.userData.node = node; mesh.userData.isPeerNode = true;
-      this.nodeGroup.add(mesh); this.sceneObjects.push(mesh);
+      this.nodeGroup.add(mesh);
+      const hitTarget = new THREE.Mesh(
+        new THREE.SphereGeometry(.48, 8, 8),
+        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, colorWrite: false, depthWrite: false })
+      );
+      hitTarget.position.copy(pos);
+      hitTarget.userData.node = node;
+      hitTarget.userData.isPeerNode = true;
+      hitTarget.userData.isTouchTarget = true;
+      this.nodeGroup.add(hitTarget);
+      this.sceneObjects.push(hitTarget);
     });
     if (this.nodeGlowMaterial && normalized.length) {
       const glowGeometry = new THREE.BufferGeometry();
