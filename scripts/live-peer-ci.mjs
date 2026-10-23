@@ -174,6 +174,38 @@ try {
       throw new Error("NEURAL_OVERSEER_UI_ASSERTION_FAILED: " + JSON.stringify(neuralUi));
     }
     console.log(JSON.stringify({ event: "NEURAL_OVERSEER_MOBILE_UI_PASS", ...neuralUi }));
+    const expectedWorkAreas = ["NETWORK", "STORAGE", "SECURITY", "WORKERS · 10K TARGET"];
+    const workAreaButtons = smokePage.locator("#neuralExperience [data-work-area]");
+    if (await workAreaButtons.count() !== expectedWorkAreas.length) {
+      await smokeBrowser.close();
+      throw new Error("MESH_WORK_AREA_BUTTON_COUNT_FAILED: " + await workAreaButtons.count());
+    }
+    for (let i = 0; i < expectedWorkAreas.length; i++) {
+      const button = workAreaButtons.nth(i);
+      const label = (await button.getAttribute("data-work-area")) || "";
+      const visible = await button.evaluate(el => {
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity) > 0.5;
+      });
+      if (label !== expectedWorkAreas[i] || !visible) {
+        await smokeBrowser.close();
+        throw new Error("MESH_WORK_AREA_BUTTON_NOT_VISIBLE: " + JSON.stringify({ expected: expectedWorkAreas[i], label, visible }));
+      }
+      await button.click();
+      await smokePage.waitForFunction(expected => {
+        const title = document.querySelector("#commandViewTitle")?.textContent?.trim();
+        return document.documentElement.classList.contains("kernel-dashboard-mode") && title === expected;
+      }, expectedWorkAreas[i], { timeout: 10000 });
+      const activeTab = await smokePage.locator(".command-tab.active").textContent();
+      if (activeTab?.trim() !== expectedWorkAreas[i]) {
+        await smokeBrowser.close();
+        throw new Error("MESH_WORK_AREA_ROUTE_FAILED: " + JSON.stringify({ expected: expectedWorkAreas[i], activeTab }));
+      }
+      await smokePage.locator("#returnToMesh").click();
+      await smokePage.waitForFunction(() => !document.documentElement.classList.contains("kernel-dashboard-mode"), undefined, { timeout: 10000 });
+    }
+    console.log(JSON.stringify({ event: "MESH_WORK_AREA_TABS_PASS", workAreas: expectedWorkAreas }));
     // The new full-screen mesh is the intended production surface. Disable its
     // pointer interception only inside this smoke-test page so legacy command
     // controls beneath it can still be regression-tested without changing UI state.
