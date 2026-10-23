@@ -125,15 +125,12 @@ try {
     await smokePage.locator("#root").waitFor({ state: "attached", timeout: 15000 });
     await smokePage.waitForFunction(() => {
       const canvas = document.querySelector("#root canvas");
-      const wrapper = canvas?.parentElement;
       const viewport = canvas?.closest(".mesh-viewport");
-      if (!canvas || !wrapper || !viewport || canvas.width <= 0 || canvas.height <= 0) return false;
+      if (!canvas || !viewport || canvas.width <= 0 || canvas.height <= 0) return false;
       const canvasRect = canvas.getBoundingClientRect();
-      const wrapperRect = wrapper.getBoundingClientRect();
       const viewportRect = viewport.getBoundingClientRect();
-      return Math.abs(canvasRect.width - wrapperRect.width) < 2 &&
-        Math.abs(canvasRect.height - wrapperRect.height) < 2 &&
-        getComputedStyle(wrapper).position === "absolute" &&
+      return Math.abs(canvasRect.width - innerWidth) < 2 &&
+        Math.abs(canvasRect.height - innerHeight) < 2 &&
         Math.abs(viewportRect.width - innerWidth) < 2 &&
         Math.abs(viewportRect.height - innerHeight) < 2;
     }, undefined, { timeout: 30000 });
@@ -152,11 +149,10 @@ try {
         canvasPresent: Boolean(canvas),
         canvasWidth: canvas?.width || 0,
         canvasHeight: canvas?.height || 0,
-        wrapperPosition: wrapper ? getComputedStyle(wrapper).position : "missing",
-        fullViewport: Boolean(canvas && wrapper && viewport &&
-          Math.abs(canvasRect.width - wrapperRect.width) < 2 &&
-          Math.abs(canvasRect.height - wrapperRect.height) < 2 &&
-          getComputedStyle(wrapper).position === "absolute" &&
+        canvasPosition: canvas ? getComputedStyle(canvas).position : "missing",
+        fullViewport: Boolean(canvas && viewport &&
+          Math.abs(canvasRect.width - innerWidth) < 2 &&
+          Math.abs(canvasRect.height - innerHeight) < 2 &&
           Math.abs(viewportRect.width - innerWidth) < 2 &&
           Math.abs(viewportRect.height - innerHeight) < 2),
         defaultOverlayText: (document.body.innerText || "").trim()
