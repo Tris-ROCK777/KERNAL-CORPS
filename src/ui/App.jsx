@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Line, OrbitControls, Stars, Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -53,12 +53,12 @@ function BinaryHighways() {
 function Scene({onNode}) { return <><color attach="background" args={['#000000']}/><fog attach="fog" args={['#000000',13,34]}/><ambientLight intensity={.18}/><Stars radius={90} depth={55} count={2200} factor={2.2} saturation={0}/><Float speed={.45} rotationIntensity={.025} floatIntensity={.06}><Core/></Float><WaveFloor/><Dome onNode={onNode}/><Filaments onNode={onNode}/><BinaryHighways/><OrbitControls enablePan={false} minDistance={8} maxDistance={20} enableDamping dampingFactor={.045}/></>; }
 function Drawer({side,close,children}) { return <section className={'drawer '+side} role="dialog" aria-modal="true"><button className="close" onClick={close} aria-label="Close drawer">×</button>{children}</section>; }
 export default function App(){
- const [drawer,setDrawer]=useState(null),[node,setNode]=useState(null),[snapshot,setSnapshot]=useState(()=>{try{return typeof window.KERNEL_TELEMETRY==='function'?window.KERNEL_TELEMETRY():window.KERNEL_TELEMETRY??null;}catch{return null;}});
- React.useEffect(()=>{const receive=e=>setSnapshot(e.detail??null);window.addEventListener('kernel:telemetry',receive);return()=>window.removeEventListener('kernel:telemetry',receive);},[]);
+ const [drawer,setDrawer]=useState(null),[node,setNode]=useState(null),[snapshot,setSnapshot]=useState(()=>{try{return typeof window.KERNEL_TELEMETRY==='function'?window.KERNEL_TELEMETRY():window.KERNEL_TELEMETRY??null;}catch{return null;}}),touchX=useRef(0);
+ useEffect(()=>{const receive=e=>setSnapshot(e.detail??null);const readInitial=()=>{try{setSnapshot(typeof window.KERNEL_TELEMETRY==='function'?window.KERNEL_TELEMETRY():window.KERNEL_TELEMETRY??null);}catch{setSnapshot(null);}};readInitial();window.addEventListener('kernel:telemetry',receive);return()=>window.removeEventListener('kernel:telemetry',receive);},[]);
  const read=(...paths)=>{for(const path of paths){const v=path.split('.').reduce((o,k)=>o==null?undefined:o[k],snapshot);if(v!==undefined&&v!==null&&v!=='')return typeof v==='object'?JSON.stringify(v):String(v);}return 'UNAVAILABLE';};
  const openNode=useCallback(n=>{setNode(n);setDrawer('bottom');},[]);
- const touchStart=useCallback(e=>{window.__kernelTouchX=e.touches?.[0]?.clientX??0;},[]);
- const touchEnd=useCallback(e=>{const x=e.changedTouches?.[0]?.clientX??0,dx=x-(window.__kernelTouchX??x);if(window.__kernelTouchX<28&&dx>65)setDrawer('left');else if(window.__kernelTouchX>window.innerWidth-28&&dx< -65)setDrawer('right');},[]);
+ const touchStart=useCallback(e=>{touchX.current=e.touches?.[0]?.clientX??0;},[]);
+ const touchEnd=useCallback(e=>{const start=touchX.current,x=e.changedTouches?.[0]?.clientX??start,dx=x-start;if(start<28&&dx>65)setDrawer('left');else if(start>window.innerWidth-28&&dx< -65)setDrawer('right');touchX.current=0;},[]);
  return <main className="app" onTouchStart={touchStart} onTouchEnd={touchEnd}>
   <Canvas onPointerMissed={()=>setDrawer(null)} className="mesh-canvas" dpr={[1,1.7]} camera={{position:[0,1.2,12],fov:52}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}>
    <Suspense fallback={null}><Scene onNode={openNode}/></Suspense>
