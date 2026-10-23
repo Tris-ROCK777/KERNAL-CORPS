@@ -3,6 +3,6 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/KERNAL-CORPS/',
+  base: './',
   build: { outDir: 'dist', sourcemap: true },
 });
