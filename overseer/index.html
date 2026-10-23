@@ -123,6 +123,12 @@ body:has(#neuralExperience){overflow:hidden}
 @media(max-width:420px){#neuralExperience .pod-grid{gap:8px}#neuralExperience .pod-card{min-height:174px}#neuralExperience .pod-face{padding:12px}#neuralExperience .pod-name{font-size:14px}#neuralExperience .telemetry-grid{grid-template-columns:1fr}#neuralExperience .telemetry-cell{display:flex;justify-content:space-between;gap:12px;align-items:center}#neuralExperience .telemetry-cell strong{text-align:right;margin:0}}
 @media(prefers-reduced-motion:reduce){#neuralExperience .drawer,#neuralExperience .pod-inner,#neuralExperience .telemetry,#neuralExperience .drawer-scrim{transition-duration:.01ms!important}}
 
+
+/* True perspective particle mesh; the legacy 2D renderer remains only as a fallback. */
+#neuralExperience #meshGL,#neuralExperience #binaryFlow{display:none!important}
+#neuralExperience #threeMesh{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:auto;touch-action:pan-y;background:radial-gradient(ellipse at 50% 48%,#061b3b 0%,#020712 68%,#01030a 100%)}
+#neuralExperience .mesh-vignette{z-index:2;pointer-events:none}
+#neuralExperience .drawer-scrim,#neuralExperience .drawer,#neuralExperience #nodeTelemetry{z-index:5}
 </style>
 </head>
 <body>
@@ -204,6 +210,7 @@ body:has(#neuralExperience){overflow:hidden}
 
 <div id="neuralExperience" aria-label="KERNELCORP neural network interface">
  <canvas id="meshGL" class="mesh-layer" aria-hidden="true"></canvas>
+ <canvas id="threeMesh" class="mesh-layer" aria-hidden="true"></canvas>
  <canvas id="binaryFlow" class="mesh-layer" aria-hidden="true"></canvas>
  <div class="mesh-vignette" aria-hidden="true"></div>
  <div class="sr-only" aria-live="polite" id="meshAnnouncement">Neural mesh active. Tap a node for network tools. Swipe from the left edge for the ledger or right edge for applications.</div>
@@ -347,7 +354,7 @@ function clock(){$("clock").textContent=new Date().toLocaleTimeString([], {hour1
  function closeDrawers(){document.querySelectorAll('#neuralExperience .drawer').forEach(d=>{d.classList.remove('open');d.setAttribute('aria-hidden','true')});document.getElementById('drawerScrim').classList.remove('open');drawer=null}
  function openDrawer(which){closeDrawers();closeTelemetry();drawer=which;const el=document.getElementById(which==='left'?'ledgerDrawer':'podsDrawer');el.classList.add('open');el.setAttribute('aria-hidden','false');document.getElementById('drawerScrim').classList.add('open');document.getElementById('gestureHint').classList.add('fade')}
  function closeTelemetry(){const el=document.getElementById('nodeTelemetry');el.classList.remove('open');el.setAttribute('aria-hidden','true');root.classList.remove('telemetry-active');zoomTarget=1;selected=-1}
- function openTelemetry(index){closeDrawers();selected=index;root.classList.add('telemetry-active');zoomTarget=1.65;const n=nodes[index];document.getElementById('nodeLabel').textContent='MESH NODE / '+String(index+1).padStart(3,'0');const el=document.getElementById('nodeTelemetry');el.classList.add('open');el.setAttribute('aria-hidden','false');document.getElementById('meshAnnouncement').textContent='Selected mesh node '+(index+1)+'. Open the live console to inspect verified telemetry.';document.getElementById('gestureHint').classList.add('fade')}
+ function openTelemetry(index){window.__kernelMeshOpenTelemetry=openTelemetry;closeDrawers();selected=index;root.classList.add('telemetry-active');zoomTarget=1.65;const n=nodes[index];document.getElementById('nodeLabel').textContent='MESH NODE / '+String(index+1).padStart(3,'0');const el=document.getElementById('nodeTelemetry');el.classList.add('open');el.setAttribute('aria-hidden','false');document.getElementById('meshAnnouncement').textContent='Selected mesh node '+(index+1)+'. Open the live console to inspect verified telemetry.';document.getElementById('gestureHint').classList.add('fade')}
  document.querySelectorAll('#neuralExperience [data-close-drawer]').forEach(b=>b.addEventListener('click',closeDrawers));
  document.getElementById('drawerScrim').addEventListener('click',closeDrawers);
  document.getElementById('closeTelemetry').addEventListener('click',closeTelemetry);
@@ -370,6 +377,50 @@ function clock(){$("clock").textContent=new Date().toLocaleTimeString([], {hour1
  function motion(e){if(e.gamma==null||e.beta==null)return;targetY=Math.max(-1,Math.min(1,e.gamma/35));targetX=Math.max(-1,Math.min(1,(e.beta-45)/45))}
  if('DeviceOrientationEvent' in window){const attach=()=>{if(typeof DeviceOrientationEvent.requestPermission==='function'){DeviceOrientationEvent.requestPermission().then(v=>{if(v==='granted')window.addEventListener('deviceorientation',motion,{passive:true})}).catch(()=>{})}else window.addEventListener('deviceorientation',motion,{passive:true})};root.addEventListener('pointerdown',attach,{once:true,passive:true})}
  resize();tick(0);
+})();
+</script>
+
+
+<script type="module">
+(async()=>{
+ const root=document.getElementById('neuralExperience'),canvas=document.getElementById('threeMesh');
+ if(!root||!canvas)return;
+ try{
+  const THREE=await import('https://unpkg.com/three@0.180.0/build/three.module.js');
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(innerWidth,innerHeight,false);
+  renderer.setClearColor(0x020712,1);renderer.outputColorSpace=THREE.SRGBColorSpace;
+  const scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x020712,.014);
+  const camera=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,.1,160);camera.position.set(0,0,34);
+  const group=new THREE.Group();scene.add(group);
+  const rand=(n)=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)};
+  const cols=29,rows=19,points=[],geo=new THREE.BufferGeometry(),positions=[],colors=[],sizes=[],indices=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+   const i=points.length;points.push(new THREE.Vector3((x/(cols-1)-.5)*52+(rand(i+3)-.5)*1.15,(y/(rows-1)-.5)*31+(rand(i+11)-.5)*1.15,(rand(i+29)-.5)*13));
+   const c=(x+y)%7===0?new THREE.Color('#ff9b28'):new THREE.Color('#168bff');positions.push(...points[i].toArray());colors.push(c.r,c.g,c.b);sizes.push((x+y)%7===0?1.15:.65);
+  }
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const i=y*cols+x;if(x<cols-1)indices.push(i,i+1);if(y<rows-1)indices.push(i,i+cols);if(x<cols-1&&y<rows-1&&rand(i+81)>.42)indices.push(i,i+cols+1)}
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.setIndex(indices);
+  const wire=new THREE.LineSegments(geo,new THREE.ShaderMaterial({vertexColors:true,transparent:true,depthWrite:false,uniforms:{time:{value:0}},vertexShader:'attribute vec3 color; varying vec3 vColor; uniform float time; void main(){vColor=color; vec3 p=position; p.z+=sin(p.x*.18+time*.00065)*.65+cos(p.y*.25+time*.0008)*.35; vec4 mv=modelViewMatrix*vec4(p,1.); gl_Position=projectionMatrix*mv;}',fragmentShader:'varying vec3 vColor; void main(){gl_FragColor=vec4(vColor,.55);}',blending:THREE.AdditiveBlending}));group.add(wire);
+  const pGeo=new THREE.BufferGeometry();pGeo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));pGeo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  const particles=new THREE.Points(pGeo,new THREE.PointsMaterial({size:.16,vertexColors:true,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true}));group.add(particles);
+  const peerIndices=[Math.floor(rows/2)*cols+Math.floor(cols*.23),Math.floor(rows*.38)*cols+Math.floor(cols*.51),Math.floor(rows*.62)*cols+Math.floor(cols*.76),Math.floor(rows*.25)*cols+Math.floor(cols*.86),Math.floor(rows*.72)*cols+Math.floor(cols*.39),Math.floor(rows*.48)*cols+Math.floor(cols*.64)];
+  const peers=[];
+  peerIndices.forEach((idx,k)=>{const orange=k%3===1, color=orange?0xffa52e:0x27a5ff;const mesh=new THREE.Mesh(new THREE.SphereGeometry(.24,20,16),new THREE.MeshBasicMaterial({color}));mesh.position.copy(points[idx]);group.add(mesh);const halo=new THREE.Mesh(new THREE.SphereGeometry(.48,20,16),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.17,blending:THREE.AdditiveBlending,depthWrite:false}));halo.position.copy(mesh.position);group.add(halo);const ring=new THREE.Mesh(new THREE.TorusGeometry(.42,.025,8,40),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.85,blending:THREE.AdditiveBlending}));ring.position.copy(mesh.position);ring.rotation.x=.6+k*.2;group.add(ring);peers.push({idx,mesh,halo,ring})});
+  // Binary energy stream textures rendered as luminous, moving 0/1 glyphs in 3D.
+  const streams=[];
+  function makeBinaryTexture(seed,orange){const c=document.createElement('canvas');c.width=256;c.height=512;const x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.font='bold 20px monospace';x.textAlign='center';for(let y=12;y<512;y+=22){x.fillStyle=orange?'rgba(255,159,42,'+(0.3+rand(seed+y)*.7)+')':'rgba(37,151,255,'+(0.3+rand(seed+y)*.7)+')';x.fillText(rand(seed+y)>.5?'1':'0',128+Math.sin(y*.07+seed)*22,y)}const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
+  for(let i=0;i<18;i++){const orange=i%4===0,mat=new THREE.SpriteMaterial({map:makeBinaryTexture(i+17,orange),transparent:true,opacity:.72,blending:THREE.AdditiveBlending,depthWrite:false});const sp=new THREE.Sprite(mat);sp.scale.set(1.1,7+rand(i+99)*6,1);sp.position.set((rand(i+31)-.5)*48,(rand(i+41)-.5)*23,(rand(i+51)-.5)*12);sp.userData={x:sp.position.x,y:sp.position.y,z:sp.position.z,phase:rand(i+61)*20,speed:.7+rand(i+71)*1.7};group.add(sp);streams.push(sp)}
+  const ambient=new THREE.PointLight(0x087bff,2.1,65);ambient.position.set(-9,2,9);scene.add(ambient);const gold=new THREE.PointLight(0xff9b22,1.4,55);gold.position.set(12,-3,5);scene.add(gold);
+  const raycaster=new THREE.Raycaster();raycaster.params.Points.threshold=.5;const pointer=new THREE.Vector2();let targetX=0,targetY=0,tiltX=0,tiltY=0,selectedPeer=null;
+  function resize(){renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}
+  window.addEventListener('resize',resize,{passive:true});
+  window.addEventListener('deviceorientation',e=>{if(e.gamma!=null&&e.beta!=null){targetY=Math.max(-.55,Math.min(.55,e.gamma/65));targetX=Math.max(-.45,Math.min(.45,(e.beta-45)/90))}},{passive:true});
+  canvas.addEventListener('pointerup',e=>{if(Math.abs(e.clientX-(canvas._sx??e.clientX))>14||Math.abs(e.clientY-(canvas._sy??e.clientY))>14)return;pointer.x=e.clientX/innerWidth*2-1;pointer.y=-(e.clientY/innerHeight)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(peers.map(p=>p.mesh));if(hits.length){selectedPeer=peers.find(p=>p.mesh===hits[0].object);const nodeIndex=selectedPeer.idx;const legacy=window.__kernelMeshOpenTelemetry;if(typeof legacy==='function')legacy(nodeIndex);else{document.getElementById('nodeLabel').textContent='MESH NODE / '+String(nodeIndex+1).padStart(3,'0');document.getElementById('nodeTelemetry').classList.add('open');root.classList.add('telemetry-active')}}});
+  canvas.addEventListener('pointerdown',e=>{canvas._sx=e.clientX;canvas._sy=e.clientY},{passive:true});
+  function animate(t){requestAnimationFrame(animate);wire.material.uniforms.time.value=t;tiltX+=(targetX-tiltX)*.035;tiltY+=(targetY-tiltY)*.035;group.rotation.y=tiltY+.035*Math.sin(t*.00018);group.rotation.x=tiltX+.025*Math.sin(t*.00023);group.rotation.z=.012*Math.sin(t*.00017);const active=root.classList.contains('telemetry-active');camera.position.z+=(active?23:34-camera.position.z)*.055;if(active)camera.position.z+=(23-camera.position.z)*.055;else camera.position.z+=(34-camera.position.z)*.025;peers.forEach((p,i)=>{const pulse=1+.22*Math.sin(t*.003+i);p.mesh.scale.setScalar(pulse);p.halo.scale.setScalar(1+.16*Math.sin(t*.002+i));p.ring.rotation.z=t*.0006*(i%2?1:-1)});streams.forEach(s=>{s.position.y=s.userData.y+((t*.001*s.userData.speed+s.userData.phase)%34)-17;s.material.rotation=Math.sin(t*.0004+s.userData.phase)*.08});renderer.render(scene,camera)}
+  animate(0);
+ }catch(error){console.error('Three.js mesh failed to initialize',error);canvas.style.display='none';document.getElementById('meshGL').style.display='block';document.getElementById('binaryFlow').style.display='block'}
 })();
 </script>
 
