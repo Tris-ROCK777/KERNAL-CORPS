@@ -50,6 +50,13 @@ export async function runRealPeerVerification() {
     const offer = signaling.sent.find(item => item.type === "OFFER");
     assert.ok(offer, "initiator should send an offer after READY");
     assert.equal(offer.targetPeerId, "remote-actual-id", "offer must target actual remote identity");
+    // Lost QoS-0 signaling packets must recover when the receiver repeats READY.
+    signaling.emit({ type: "READY", peerId: "remote-actual-id" });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(signaling.sent.filter(item => item.type === "OFFER").length, 2,
+      "same-peer READY should retransmit the cached offer without creating a new offer");
+    assert.equal(signaling.sent.filter(item => item.type === "OFFER")[1].sdp.sdp, offer.sdp.sdp,
+      "offer retry must reuse the original SDP");
     node.pc.emit("icecandidate", { candidate: { toJSON: () => ({ candidate: "fake-ice" }) } });
     await new Promise(resolve => setTimeout(resolve, 0));
     const ice = signaling.sent.find(item => item.type === "ICE");
