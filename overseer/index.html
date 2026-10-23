@@ -216,6 +216,10 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline-color:#a0efea}
   <a class="ledger-item" href="./non-exportable-vault-verify.html"><i>Vault / cryptography</i><strong>Non-exportable vault</strong><span>Inspect the vault verification workflow.</span></a>
   <a class="ledger-item" href="./vault-persistence-verify.html"><i>Vault / persistence</i><strong>Vault persistence record</strong><span>Validate persistence using the existing tool.</span></a>
   <a class="ledger-item" href="./authority-migrate.html"><i>Authority / migration</i><strong>Authority migration</strong><span>Open the authority migration record and its verification path.</span></a>
+  <a class="ledger-item" href="./ringwal-console.html"><i>Storage / Ring-WAL</i><strong>Ring-WAL console</strong><span>Inspect local durability records and current runtime verification.</span></a>
+  <a class="ledger-item" href="./pod-command-drawer.html"><i>Storage / OPFS inspector</i><strong>Pod command drawer</strong><span>Inspect local OPFS metadata with the existing read-only inspector.</span></a>
+  <a class="ledger-item" href="./authority-enroll.html"><i>Authority / enrollment</i><strong>Authority enrollment</strong><span>Open the existing authority enrollment workflow.</span></a>
+  <a class="ledger-item" href="./non-exportable-vault-verify.html"><i>Vault / key custody</i><strong>Non-exportable vault verification</strong><span>Verify the browser vault using the canonical route.</span></a>
  </aside>
  <aside class="drawer" id="podsDrawer" aria-label="Dual-State Pods" aria-hidden="true">
   <div class="drawer-head"><div><div class="eyebrow">X-KOM’Z / ECOSYSTEM</div><h2>Dual-State Pods</h2></div><button class="close-drawer" data-close-drawer aria-label="Close applications">×</button></div>
@@ -300,14 +304,14 @@ function clock(){$("clock").textContent=new Date().toLocaleTimeString([], {hour1
   edges.forEach((e,i)=>{if(i%4===0)streams.push({edge:e,offset:randSeed(i+44),speed:.12+randSeed(i+77)*.22,orange:i%8===0})});
  }
  function shader(type,source){const sh=gl.createShader(type);gl.shaderSource(sh,source);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh));return sh}
- let program=null,posLoc,colLoc,sizeLoc;
+ let program=null,posLoc,colLoc,sizeLoc,linePos=null,cbuf=null,sbuf=null;
  if(gl){
   try{
    const vs='attribute vec2 p;attribute vec4 c;attribute float sz;varying vec4 v;uniform float t;uniform vec2 res;void main(){vec2 q=p/res*2.0-1.0;q.y=-q.y;gl_Position=vec4(q,0.0,1.0);gl_PointSize=sz;v=c;}';
    const fs='precision mediump float;varying vec4 v;void main(){float d=length(gl_PointCoord-vec2(.5));float glow=1.0-smoothstep(.04,.5,d);gl_FragColor=vec4(v.rgb,v.a*glow);}';
    program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vs));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);
    if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
-   posLoc=gl.getAttribLocation(program,'p');colLoc=gl.getAttribLocation(program,'c');sizeLoc=gl.getAttribLocation(program,'sz');
+   posLoc=gl.getAttribLocation(program,'p');colLoc=gl.getAttribLocation(program,'c');sizeLoc=gl.getAttribLocation(program,'sz');linePos=gl.createBuffer();cbuf=gl.createBuffer();sbuf=gl.createBuffer();
   }catch(e){program=null}
  }
  function project(n,t){const depth=(n.z-.5)*100*zoom;return {x:W/2+(n.x-W/2+tiltX*(n.y/H-.5)*34)*zoom+tiltY*depth*.15,y:H/2+(n.y-H/2+tiltY*(n.x/W-.5)*24)*zoom-tiltX*depth*.12}}
@@ -317,19 +321,18 @@ function clock(){$("clock").textContent=new Date().toLocaleTimeString([], {hour1
   const vertices=[],colors=[],sizes=[];
   function vertex(p,c,size){vertices.push(p.x,p.y);colors.push(c[0],c[1],c[2],c[3]);sizes.push(size)}
   edges.forEach((e,i)=>{const a=project(nodes[e.a],t),b=project(nodes[e.b],t);const pulse=.28+.25*(.5+.5*Math.sin(t*.0015+e.phase));vertex(a,[.08,.38,.95,pulse],1);vertex(b,[.08,.38,.95,pulse],1)});
-  const linePos=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,linePos);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(posLoc);gl.vertexAttribPointer(posLoc,2,gl.FLOAT,false,0,0);
-  const cbuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,cbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(colors),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(colLoc);gl.vertexAttribPointer(colLoc,4,gl.FLOAT,false,0,0);
-  const sbuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,sbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(sizes),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(sizeLoc);gl.vertexAttribPointer(sizeLoc,1,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,linePos);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(posLoc);gl.vertexAttribPointer(posLoc,2,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,cbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(colors),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(colLoc);gl.vertexAttribPointer(colLoc,4,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,sbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(sizes),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(sizeLoc);gl.vertexAttribPointer(sizeLoc,1,gl.FLOAT,false,0,0);
   gl.uniform2f(gl.getUniformLocation(program,'res'),W,H);gl.drawArrays(gl.LINES,0,vertices.length/2);
   const np=[],nc=[],ns=[];
   nodes.forEach((n,i)=>{const p=project(n,t),pulse=.55+.45*Math.sin(t*.002+n.phase);let c=n.bright?[1,.46,.08,.95]:[.12,.67,1,.65];if(i===selected)c=[1,.8,.25,1];np.push(p.x,p.y);nc.push(...c);ns.push((n.bright?9:3.5)+(n.bright?5:2)*pulse)});
   gl.bindBuffer(gl.ARRAY_BUFFER,linePos);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(np),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(posLoc,2,gl.FLOAT,false,0,0);
   gl.bindBuffer(gl.ARRAY_BUFFER,cbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(nc),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(colLoc,4,gl.FLOAT,false,0,0);
   gl.bindBuffer(gl.ARRAY_BUFFER,sbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(ns),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(sizeLoc,1,gl.FLOAT,false,0,0);gl.drawArrays(gl.POINTS,0,nodes.length);
-  gl.deleteBuffer(linePos);gl.deleteBuffer(cbuf);gl.deleteBuffer(sbuf);
  }
  function renderFlow(t){
-  flow.clearRect(0,0,W,H);flow.save();flow.scale(D,D);flow.globalCompositeOperation='lighter';
+  flow.setTransform(1,0,0,1,0,0);flow.clearRect(0,0,flowCanvas.width,flowCanvas.height);flow.save();flow.scale(D,D);flow.globalCompositeOperation='lighter';
   flow.font='bold 12px ui-monospace,SFMono-Regular,Menlo,monospace';
   streams.forEach((s,k)=>{const a=project(nodes[s.edge.a],t),b=project(nodes[s.edge.b],t);const phase=(t*.0001*s.speed+s.offset)%1;for(let j=0;j<5;j++){let q=(phase+j*.19)%1,x=a.x+(b.x-a.x)*q,y=a.y+(b.y-a.y)*q;flow.fillStyle=s.orange?'rgba(255,154,43,'+(0.75-j*.12)+')':'rgba(89,197,255,'+(0.72-j*.12)+')';flow.shadowBlur=9;flow.shadowColor=s.orange?'#ff8a23':'#2b9fff';flow.fillText((k+j)%2?'0':'1',x,y)}});flow.restore();
  }
