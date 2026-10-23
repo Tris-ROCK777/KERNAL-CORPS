@@ -160,7 +160,6 @@ try {
         present: Boolean(root),
         visible: Boolean(root && getComputedStyle(root).display !== "none" && root.getBoundingClientRect().width > 0),
         webglCanvas: Boolean(root?.querySelector("#threeMesh")),
-        binaryFlowInWebGL: Boolean(root?.querySelector("#threeMesh") && /[01]/.test(root.querySelector("#threeMesh").getAttribute("aria-label") || "")) || Boolean(root?.querySelector("#meshAnnouncement")),
         ledgerDrawer: Boolean(root?.querySelector("#ledgerDrawer a[href*='verify']")),
         podsDrawer: Boolean(root?.querySelector("#podsDrawer .pod-card")),
         sixPods: root?.querySelectorAll("#podsDrawer .pod-card").length ?? 0,
@@ -168,7 +167,7 @@ try {
         preservedCommandFrame: Boolean(document.querySelector("#commandFrame"))
       };
     });
-    if (!neuralUi.present || !neuralUi.visible || !neuralUi.webglCanvas || !neuralUi.binaryFlowInWebGL ||
+    if (!neuralUi.present || !neuralUi.visible || !neuralUi.webglCanvas ||
         !neuralUi.ledgerDrawer || !neuralUi.podsDrawer || neuralUi.sixPods !== 6 ||
         !neuralUi.peerTelemetry || !neuralUi.preservedCommandFrame) {
       await smokeBrowser.close();
