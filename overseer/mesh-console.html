@@ -359,7 +359,7 @@ const $=id=>document.getElementById(id);
 const drawer=$("consolePanel"),rightDrawer=$("peersPanel"),statusSection=$("statusSection"),controlsSection=$("controlsSection"),logsSection=$("logsSection"),keysSection=$("keysSection");
 const originalHud=document.querySelector(".hud"),readout=originalHud.querySelector(".readout"),lens=document.querySelector("#lens"),controls=originalHud.querySelector(".controls"),logPanel=document.querySelector("#log"),inspector=document.querySelector("#inspect");
 statusSection.append(readout,inspector);
-$("rightControls").append(lens,controls);
+$("rightControls").append(lens); // Keep primary network/worker actions visible in the mobile HUD.
 // Keep operational controls above the scrollable peer list so they remain visible on phone screens.
 rightDrawer.insertBefore($("rightControls"),$("nodeList"));
 $("rightControls").style.flex="0 0 auto";

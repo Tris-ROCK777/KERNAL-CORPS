@@ -222,17 +222,12 @@ try {
     await smokePage.getByRole("button", { name: "NETWORK", exact: true }).click();
     await smokePage.frameLocator("#commandFrame").locator("#simTransfer").waitFor({ state: "attached", timeout: 15000 });
     console.log(JSON.stringify({ event: "FOUR_COMMAND_AREAS_LOAD_PASS", storageControls, securityButton }));
-    // Network operations are placed in the right-hand drawer on mobile; open it before interacting.
+    // Primary network and worker actions stay visible in the mobile HUD.
     const commandFrame = smokePage.frameLocator("#commandFrame");
     await smokePage.waitForFunction(() => {
       const frame = document.querySelector("#commandFrame");
       return frame?.contentWindow?.__KERNEL_CONSOLE_UI_READY === true;
     }, undefined, { timeout: 15000 });
-    await commandFrame.locator("#openRightDrawer").click();
-    await smokePage.waitForFunction(() => {
-      const frame = document.querySelector("#commandFrame");
-      return frame?.contentDocument?.querySelector("#openRightDrawer")?.getAttribute("aria-expanded") === "true";
-    }, undefined, { timeout: 5000 });
     await commandFrame.locator("#simTransfer").click();
     await smokePage.waitForFunction(() => {
       const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#log")?.textContent || "";
