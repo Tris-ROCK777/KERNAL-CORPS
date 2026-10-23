@@ -445,12 +445,19 @@ const mesh = new XKomzMasterInterface(mount, {
   viewportOnly: true,
   onSnapshot(snapshot) {
     latestMeshSnapshot = snapshot;
-    if (selectedMeshNode) renderSelectedMeshNode(selectedMeshNode, latestMeshSnapshot);
+    if (selectedMeshNode) {
+      const peers = inspectorValue(snapshot, ['network.peers','peers','nodes']);
+      const selectedId = inspectorValue(selectedMeshNode, ['id','peerId','peer_id','nodeId','connectionId']);
+      const refreshed = Array.isArray(peers) ? peers.find(peer => String(inspectorValue(peer,['id','peerId','peer_id','nodeId','connectionId']) ?? '') === String(selectedId ?? '')) : null;
+      if (refreshed) selectedMeshNode = refreshed;
+      renderSelectedMeshNode(selectedMeshNode, latestMeshSnapshot);
+    }
     const paths = {
       peers: ['network.livePeerCount','network.peerCount'],
       latency: ['network.latencyMs'],
       workers: ['network.workers.localActive'],
       rxBytes: ['network.bytesReceived'],
+      txBytes: ['network.bytesSent'],
       shards: ['storage.shardCount'],
       verifiedBytes: ['storage.verifiedShardBytes'],
       readback: ['security.readbackStatus'],
@@ -473,7 +480,8 @@ const mesh = new XKomzMasterInterface(mount, {
     }
   },
   onNodeSelected(node) {
-    selectedMeshNode = node || null;
+    // syncNodes wraps the original peer record as .raw; inspect the actual reported peer data.
+    selectedMeshNode = node?.raw && typeof node.raw === 'object' ? node.raw : (node || null);
     openMeshDrawer('telemetry');
     renderSelectedMeshNode(selectedMeshNode, latestMeshSnapshot);
     const label = node?.name || node?.label || node?.id || node?.peerId || node?.peer_id || 'SELECTED MESH NODE';
