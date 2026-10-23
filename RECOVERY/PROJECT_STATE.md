@@ -39,9 +39,7 @@ Continue from the restored Ring-WAL dashboard. Do not ask the user to repeat exi
 
 ## Unified entrypoint and historical branch audit (2026-10-22)
 
-Canonical command plane: `/overseer/index.html` (title: **KERNEL UMBRELLA CORP // X-KOM’Z OVERSEER**). The root `/index.html` already redirects here. The historical names below are compatibility entrypoints; they must not fork the UI or create separate dashboards.
-
-The repository root redirects to the canonical Overseer command plane. No duplicate dashboard pages should be added; historical names are for search and recovery only.
+Canonical command plane: `/overseer/index.html` (title: **KERNEL UMBRELLA CORP // X-KOM’Z OVERSEER**). The root `/index.html` already redirects here. The root `/index.html` is the sole root entrypoint and redirects to the canonical Overseer command plane. Historical names exist only in repository history and branch names; do not recreate them as new pages.
 ### Historical branches checked against `main`
 
 The repository's branch search returned these 13 non-main branches:
