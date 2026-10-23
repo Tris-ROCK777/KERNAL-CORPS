@@ -3,6 +3,7 @@ name: Deploy Overseer Verification Page
 on:
   push:
     branches:
+      - main
       - 3d-mesh-rebuild
     paths:
       - "overseer/**"
