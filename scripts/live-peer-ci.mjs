@@ -129,7 +129,10 @@ try {
       const rect = canvas.getBoundingClientRect();
       return Math.abs(rect.width - innerWidth) < 2 &&
         Math.abs(rect.height - innerHeight) < 2 &&
-        getComputedStyle(canvas).position === "fixed";
+        getComputedStyle(canvas).position === "absolute" &&
+        Boolean(canvas.closest(".mesh-viewport")) &&
+        Math.abs(canvas.closest(".mesh-viewport").getBoundingClientRect().width - innerWidth) < 2 &&
+        Math.abs(canvas.closest(".mesh-viewport").getBoundingClientRect().height - innerHeight) < 2;
     }, undefined, { timeout: 30000 });
     const r3fScene = await smokePage.evaluate(() => {
       const canvas = document.querySelector("#root canvas");
@@ -141,9 +144,10 @@ try {
         canvasPresent: Boolean(canvas),
         canvasWidth: canvas?.width || 0,
         canvasHeight: canvas?.height || 0,
-        fullViewport: Boolean(canvas && getComputedStyle(canvas).position === "fixed" &&
-          Math.abs(canvas.getBoundingClientRect().width - innerWidth) < 2 &&
-          Math.abs(canvas.getBoundingClientRect().height - innerHeight) < 2),
+        fullViewport: Boolean(canvas && getComputedStyle(canvas).position === "absolute" &&
+          canvas.closest(".mesh-viewport") &&
+          Math.abs(canvas.closest(".mesh-viewport").getBoundingClientRect().width - innerWidth) < 2 &&
+          Math.abs(canvas.closest(".mesh-viewport").getBoundingClientRect().height - innerHeight) < 2),
         defaultOverlayText: (document.body.innerText || "").trim()
       };
     });
