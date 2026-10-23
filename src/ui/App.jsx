@@ -1,7 +1,6 @@
-import React, { Suspense, useCallback, useMemo, useRef, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, Line, OrbitControls, Stars, Text } from '@react-three/drei';
-import * as THREE from 'three';
+import { Float, Line, OrbitControls, Stars } from '@react-three/drei';
 
 const PODS = [
   ['Planet-K','planet-k'], ['KashKorner','kashkorner'], ['X-Koin’s','x-koins'],
@@ -46,7 +45,7 @@ function BinaryHighways() {
  const paths=useMemo(()=>Array.from({length:9},(_,i)=>Array.from({length:150},(_,j)=>{const t=j/149*Math.PI*2;const r=5.1+i*.115;return [Math.cos(t)*r,Math.sin(t*2+i*.7)*.16,Math.sin(t)*r];})),[]);
  const ribbons=useRef();
  useFrame(({clock})=>{if(ribbons.current)ribbons.current.rotation.y=clock.elapsedTime*.025;});
- return <group ref={ribbons}>{paths.map((p,i)=><group key={i}><Line points={p} color={i%2?'#00d9ff':'#f5a623'} lineWidth={i%2?1.5:1.2} transparent opacity={.72}/>{Array.from({length:18},(_,j)=>{const q=p[(j*8+i*5)%p.length];return <Text key={j} position={q} fontSize={.14} color={i%2?'#58eaff':'#ffc25c'} anchorX="center" anchorY="middle">{(i+j)%2?'1':'0'}</Text>;})}</group>)}
+ return <group ref={ribbons}>{paths.map((p,i)=><group key={i}><Line points={p} color={i%2?'#00d9ff':'#f5a623'} lineWidth={i%2?1.5:1.2} transparent opacity={.72}/>{Array.from({length:18},(_,j)=>{const q=p[(j*8+i*5)%p.length];return <mesh key={j} position={q}><meshBasicMaterial color={i%2?'#58eaff':'#ffc25c'}/>{(i+j)%2?<boxGeometry args={[.025,.14,.025]}/>:<torusGeometry args={[.045,.009,4,8]}/>}</mesh>;})}</group>)}
  {Array.from({length:5},(_,i)=><mesh key={'ring'+i} rotation={[Math.PI/2+i*.08,0,i*.12]}><torusGeometry args={[5.6+i*.18,.009,6,240]}/><meshBasicMaterial color={i%2?'#ffad2f':'#00bfff'} transparent opacity={.55}/></mesh>)}
  </group>;
 }
@@ -61,7 +60,7 @@ export default function App(){
  const touchEnd=useCallback(e=>{const start=touchX.current,x=e.changedTouches?.[0]?.clientX??start,dx=x-start;if(start<28&&dx>65)setDrawer('left');else if(start>window.innerWidth-28&&dx< -65)setDrawer('right');touchX.current=0;},[]);
  return <main className="app" onTouchStart={touchStart} onTouchEnd={touchEnd}>
   <Canvas onPointerMissed={()=>setDrawer(null)} className="mesh-canvas" dpr={[1,1.7]} camera={{position:[0,1.2,12],fov:52}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}>
-   <Suspense fallback={null}><Scene onNode={openNode}/></Suspense>
+   <Scene onNode={openNode}/>
   </Canvas>
   {drawer==='bottom'&&<Drawer side="bottom" close={()=>setDrawer(null)}><h2>NODE TELEMETRY</h2><p className="selected">Selected visual node: {node?.id??'unknown'}</p><dl><dt>WebRTC peers</dt><dd>{read('network.peerCount','peerCount','network.peers.length')}</dd><dt>Workers</dt><dd>{read('workers.active','workerCount','workers.activeCount')} / 10,000 target</dd><dt>OPFS bytes</dt><dd>{read('storage.opfsBytes','storage.bytes','opfsBytes')}</dd><dt>Ring-WAL</dt><dd>{read('storage.ringWalStatus','storage.walStatus','ringWalStatus')}</dd></dl></Drawer>}
   {drawer==='left'&&<Drawer side="left" close={()=>setDrawer(null)}><h2>SOVEREIGN LEDGER</h2><p>Authority security records</p><p>Authority: {read('security.authorityStatus','authorityStatus')} · Signature: {read('security.signatureStatus','signatureStatus')}</p><p>SHA-256: {read('security.lastSha256','security.lastHash','lastSha256','lastHash')}</p><p>Read-back: {read('security.readbackStatus','storage.readbackStatus','readbackStatus')} · Receipts: {read('security.receiptCount','storage.receiptCount','receiptCount')}</p></Drawer>}
