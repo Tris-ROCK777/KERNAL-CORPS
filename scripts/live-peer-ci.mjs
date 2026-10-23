@@ -225,7 +225,7 @@ try {
     // Network operations are housed in the live-peer drawer on mobile.
     // Exercise the local RTCDataChannel simulator separately from the two-browser peer test.
     const commandFrame = smokePage.frameLocator("#commandFrame");
-    await commandFrame.locator("#openDrawer").click();
+    await commandFrame.locator("#openRightDrawer").click();
     await commandFrame.locator("#simTransfer").click();
     await smokePage.waitForFunction(() => {
       const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#log")?.textContent || "";
