@@ -126,11 +126,22 @@ try {
     await smokePage.waitForFunction(
       () => {
         const frame = document.querySelector("#commandFrame");
-        const doc = frame?.contentDocument; const log = [doc?.querySelector("#status")?.textContent, doc?.querySelector("#log")?.textContent].filter(Boolean).join("\\n");
-        return log.includes("PRODUCTION RUNTIME READY") || log.includes("RUNTIME NOT READY:") || log.includes("RUNTIME BLOCKED:");
+        if (!frame || !frame.contentDocument) return false;
+        const doc = frame.contentDocument;
+        const text = [doc.querySelector("#status")?.textContent, doc.querySelector("#log")?.textContent].filter(Boolean).join("\\n");
+        return text.length > 0 && !text.includes("BOOTING LOCAL CONSOLE…");
       },
-      undefined, { timeout: 120000 }
-    );
+      undefined, { timeout: 30000 }
+    ).catch(error => {
+      const frame = smokePage.locator("#commandFrame");
+      return frame.evaluate(el => {
+        const doc = el.contentDocument;
+        return { title: doc?.title, readyState: doc?.readyState,
+          log: doc?.querySelector("#log")?.textContent || "",
+          status: doc?.querySelector("#status")?.textContent || "",
+          bodyText: doc?.body?.innerText?.slice(0, 1600) || "" };
+      }).then(state => { throw new Error("COMMAND_CENTER_RUNTIME_DID_NOT_SETTLE: " + JSON.stringify(state) + " | " + String(error)); });
+    });
     const runtimeLog = await smokePage.locator("#commandFrame").evaluate(frame =>
       [frame.contentDocument?.querySelector("#status")?.textContent, frame.contentDocument?.querySelector("#log")?.textContent].filter(Boolean).join("\\n")
     );
