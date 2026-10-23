@@ -1,0 +1,14 @@
+name: Runner Dispatch Diagnostic
+on:
+  workflow_dispatch:
+  push:
+    branches: [3d-mesh-rebuild-clean]
+    paths: ['.github/workflows/runner-diagnostic.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm runner started
+        run: echo "runner-started"
