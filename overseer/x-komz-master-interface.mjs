@@ -428,7 +428,7 @@ export class XKomzMasterInterface {
     this.coreHalo = new THREE.Mesh(new THREE.SphereGeometry(1.95, 32, 24), new THREE.MeshBasicMaterial({ color: 0x158cff, transparent: true, opacity: .075, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false }));
     this.coreOrbit = new THREE.Mesh(new THREE.TorusGeometry(5.8, .035, 8, 180), new THREE.MeshBasicMaterial({ color: 0x65dcff, transparent: true, opacity: .68 }));
     this.coreOrbit.rotation.set(.72, .15, .25);
-    this.coreOrbit2 = new THREE.Mesh(new THREE.TorusGeometry(6.15, .022, 8, 180), new THREE.MeshBasicMaterial({ color: 0xffb34d, transparent: true, opacity: .38 }));
+    this.coreOrbit2 = new THREE.Mesh(new THREE.TorusGeometry(6.15, .022, 8, 180), new THREE.MeshBasicMaterial({ color: 0x368dff, transparent: true, opacity: .38 }));
     this.coreOrbit2.rotation.set(1.25, .65, -.2);
     this.coreGroup.add(torusA, torusB, nucleus, this.coreHalo, this.coreOrbit, this.coreOrbit2);
     const corePoints = new THREE.Points(new THREE.IcosahedronGeometry(5.1, 4), new THREE.PointsMaterial({ color: 0xb8f5ff, size: .045, transparent: true, opacity: .9 }));
@@ -449,7 +449,7 @@ export class XKomzMasterInterface {
     this.scene.add(domeDots);
 
     // Layer 3: multi-depth colored filaments and bokeh particles.
-    const palette = [new THREE.Color(0x168dff), new THREE.Color(0xff6b21), new THREE.Color(0xffc34a), new THREE.Color(0xff4545), new THREE.Color(0x74dfff)];
+    const palette = [new THREE.Color(0x168dff), new THREE.Color(0x247bff), new THREE.Color(0x36baff), new THREE.Color(0x5ad8ff), new THREE.Color(0x9cefff)];
     const count = 2400, pos = new Float32Array(count * 3), colors = new Float32Array(count * 3), sizes = new Float32Array(count);
     for (let i = 0; i < count; i++) {
       const r = 7 + Math.random() * 28, a = Math.random() * Math.PI * 2, y = (Math.random() - .5) * 28;
@@ -487,7 +487,7 @@ export class XKomzMasterInterface {
         pts.push(new THREE.Vector3(Math.cos(t + phase) * r, Math.sin(t * 2 + phase) * 3.5, Math.sin(t + phase) * r));
       }
       const geometry = new THREE.BufferGeometry().setFromPoints(pts);
-      const material = new THREE.LineBasicMaterial({ color: i % 3 ? 0x30baff : 0xffb34d, transparent: true, opacity: .55 });
+      const material = new THREE.LineBasicMaterial({ color: i % 3 ? 0x30baff : 0x6aaaff, transparent: true, opacity: .55 });
       this.highways.add(new THREE.Line(geometry, material));
     }
     this.scene.add(this.highways);
@@ -506,8 +506,10 @@ export class XKomzMasterInterface {
       let bits = ''; for (let i = 0; i < 76; i++) bits += Math.random() > .5 ? '1 ' : '0 ';
       ctx.fillText(bits, 4, 38);
       const texture = new THREE.CanvasTexture(binaryCanvas);
+      texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.repeat.set(1.35, 1); this.binaryTexture = texture;
       for (let i = 0; i < 6; i++) {
-        const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: .36 + i * .045, side: THREE.DoubleSide, depthWrite: false, color: i % 2 ? 0x77dfff : 0xffbd56 });
+        const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: .36 + i * .045, side: THREE.DoubleSide, depthWrite: false, color: i % 2 ? 0x77dfff : 0x4a9dff });
         const ribbon = new THREE.Mesh(new THREE.PlaneGeometry(18 + i * 1.4, 1.2), material);
         ribbon.position.set(0, -4 + i * 1.35, 0); ribbon.rotation.y = i * .49; ribbon.rotation.x = -.15 + i * .04;
         this.binaryGroup.add(ribbon);
@@ -548,7 +550,7 @@ export class XKomzMasterInterface {
     if (this.filaments) { this.filaments.rotation.y = -t * .03; this.filaments.rotation.x = Math.sin(t * .09) * .04; }
     if (this.highways) this.highways.rotation.y = t * .07;
     if (this.rings) this.rings.rotation.y = -t * .06;
-    if (this.binaryGroup) this.binaryGroup.rotation.y = Math.sin(t * .18) * .22;
+    if (this.binaryGroup) { this.binaryGroup.rotation.y = Math.sin(t * .18) * .22; if (this.binaryTexture) this.binaryTexture.offset.x = (t * .075) % 1; }
     if (this.floor) {
       const attr = this.floor.geometry.getAttribute('position');
       for (let i = 0; i < attr.count; i++) {
