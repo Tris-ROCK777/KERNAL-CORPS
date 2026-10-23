@@ -121,7 +121,7 @@ try {
       if (response.status() >= 400) resourceFailures.push({ url: response.url(), status: response.status() });
     });
     smokePage.on("pageerror", error => consoleErrors.push(String(error?.stack || error)));
-    smokePage.on("console", message => { if (message.type() === "error") consoleErrors.push(message.text()); });
+    smokePage.on("console", message => { if (message.type() === "error") { const at=message.location(); consoleErrors.push(message.text()+" @ "+String(at.url||"")+":"+String(at.lineNumber||0)+":"+String(at.columnNumber||0)); } });
     await smokePage.goto(consoleUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
     await smokePage.waitForFunction(
       () => {
