@@ -431,6 +431,26 @@ export class XKomzMasterInterface {
     this.coreOrbit2 = new THREE.Mesh(new THREE.TorusGeometry(6.15, .022, 8, 180), new THREE.MeshBasicMaterial({ color: 0x368dff, transparent: true, opacity: .38 }));
     this.coreOrbit2.rotation.set(1.25, .65, -.2);
     this.coreGroup.add(torusA, torusB, nucleus, this.coreHalo, this.coreOrbit, this.coreOrbit2);
+    // High-energy cyan-white beams radiate from the engineered nucleus into the peer field.
+    this.coreBeams = new THREE.Group();
+    this.coreBeamMaterials = [];
+    for (let i = 0; i < 144; i++) {
+      const u = (i + .5) / 144;
+      const y = 1 - 2 * u;
+      const radius = Math.sqrt(Math.max(0, 1 - y * y));
+      const angle = i * Math.PI * (3 - Math.sqrt(5));
+      const direction = new THREE.Vector3(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+      const length = 7.5 + (i % 7) * 1.35;
+      const points = [direction.clone().multiplyScalar(1.15), direction.clone().multiplyScalar(length)];
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const material = new THREE.LineBasicMaterial({
+        color: i % 9 === 0 ? 0xffc45c : (i % 3 === 0 ? 0x77eaff : 0xd9fbff),
+        transparent: true, opacity: .16 + (i % 5) * .035, blending: THREE.AdditiveBlending, depthWrite: false
+      });
+      this.coreBeamMaterials.push(material);
+      this.coreBeams.add(new THREE.Line(geometry, material));
+    }
+    this.coreGroup.add(this.coreBeams);
     const corePoints = new THREE.Points(new THREE.IcosahedronGeometry(5.1, 4), new THREE.PointsMaterial({ color: 0xb8f5ff, size: .045, transparent: true, opacity: .9 }));
     this.coreGroup.add(corePoints);
     this.scene.add(this.coreGroup);
@@ -487,7 +507,7 @@ export class XKomzMasterInterface {
         pts.push(new THREE.Vector3(Math.cos(t + phase) * r, Math.sin(t * 2 + phase) * 3.5, Math.sin(t + phase) * r));
       }
       const geometry = new THREE.BufferGeometry().setFromPoints(pts);
-      const material = new THREE.LineBasicMaterial({ color: i % 3 ? 0x30baff : 0x6aaaff, transparent: true, opacity: .55 });
+      const material = new THREE.LineBasicMaterial({ color: i % 4 === 0 ? 0xffb43f : (i % 3 ? 0x30baff : 0x72efff), transparent: true, opacity: .62, blending: THREE.AdditiveBlending, depthWrite: false });
       this.highways.add(new THREE.Line(geometry, material));
     }
     this.scene.add(this.highways);
@@ -509,7 +529,7 @@ export class XKomzMasterInterface {
       texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.ClampToEdgeWrapping;
       texture.repeat.set(1.35, 1); this.binaryTexture = texture;
       for (let i = 0; i < 6; i++) {
-        const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: .36 + i * .045, side: THREE.DoubleSide, depthWrite: false, color: i % 2 ? 0x77dfff : 0x4a9dff });
+        const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: .48 + i * .045, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, color: i % 3 === 0 ? 0xffbd4d : (i % 2 ? 0x77dfff : 0x4a9dff) });
         const ribbon = new THREE.Mesh(new THREE.PlaneGeometry(18 + i * 1.4, 1.2), material);
         ribbon.position.set(0, -4 + i * 1.35, 0); ribbon.rotation.y = i * .49; ribbon.rotation.x = -.15 + i * .04;
         this.binaryGroup.add(ribbon);
@@ -547,6 +567,7 @@ export class XKomzMasterInterface {
     }
     if (this.coreGroup) { this.coreGroup.rotation.x = Math.sin(t * .17) * .12; this.coreGroup.rotation.y = t * .14; }
     if (this.coreHalo) { const pulse = 1 + Math.sin(t * 1.4) * .055; this.coreHalo.scale.setScalar(pulse); this.coreHalo.material.opacity = .055 + (Math.sin(t * 1.4) + 1) * .018; }
+    if (this.coreBeams) { const pulse = (Math.sin(t * 2.1) + 1) * .5; this.coreBeams.rotation.y = -t * .045; this.coreBeamMaterials.forEach((material, index) => { material.opacity = .10 + pulse * .24 + (index % 5) * .012; }); }
     if (this.coreOrbit) this.coreOrbit.rotation.z = t * .12;
     if (this.coreOrbit2) this.coreOrbit2.rotation.y = -t * .09;
     if (this.dome) { this.dome.rotation.y = -t * .025; this.dome.rotation.x = Math.sin(t * .07) * .025; }
