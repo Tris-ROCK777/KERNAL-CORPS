@@ -125,18 +125,26 @@ try {
     await smokePage.locator("#root").waitFor({ state: "attached", timeout: 15000 });
     await smokePage.waitForFunction(() => {
       const canvas = document.querySelector("#root canvas");
-      if (!canvas || canvas.width <= 0 || canvas.height <= 0) return false;
-      const rect = canvas.getBoundingClientRect();
-      return Math.abs(rect.width - innerWidth) < 2 &&
-        Math.abs(rect.height - innerHeight) < 2 &&
-        getComputedStyle(canvas).position === "absolute" &&
-        Boolean(canvas.closest(".mesh-viewport")) &&
-        Math.abs(canvas.closest(".mesh-viewport").getBoundingClientRect().width - innerWidth) < 2 &&
-        Math.abs(canvas.closest(".mesh-viewport").getBoundingClientRect().height - innerHeight) < 2;
+      const wrapper = canvas?.parentElement;
+      const viewport = canvas?.closest(".mesh-viewport");
+      if (!canvas || !wrapper || !viewport || canvas.width <= 0 || canvas.height <= 0) return false;
+      const canvasRect = canvas.getBoundingClientRect();
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const viewportRect = viewport.getBoundingClientRect();
+      return Math.abs(canvasRect.width - wrapperRect.width) < 2 &&
+        Math.abs(canvasRect.height - wrapperRect.height) < 2 &&
+        getComputedStyle(wrapper).position === "absolute" &&
+        Math.abs(viewportRect.width - innerWidth) < 2 &&
+        Math.abs(viewportRect.height - innerHeight) < 2;
     }, undefined, { timeout: 30000 });
     const r3fScene = await smokePage.evaluate(() => {
       const canvas = document.querySelector("#root canvas");
+      const wrapper = canvas?.parentElement;
+      const viewport = canvas?.closest(".mesh-viewport");
       const root = document.querySelector("#root");
+      const canvasRect = canvas?.getBoundingClientRect();
+      const wrapperRect = wrapper?.getBoundingClientRect();
+      const viewportRect = viewport?.getBoundingClientRect();
       return {
         title: document.title,
         rootVisible: Boolean(root && root.getBoundingClientRect().width >= innerWidth - 1 &&
@@ -144,10 +152,13 @@ try {
         canvasPresent: Boolean(canvas),
         canvasWidth: canvas?.width || 0,
         canvasHeight: canvas?.height || 0,
-        fullViewport: Boolean(canvas && getComputedStyle(canvas).position === "absolute" &&
-          canvas.closest(".mesh-viewport") &&
-          Math.abs(canvas.closest(".mesh-viewport").getBoundingClientRect().width - innerWidth) < 2 &&
-          Math.abs(canvas.closest(".mesh-viewport").getBoundingClientRect().height - innerHeight) < 2),
+        wrapperPosition: wrapper ? getComputedStyle(wrapper).position : "missing",
+        fullViewport: Boolean(canvas && wrapper && viewport &&
+          Math.abs(canvasRect.width - wrapperRect.width) < 2 &&
+          Math.abs(canvasRect.height - wrapperRect.height) < 2 &&
+          getComputedStyle(wrapper).position === "absolute" &&
+          Math.abs(viewportRect.width - innerWidth) < 2 &&
+          Math.abs(viewportRect.height - innerHeight) < 2),
         defaultOverlayText: (document.body.innerText || "").trim()
       };
     });
