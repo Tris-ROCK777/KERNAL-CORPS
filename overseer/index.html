@@ -174,7 +174,7 @@ a{color:inherit;text-decoration:none}
 
 
 <script type="module">
-import XKomzMasterInterface from './x-komz-master-interface.mjs?build=9cd5d20e';
+import XKomzMasterInterface from './x-komz-master-interface.mjs?build=a37736da';
 const experience = document.getElementById('neuralExperience');
 const mount = document.getElementById('meshViewportMount');
 const panes = {
@@ -248,8 +248,7 @@ experience.addEventListener('pointerdown', event => {
   const edge = 24;
   const fromLeft = event.clientX <= edge;
   const fromRight = event.clientX >= width - edge;
-  const fromBottom = event.clientY >= height - edge;
-  if (fromLeft || fromRight || fromBottom) edgeGestureStart = {x:event.clientX,y:event.clientY,fromLeft,fromRight,fromBottom,id:event.pointerId};
+  if (fromLeft || fromRight) edgeGestureStart = {x:event.clientX,y:event.clientY,fromLeft,fromRight,id:event.pointerId};
 }, {passive:true});
 experience.addEventListener('pointerup', event => {
   if (!edgeGestureStart || edgeGestureStart.id !== event.pointerId) return;
