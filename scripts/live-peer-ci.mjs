@@ -124,11 +124,16 @@ try {
     smokePage.on("console", message => { if (message.type() === "error") consoleErrors.push(message.text()); });
     await smokePage.goto(consoleUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
     await smokePage.waitForFunction(
-      () => document.querySelector("#log")?.textContent.includes("PRODUCTION RUNTIME READY") ||
-            document.querySelector("#log")?.textContent.includes("RUNTIME BLOCKED:"),
+      () => {
+        const frame = document.querySelector("#commandFrame");
+        const log = frame?.contentDocument?.querySelector("#log")?.textContent || "";
+        return log.includes("PRODUCTION RUNTIME READY") || log.includes("RUNTIME BLOCKED:");
+      },
       undefined, { timeout: 60000 }
     );
-    const runtimeLog = await smokePage.locator("#log").textContent();
+    const runtimeLog = await smokePage.locator("#commandFrame").evaluate(frame =>
+      frame.contentDocument?.querySelector("#log")?.textContent || ""
+    );
     const runtimeMode = runtimeLog.includes("PRODUCTION RUNTIME READY")
       ? "READY"
       : runtimeLog.includes("RUNTIME BLOCKED: PINNED_AUTHORITY_KEY_MISSING_FROM_VAULT")
@@ -138,20 +143,25 @@ try {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_RUNTIME_FAILED: " + runtimeLog);
     }
-    const ui = await smokePage.evaluate(() => ({
-      title: document.title,
-      canvasPresent: Boolean(document.querySelector("#scene")),
-      canvasWidth: document.querySelector("#scene")?.width ?? 0,
-      canvasHeight: document.querySelector("#scene")?.height ?? 0,
-      authorityStateDisplayed: Boolean(document.querySelector("#pin")?.textContent &&
-        !/Loading/.test(document.querySelector("#pin").textContent)),
-      controls: ["dispatch", "sever", "scale", "rejoin", "livePeerTest"].map(id => ({
-        id, visible: Boolean(document.querySelector("#" + id) &&
-          document.querySelector("#" + id).getBoundingClientRect().width > 0 &&
-          document.querySelector("#" + id).getBoundingClientRect().height > 0)
-      }))
-    }));
-    if (!ui.canvasPresent || ui.canvasWidth <= 0 || ui.canvasHeight <= 0 ||
+    const ui = await smokePage.evaluate(() => {
+      const frame = document.querySelector("#commandFrame");
+      const doc = frame?.contentDocument;
+      return {
+        title: document.title,
+        commandFramePresent: Boolean(frame),
+        canvasPresent: Boolean(doc?.querySelector("#scene")),
+        canvasWidth: doc?.querySelector("#scene")?.width ?? 0,
+        canvasHeight: doc?.querySelector("#scene")?.height ?? 0,
+        authorityStateDisplayed: Boolean(doc?.querySelector("#pin")?.textContent &&
+          !/Loading/.test(doc.querySelector("#pin").textContent)),
+        controls: ["dispatch", "sever", "scale", "rejoin", "livePeerTest"].map(id => ({
+          id, visible: Boolean(doc?.querySelector("#" + id) &&
+            doc.querySelector("#" + id).getBoundingClientRect().width > 0 &&
+            doc.querySelector("#" + id).getBoundingClientRect().height > 0)
+        }))
+      };
+    });
+    if (!ui.commandFramePresent || !ui.canvasPresent || ui.canvasWidth <= 0 || ui.canvasHeight <= 0 ||
         !ui.authorityStateDisplayed || ui.controls.some(control => !control.visible)) {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_UI_ASSERTION_FAILED: " + JSON.stringify(ui));
