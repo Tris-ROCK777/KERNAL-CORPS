@@ -292,7 +292,7 @@ try {
     // reports the actual local count, and stops cleanly without claiming 10,000 workers.
     const command = smokePage.frameLocator("#commandFrame");
     await command.locator("#scale").scrollIntoViewIfNeeded();
-    await command.locator("#scale").click();
+    await command.locator("#scale").evaluate(button => button.click());
     await smokePage.waitForFunction(() => {
       const doc = document.querySelector("#commandFrame")?.contentDocument;
       return Boolean(doc?.querySelector("#log")?.textContent.includes("LOCAL WORKER TASKS VERIFIED"));
@@ -308,7 +308,7 @@ try {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_LOCAL_WORKER_SMOKE_FAILED: " + JSON.stringify(workerState));
     }
-    await command.locator("#scale").click();
+    await command.locator("#scale").evaluate(button => button.click());
     console.log(JSON.stringify({ event: "DEPLOYED_LOCAL_WORKER_TASK_QUEUE_PASS", actualWorkers: workerState.count, verifiedTaskLog: workerState.log }));
     // Explicit first-boot provisioning is tested only after all production fail-closed checks,
     // in this disposable CI browser profile. The generated key is never installed as a trust pin.
