@@ -338,6 +338,8 @@ button.danger{color:#ffb4bd;border-color:rgba(255,101,123,.3)}
 <script type="module">
 import { initializeProductionOverseer } from "./overseer-production-runtime.mjs";
 import { OverseerMeshReplicator } from "./overseer-mesh-sync.mjs";
+window.addEventListener("error",event=>{const node=document.querySelector("#log");if(node)node.textContent+="\nSCRIPT ERROR: "+String(event.message||event.error||"unknown")+" @ "+String(event.filename||"")+" : "+String(event.lineno||"");});
+window.addEventListener("unhandledrejection",event=>{const node=document.querySelector("#log");if(node)node.textContent+="\nUNHANDLED REJECTION: "+String(event.reason?.stack||event.reason||"unknown");});
 const canvas=document.querySelector("#scene"),ctx=canvas.getContext("2d",{alpha:false});
 const $=id=>document.getElementById(id);
 const drawer=$("consolePanel"),rightDrawer=$("peersPanel"),statusSection=$("statusSection"),controlsSection=$("controlsSection"),logsSection=$("logsSection"),keysSection=$("keysSection");
