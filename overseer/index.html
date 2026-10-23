@@ -60,20 +60,12 @@ button,input,a{font:inherit}button,a{touch-action:manipulation}button{cursor:poi
 <section class="section" id="network">
  <div class="section-head"><div><div class="eyebrow">LIVE NETWORK · ORIGINAL CONTROL SURFACE</div><h3>Neural mesh & peer operations</h3><p>The original live network and every existing command surface are available in this shared workspace.</p></div><span class="mini-tag">UNIFIED WORKBENCH</span></div>
  <div class="panel network-shell">
-  <div class="network-toolbar"><div><div class="eyebrow">ONE CONTROL PLANE · ALL EXISTING COMMAND SURFACES</div><p>Switch between the original mesh, pod inspector, Ring-WAL, peer/recovery checks, authority flows, vault verification, and verification harness without leaving Overseer.</p></div><div class="jump-nav"><a href="./mesh-console.html" target="_blank" rel="noopener">OPEN MESH FULL SCREEN ↗</a><a href="#tools">ALL TOOL LINKS ↓</a></div></div>
-  <div class="command-switcher" role="group" aria-label="Unified command surfaces">
-<button class="command-tab active" type="button" data-command-view="./mesh-console.html" data-command-title="Live mesh console">LIVE MESH</button>
-<button class="command-tab" type="button" data-command-view="./pod-command-drawer.html" data-command-title="Pod and OPFS inspector">POD / OPFS</button>
-<button class="command-tab" type="button" data-command-view="./ringwal-console.html" data-command-title="Ring-WAL console">RING-WAL</button>
-<button class="command-tab" type="button" data-command-view="./live-peer-verify.html" data-command-title="Live WebRTC peer verification">PEER TEST</button>
-<button class="command-tab" type="button" data-command-view="./live-peer-persistence-verify.html" data-command-title="Peer persistence and recovery verification">RECOVERY</button>
-<button class="command-tab" type="button" data-command-view="./authenticated-shard-verify.html" data-command-title="Authenticated shard verification">SHARD AUTH</button>
-<button class="command-tab" type="button" data-command-view="./storage-verify.html" data-command-title="OPFS storage verification">STORAGE</button>
-<button class="command-tab" type="button" data-command-view="./authority-enroll.html" data-command-title="Authority enrollment">ENROLL</button>
-<button class="command-tab" type="button" data-command-view="./authority-migrate.html" data-command-title="Authority migration">MIGRATE</button>
-<button class="command-tab" type="button" data-command-view="./non-exportable-vault-verify.html" data-command-title="Non-exportable authority vault verification">KEY VAULT</button>
-<button class="command-tab" type="button" data-command-view="./vault-persistence-verify.html" data-command-title="Authority vault persistence verification">VAULT RECOVERY</button>
-<button class="command-tab" type="button" data-command-view="./verify.html" data-command-title="Mesh verification harness">VERIFY HARNESS</button>
+  <div class="network-toolbar"><div><div class="eyebrow">ONE CONTROL PLANE · ALL EXISTING COMMAND SURFACES</div><p>Four operating areas: network, storage, security, and worker dispatch toward the 10,000-worker architecture target. Detailed verification tools remain available below.</p></div><div class="jump-nav"><a href="./mesh-console.html" target="_blank" rel="noopener">OPEN MESH FULL SCREEN ↗</a><a href="#tools">ALL TOOL LINKS ↓</a></div></div>
+  <div class="command-switcher" role="group" aria-label="Storage, network, security, and workers">
+<button class="command-tab active" type="button" data-command-view="./mesh-console.html" data-command-title="Network">NETWORK</button>
+<button class="command-tab" type="button" data-command-view="./ringwal-console.html" data-command-title="Storage">STORAGE</button>
+<button class="command-tab" type="button" data-command-view="./authority-enroll.html" data-command-title="Security">SECURITY</button>
+<button class="command-tab" type="button" data-command-view="./mesh-console.html" data-command-title="Workers · scale and dispatch">WORKERS · 10K TARGET</button>
 </div>
   <div class="command-toolbar"><div><strong id="commandViewTitle">LIVE MESH CONSOLE</strong><span id="commandViewStatus" aria-live="polite">Loading the original network console.</span></div><a class="btn" id="commandOpenStandalone" href="./mesh-console.html" target="_blank" rel="noopener">OPEN STANDALONE ↗</a></div>
   <iframe class="command-frame" id="commandFrame" src="./mesh-console.html" title="KERNEL live neural mesh command console" loading="eager" allow="clipboard-read; clipboard-write" referrerpolicy="same-origin"></iframe>
