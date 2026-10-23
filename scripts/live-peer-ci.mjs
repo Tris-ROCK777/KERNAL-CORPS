@@ -203,11 +203,10 @@ try {
       await smokePage.locator("#closeModal").click();
     }
     console.log(JSON.stringify({ event: "SEVEN_CANONICAL_APP_MODALS_PASS", apps: expectedApps, commandAreas: tabLabels.map(value => value.trim()) }));
-    // Exercise the real local RTCDataChannel loopback simulator from the deployed mobile UI.
-    // Open the console drawer first: the mobile layout intentionally keeps controls in the drawer.
-    // This remains distinct from the separate two-browser remote-peer transfer test.
+    // Network operations are housed in the live-peer drawer on mobile.
+    // Exercise the local RTCDataChannel simulator separately from the two-browser peer test.
     const commandFrame = smokePage.frameLocator("#commandFrame");
-    await commandFrame.locator("#openDrawer").click();
+    await commandFrame.locator("#openRightDrawer").click();
     await commandFrame.locator("#simTransfer").click();
     await smokePage.waitForFunction(() => {
       const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#log")?.textContent || "";
