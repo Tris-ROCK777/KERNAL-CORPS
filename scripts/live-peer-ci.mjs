@@ -126,13 +126,13 @@ try {
     await smokePage.waitForFunction(
       () => {
         const frame = document.querySelector("#commandFrame");
-        const log = frame?.contentDocument?.querySelector("#log")?.textContent || "";
+        const log = frame?.contentDocument?.querySelector("#status")?.textContent || frame?.contentDocument?.querySelector("#log")?.textContent || "";
         return log.includes("PRODUCTION RUNTIME READY") || log.includes("RUNTIME BLOCKED:");
       },
       undefined, { timeout: 60000 }
     );
     const runtimeLog = await smokePage.locator("#commandFrame").evaluate(frame =>
-      frame.contentDocument?.querySelector("#log")?.textContent || ""
+      frame.contentDocument?.querySelector("#status")?.textContent || frame.contentDocument?.querySelector("#log")?.textContent || ""
     );
     const runtimeMode = runtimeLog.includes("PRODUCTION RUNTIME READY")
       ? "READY"
