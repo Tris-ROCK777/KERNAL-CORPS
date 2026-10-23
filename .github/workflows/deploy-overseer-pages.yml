@@ -1,7 +1,13 @@
 name: Deploy Overseer Verification Page
+# Triggered from the feature branch to verify the actual Pages deployment.
 
 on:
-  # Manual fallback only; automatic deployments are owned by overseer-pages.yml.
+  push:
+    branches:
+      - 3d-mesh-rebuild
+    paths:
+      - "overseer/**"
+      - ".github/workflows/deploy-overseer-pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -10,23 +16,21 @@ permissions:
   id-token: write
 
 concurrency:
-  group: overseer-pages
+  group: overseer-verification-pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build-and-deploy:
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-24.04
     steps:
       - name: Checkout KERNELCORP
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
 
-      - name: Enable and configure GitHub Pages
+      - name: Configure GitHub Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
-        with:
-          enablement: true
 
       - name: Package Overseer verification site
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9

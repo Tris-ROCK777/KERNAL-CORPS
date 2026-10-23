@@ -129,6 +129,19 @@ body:has(#neuralExperience){overflow:hidden}
 #neuralExperience #threeMesh{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:auto;touch-action:pan-y;background:radial-gradient(ellipse at 50% 48%,#061b3b 0%,#020712 68%,#01030a 100%)}
 #neuralExperience .mesh-vignette{z-index:2;pointer-events:none}
 #neuralExperience .drawer-scrim,#neuralExperience .drawer,#neuralExperience #nodeTelemetry{z-index:5}
+
+html,body{width:100%;height:100%;overflow:hidden;background:#020712}body{padding:0!important}body>.shell,body>.modal{display:none!important}
+#neuralExperience{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;overflow:hidden!important;z-index:1;background:#020712}
+#neuralExperience .mesh-layer{position:absolute;inset:0;width:100%;height:100%;display:none!important}
+#neuralExperience #threeMesh{display:block!important;z-index:0;touch-action:none}
+#neuralExperience .mesh-vignette{position:absolute;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,transparent 30%,rgba(1,5,14,.28) 72%,rgba(1,4,12,.8) 100%)}
+#neuralExperience .drawer-scrim{z-index:4}
+#neuralExperience .drawer,#neuralExperience .telemetry{z-index:5;background:rgba(2,8,19,.86);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-color:#58dfff50;max-height:calc(100dvh - 16px);overflow:auto}
+#neuralExperience .telemetry-console{width:100%;height:min(48dvh,560px);min-height:300px;border:1px solid #64dfff3b;border-radius:12px;background:#030914;margin-top:14px}
+#neuralExperience .telemetry-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+#neuralExperience .telemetry-actions a{display:inline-flex;padding:10px;border:1px solid #61dfff48;border-radius:8px;font-size:10px;color:#bdefff}
+@media(max-width:700px){#neuralExperience .drawer{width:min(92vw,440px);padding:18px 14px}#neuralExperience .telemetry{left:8px;right:8px;max-height:72dvh}#neuralExperience .telemetry-console{height:43dvh;min-height:280px}}
+
 </style>
 </head>
 <body>
@@ -154,12 +167,12 @@ body:has(#neuralExperience){overflow:hidden}
  <div class="section-head"><div><div class="eyebrow">ECOSYSTEM</div><h3>The KERNEL ecosystem</h3><p>Seven product surfaces, coordinated from one command plane.</p></div><span class="mini-tag">01 HUB + 06 PODS</span></div>
  <div class="apps">
   <button class="app hub" type="button" data-app="X-KOM’Z"><div class="app-top"><span class="app-icon">⌘</span><span class="app-num">HUB / 01</span></div><strong>X-KOM’Z</strong><p>Central command, live mesh inventory, diagnostics, authority and durable commits.</p><span class="app-foot">OPEN COMMAND PLANE ↗</span></button>
-  <button class="app" data-app="Planet-K"><div class="app-top"><span class="app-icon">⌘</span><span class="app-num">POD / 02</span></div><strong>Planet-K</strong><p>Knowledge, research, Korn universe, Bible study and searchable information.</p><span class="app-foot">PRODUCT BRIEF ↗</span></button>
+  <button class="app" data-app="PlanetApeX"><div class="app-top"><span class="app-icon">⌘</span><span class="app-num">POD / 02</span></div><strong>Planet-K</strong><p>Knowledge, research, Korn universe, Bible study and searchable information.</p><span class="app-foot">PRODUCT BRIEF ↗</span></button>
   <button class="app" data-app="KashKorner"><div class="app-top"><span class="app-icon">$</span><span class="app-num">POD / 03</span></div><strong>KashKorner</strong><p>Financial tools, ledger concepts and transaction-history workflows.</p><span class="app-foot">PRODUCT BRIEF ↗</span></button>
-  <button class="app" data-app="X-Koin’s"><div class="app-top"><span class="app-icon">◇</span><span class="app-num">POD / 04</span></div><strong>X-Koin’s</strong><p>Digital asset interfaces and API service concepts with authority controls.</p><span class="app-foot">PRODUCT BRIEF ↗</span></button>
-  <button class="app" data-app="Kernelodie’s"><div class="app-top"><span class="app-icon">♫</span><span class="app-num">POD / 05</span></div><strong>Kernelodie’s</strong><p>Music discovery, library, listening and AI-assisted audio creation.</p><span class="app-foot">PRODUCT BRIEF ↗</span></button>
+  <button class="app" data-app="KoinKob's"><div class="app-top"><span class="app-icon">◇</span><span class="app-num">POD / 04</span></div><strong>X-Koin’s</strong><p>Digital asset interfaces and API service concepts with authority controls.</p><span class="app-foot">PRODUCT BRIEF ↗</span></button>
+  <button class="app" data-app="Kernelodie'z"><div class="app-top"><span class="app-icon">♫</span><span class="app-num">POD / 05</span></div><strong>Kernelodie’s</strong><p>Music discovery, library, listening and AI-assisted audio creation.</p><span class="app-foot">PRODUCT BRIEF ↗</span></button>
   <button class="app" data-app="KernelVision"><div class="app-top"><span class="app-icon">▣</span><span class="app-num">POD / 06</span></div><strong>KernelVision</strong><p>Film, editing, rendering, publishing and cooperative compute workflows.</p><span class="app-foot">PRODUCT BRIEF ↗</span></button>
-  <button class="app" data-app="X-Shield"><div class="app-top"><span class="app-icon">⬡</span><span class="app-num">POD / 07</span></div><strong>X-Shield</strong><p>Privacy controls, threat visibility and security tooling across the ecosystem.</p><span class="app-foot">PRODUCT BRIEF ↗</span></button>
+  <button class="app" data-app="XShield"><div class="app-top"><span class="app-icon">⬡</span><span class="app-num">POD / 07</span></div><strong>X-Shield</strong><p>Privacy controls, threat visibility and security tooling across the ecosystem.</p><span class="app-foot">PRODUCT BRIEF ↗</span></button>
  </div>
 </section>
 <section class="section" id="network">
@@ -209,9 +222,7 @@ body:has(#neuralExperience){overflow:hidden}
 </div>
 
 <div id="neuralExperience" aria-label="KERNELCORP neural network interface">
- <canvas id="meshGL" class="mesh-layer" aria-hidden="true"></canvas>
  <canvas id="threeMesh" class="mesh-layer" aria-hidden="true"></canvas>
- <canvas id="binaryFlow" class="mesh-layer" aria-hidden="true"></canvas>
  <div class="mesh-vignette" aria-hidden="true"></div>
  <div class="sr-only" aria-live="polite" id="meshAnnouncement">Neural mesh active. Tap a node for network tools. Swipe from the left edge for the ledger or right edge for applications.</div>
  <div class="drawer-scrim" id="drawerScrim"></div>
@@ -247,6 +258,8 @@ body:has(#neuralExperience){overflow:hidden}
   <div class="telemetry-top"><div><div class="eyebrow" id="nodeLabel">NETWORK NODE / SELECTED</div><h2>Peer telemetry</h2></div><button class="telemetry-close" id="closeTelemetry" aria-label="Zoom back to mesh">×</button></div>
   <div class="telemetry-grid"><div class="telemetry-cell"><small>Peer latency</small><strong>Read from live console</strong></div><div class="telemetry-cell"><small>Active OPFS shards</small><strong>Read from storage state</strong></div><div class="telemetry-cell"><small>K-KOINZ toll locks</small><strong>Read from live toll state</strong></div></div>
   <p class="telemetry-copy">This view does not substitute estimates for live telemetry. Open the existing console to inspect current peer, storage, and toll state.</p>
+  <div class="telemetry-actions"><a href="./ringwal-console.html">RING-WAL LOGS</a><a href="./storage-verify.html">OPFS SHARDS</a><a href="./authenticated-shard-verify.html">AUTHENTICATED SHARDS</a><a href="./live-peer-verify.html">LIVE WEBRTC VERIFY</a><a href="./authority-enroll.html">AUTHORITY TOOLS</a><a href="./verify.html">MESH VERIFY</a></div>
+  <iframe class="telemetry-console" title="Full live KERNEL mesh console" src="./mesh-console.html" loading="eager" allow="clipboard-read; clipboard-write"></iframe>
   <a class="telemetry-link" href="./mesh-console.html">OPEN MESH CONSOLE ↗</a><a class="telemetry-link" href="./live-peer-verify.html">VERIFY LIVE PEER ↗</a><a class="telemetry-link" href="./storage-verify.html">VERIFY STORAGE ↗</a><a class="telemetry-link" href="./ringwal-console.html">OPEN RINGWAL ↗</a>
  </section>
  <div class="sr-only" id="gestureHint">Tap a bright node to inspect. Pull from the left edge for the Sovereign Ledger or the right edge for Dual-State Pods. Pinch to zoom out.</div>
@@ -286,142 +299,39 @@ $("closeModal").addEventListener("click",closeModal);$("appModal").addEventListe
 function clock(){$("clock").textContent=new Date().toLocaleTimeString([], {hour12:false})}clock();setInterval(clock,1000);checkCapabilities();
 </script>
 
-<script>
-(()=> {
- const root=document.getElementById('neuralExperience'); if(!root)return;
- const glCanvas=document.getElementById('meshGL'), flowCanvas=document.getElementById('binaryFlow');
- const gl=glCanvas.getContext('webgl',{alpha:false,antialias:true,powerPreference:'high-performance'});
- const flow=flowCanvas.getContext('2d');
- const prefersReduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
- let W=0,H=0,D=1,tiltX=0,tiltY=0,targetX=0,targetY=0,zoom=1,zoomTarget=1,selected=-1,drawer=null,frame=0,lastHint=performance.now();
- const nodes=[],edges=[],streams=[];
- const randSeed=(n)=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)};
- function resize(){
-  D=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
-  [glCanvas,flowCanvas].forEach(c=>{c.width=Math.round(W*D);c.height=Math.round(H*D);c.style.width=W+'px';c.style.height=H+'px'});
-  if(gl)gl.viewport(0,0,glCanvas.width,glCanvas.height);
-  nodes.length=0;edges.length=0;streams.length=0;
-  const cols=Math.max(7,Math.round(W/105)),rows=Math.max(7,Math.round(H/105)),pad=34;
-  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
-   const i=nodes.length;
-   nodes.push({x:pad+x*(W-pad*2)/(cols-1)+(randSeed(i+3)-.5)*38,y:pad+y*(H-pad*2)/(rows-1)+(randSeed(i+11)-.5)*38,z:randSeed(i+29),bright:randSeed(i+19)>.78,phase:randSeed(i+7)*6.28});
-  }
-  for(let i=0;i<nodes.length;i++){
-   let a=nodes[i];let near=[];
-   for(let j=i+1;j<nodes.length;j++){let b=nodes[j],dx=a.x-b.x,dy=a.y-b.y,d=dx*dx+dy*dy;if(d<Math.pow(Math.min(W/cols,H/rows)*1.8,2))near.push({j,d})}
-   near.sort((a,b)=>a.d-b.d).slice(0,3).forEach(n=>{if(!edges.some(e=>e.a===n.j&&e.b===i||e.a===i&&e.b===n.j))edges.push({a:i,b:n.j,phase:randSeed(i*nodes.length+n.j)*90})});
-  }
-  edges.forEach((e,i)=>{if(i%4===0)streams.push({edge:e,offset:randSeed(i+44),speed:.12+randSeed(i+77)*.22,orange:i%8===0})});
- }
- function shader(type,source){const sh=gl.createShader(type);gl.shaderSource(sh,source);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh));return sh}
- let program=null,posLoc,colLoc,sizeLoc,linePos=null,cbuf=null,sbuf=null;
- if(gl){
-  try{
-   const vs='attribute vec2 p;attribute vec4 c;attribute float sz;varying vec4 v;uniform float t;uniform vec2 res;void main(){vec2 q=p/res*2.0-1.0;q.y=-q.y;gl_Position=vec4(q,0.0,1.0);gl_PointSize=sz;v=c;}';
-   const fs='precision mediump float;varying vec4 v;void main(){float d=length(gl_PointCoord-vec2(.5));float glow=1.0-smoothstep(.04,.5,d);gl_FragColor=vec4(v.rgb,v.a*glow);}';
-   program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vs));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);
-   if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
-   posLoc=gl.getAttribLocation(program,'p');colLoc=gl.getAttribLocation(program,'c');sizeLoc=gl.getAttribLocation(program,'sz');linePos=gl.createBuffer();cbuf=gl.createBuffer();sbuf=gl.createBuffer();
-  }catch(e){program=null}
- }
- function project(n,t){const depth=(n.z-.5)*100*zoom;return {x:W/2+(n.x-W/2+tiltX*(n.y/H-.5)*34)*zoom+tiltY*depth*.15,y:H/2+(n.y-H/2+tiltY*(n.x/W-.5)*24)*zoom-tiltX*depth*.12}}
- function renderGL(t){
-  if(!gl||!program)return;
-  gl.viewport(0,0,glCanvas.width,glCanvas.height);gl.clearColor(.008,.016,.035,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(program);
-  const vertices=[],colors=[],sizes=[];
-  function vertex(p,c,size){vertices.push(p.x,p.y);colors.push(c[0],c[1],c[2],c[3]);sizes.push(size)}
-  edges.forEach((e,i)=>{const a=project(nodes[e.a],t),b=project(nodes[e.b],t);const pulse=.28+.25*(.5+.5*Math.sin(t*.0015+e.phase));vertex(a,[.08,.38,.95,pulse],1);vertex(b,[.08,.38,.95,pulse],1)});
-  gl.bindBuffer(gl.ARRAY_BUFFER,linePos);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(posLoc);gl.vertexAttribPointer(posLoc,2,gl.FLOAT,false,0,0);
-  gl.bindBuffer(gl.ARRAY_BUFFER,cbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(colors),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(colLoc);gl.vertexAttribPointer(colLoc,4,gl.FLOAT,false,0,0);
-  gl.bindBuffer(gl.ARRAY_BUFFER,sbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(sizes),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(sizeLoc);gl.vertexAttribPointer(sizeLoc,1,gl.FLOAT,false,0,0);
-  gl.uniform2f(gl.getUniformLocation(program,'res'),W,H);gl.drawArrays(gl.LINES,0,vertices.length/2);
-  const np=[],nc=[],ns=[];
-  nodes.forEach((n,i)=>{const p=project(n,t),pulse=.55+.45*Math.sin(t*.002+n.phase);let c=n.bright?[1,.46,.08,.95]:[.12,.67,1,.65];if(i===selected)c=[1,.8,.25,1];np.push(p.x,p.y);nc.push(...c);ns.push((n.bright?9:3.5)+(n.bright?5:2)*pulse)});
-  gl.bindBuffer(gl.ARRAY_BUFFER,linePos);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(np),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(posLoc,2,gl.FLOAT,false,0,0);
-  gl.bindBuffer(gl.ARRAY_BUFFER,cbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(nc),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(colLoc,4,gl.FLOAT,false,0,0);
-  gl.bindBuffer(gl.ARRAY_BUFFER,sbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(ns),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(sizeLoc,1,gl.FLOAT,false,0,0);gl.drawArrays(gl.POINTS,0,nodes.length);
- }
- function renderFlow(t){
-  flow.setTransform(1,0,0,1,0,0);flow.clearRect(0,0,flowCanvas.width,flowCanvas.height);flow.save();flow.scale(D,D);flow.globalCompositeOperation='lighter';
-  if(!gl||!program){
-   edges.forEach((e,i)=>{const a=project(nodes[e.a],t),b=project(nodes[e.b],t);flow.beginPath();flow.moveTo(a.x,a.y);flow.lineTo(b.x,b.y);flow.strokeStyle='rgba(44,151,255,.34)';flow.lineWidth=.8;flow.stroke()});
-   nodes.forEach((n,i)=>{const p=project(n,t);flow.beginPath();flow.arc(p.x,p.y,n.bright?4.5:1.8,0,Math.PI*2);flow.fillStyle=n.bright?'rgba(255,157,45,.96)':'rgba(76,182,255,.78)';flow.shadowBlur=n.bright?14:4;flow.shadowColor=n.bright?'#ff9d2d':'#2b9fff';flow.fill()});
-  }
-  flow.font='bold 12px ui-monospace,SFMono-Regular,Menlo,monospace';
-  streams.forEach((s,k)=>{const a=project(nodes[s.edge.a],t),b=project(nodes[s.edge.b],t);const phase=(t*.0001*s.speed+s.offset)%1;for(let j=0;j<5;j++){let q=(phase+j*.19)%1,x=a.x+(b.x-a.x)*q,y=a.y+(b.y-a.y)*q;flow.fillStyle=s.orange?'rgba(255,154,43,'+(0.75-j*.12)+')':'rgba(89,197,255,'+(0.72-j*.12)+')';flow.shadowBlur=9;flow.shadowColor=s.orange?'#ff8a23':'#2b9fff';flow.fillText((k+j)%2?'0':'1',x,y)}});flow.restore();
- }
- function tick(t){frame=requestAnimationFrame(tick);if(!prefersReduced){tiltX+=(targetX-tiltX)*.055;tiltY+=(targetY-tiltY)*.055;zoom+=(zoomTarget-zoom)*.07}renderGL(t);renderFlow(t);}
- function closeDrawers(){document.querySelectorAll('#neuralExperience .drawer').forEach(d=>{d.classList.remove('open');d.setAttribute('aria-hidden','true')});document.getElementById('drawerScrim').classList.remove('open');drawer=null}
- function openDrawer(which){closeDrawers();closeTelemetry();drawer=which;const el=document.getElementById(which==='left'?'ledgerDrawer':'podsDrawer');el.classList.add('open');el.setAttribute('aria-hidden','false');document.getElementById('drawerScrim').classList.add('open');document.getElementById('gestureHint').classList.add('fade')}
- function closeTelemetry(){const el=document.getElementById('nodeTelemetry');el.classList.remove('open');el.setAttribute('aria-hidden','true');root.classList.remove('telemetry-active');zoomTarget=1;selected=-1}
- function openTelemetry(index){window.__kernelMeshOpenTelemetry=openTelemetry;closeDrawers();selected=index;root.classList.add('telemetry-active');zoomTarget=1.65;const n=nodes[index];document.getElementById('nodeLabel').textContent='MESH NODE / '+String(index+1).padStart(3,'0');const el=document.getElementById('nodeTelemetry');el.classList.add('open');el.setAttribute('aria-hidden','false');document.getElementById('meshAnnouncement').textContent='Selected mesh node '+(index+1)+'. Open the live console to inspect verified telemetry.';document.getElementById('gestureHint').classList.add('fade')}
- document.querySelectorAll('#neuralExperience [data-close-drawer]').forEach(b=>b.addEventListener('click',closeDrawers));
- document.getElementById('drawerScrim').addEventListener('click',closeDrawers);
- document.getElementById('closeTelemetry').addEventListener('click',closeTelemetry);
- document.querySelectorAll('#neuralExperience .pod-card').forEach(card=>{const flip=()=>card.classList.toggle('flipped');card.addEventListener('click',e=>{if(e.target.closest('a'))return;flip()});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}})});
- let start=null;
- root.addEventListener('pointerdown',e=>{start={x:e.clientX,y:e.clientY,id:e.pointerId};lastHint=performance.now()},{passive:true});
- root.addEventListener('pointerup',e=>{
-  if(!start)return;const dx=e.clientX-start.x,dy=e.clientY-start.y,sx=start.x,sy=start.y;start=null;
-  if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.2){if(sx<34&&dx>0){openDrawer('left');return}if(sx>W-34&&dx<0){openDrawer('right');return}if(drawer){closeDrawers();return}}
-  if(Math.abs(dx)<12&&Math.abs(dy)<12&&!drawer&&!document.getElementById('nodeTelemetry').classList.contains('open')){
-   let best=-1,bd=Infinity;nodes.forEach((n,i)=>{const p=project(n,performance.now()),d=Math.hypot(p.x-e.clientX,p.y-e.clientY);if(d<bd){bd=d;best=i}});
-   if(best>=0&&bd<28)openTelemetry(best);
-  }
- },{passive:true});
- let pinchStart=0;
- root.addEventListener('touchstart',e=>{if(e.touches.length===2)pinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)},{passive:true});
- root.addEventListener('touchmove',e=>{if(e.touches.length===2){const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(pinchStart&&Math.abs(dist-pinchStart)>28){if(dist<pinchStart)closeTelemetry();pinchStart=dist}}},{passive:true});
- window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawers();closeTelemetry()}if(e.key==='ArrowLeft'&&e.altKey)openDrawer('left');if(e.key==='ArrowRight'&&e.altKey)openDrawer('right')});
- window.addEventListener('resize',resize,{passive:true});
- function motion(e){if(e.gamma==null||e.beta==null)return;targetY=Math.max(-1,Math.min(1,e.gamma/35));targetX=Math.max(-1,Math.min(1,(e.beta-45)/45))}
- if('DeviceOrientationEvent' in window){const attach=()=>{if(typeof DeviceOrientationEvent.requestPermission==='function'){DeviceOrientationEvent.requestPermission().then(v=>{if(v==='granted')window.addEventListener('deviceorientation',motion,{passive:true})}).catch(()=>{})}else window.addEventListener('deviceorientation',motion,{passive:true})};root.addEventListener('pointerdown',attach,{once:true,passive:true})}
- resize();tick(0);
-})();
-</script>
+<script>/* Legacy 2D renderer retired. Three.js owns the only visual canvas. */</script>
 
 
 <script type="module">
 (async()=>{
- const root=document.getElementById('neuralExperience'),canvas=document.getElementById('threeMesh');
- if(!root||!canvas)return;
- try{
-  const THREE=await import('https://unpkg.com/three@0.180.0/build/three.module.js');
-  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(innerWidth,innerHeight,false);
-  renderer.setClearColor(0x020712,1);renderer.outputColorSpace=THREE.SRGBColorSpace;
-  const scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x020712,.014);
-  const camera=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,.1,160);camera.position.set(0,0,34);
-  const group=new THREE.Group();scene.add(group);
-  const rand=(n)=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)};
-  const cols=29,rows=19,points=[],geo=new THREE.BufferGeometry(),positions=[],colors=[],sizes=[],indices=[];
-  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
-   const i=points.length;points.push(new THREE.Vector3((x/(cols-1)-.5)*52+(rand(i+3)-.5)*1.15,(y/(rows-1)-.5)*31+(rand(i+11)-.5)*1.15,(rand(i+29)-.5)*13));
-   const c=(x+y)%7===0?new THREE.Color('#ff9b28'):new THREE.Color('#168bff');positions.push(...points[i].toArray());colors.push(c.r,c.g,c.b);sizes.push((x+y)%7===0?1.15:.65);
-  }
-  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const i=y*cols+x;if(x<cols-1)indices.push(i,i+1);if(y<rows-1)indices.push(i,i+cols);if(x<cols-1&&y<rows-1&&rand(i+81)>.42)indices.push(i,i+cols+1)}
-  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.setIndex(indices);
-  const wire=new THREE.LineSegments(geo,new THREE.ShaderMaterial({vertexColors:true,transparent:true,depthWrite:false,uniforms:{time:{value:0}},vertexShader:'varying vec3 vColor; uniform float time; void main(){vColor=color; vec3 p=position; p.z+=sin(p.x*.18+time*.00065)*.65+cos(p.y*.25+time*.0008)*.35; vec4 mv=modelViewMatrix*vec4(p,1.); gl_Position=projectionMatrix*mv;}',fragmentShader:'varying vec3 vColor; void main(){gl_FragColor=vec4(vColor,.55);}',blending:THREE.AdditiveBlending}));group.add(wire);
-  const pGeo=new THREE.BufferGeometry();pGeo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));pGeo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
-  const particles=new THREE.Points(pGeo,new THREE.PointsMaterial({size:.16,vertexColors:true,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true}));group.add(particles);
-  const peerIndices=[Math.floor(rows/2)*cols+Math.floor(cols*.23),Math.floor(rows*.38)*cols+Math.floor(cols*.51),Math.floor(rows*.62)*cols+Math.floor(cols*.76),Math.floor(rows*.25)*cols+Math.floor(cols*.86),Math.floor(rows*.72)*cols+Math.floor(cols*.39),Math.floor(rows*.48)*cols+Math.floor(cols*.64)];
-  const peers=[];
-  peerIndices.forEach((idx,k)=>{const orange=k%3===1, color=orange?0xffa52e:0x27a5ff;const mesh=new THREE.Mesh(new THREE.SphereGeometry(.24,20,16),new THREE.MeshBasicMaterial({color}));mesh.position.copy(points[idx]);group.add(mesh);const halo=new THREE.Mesh(new THREE.SphereGeometry(.48,20,16),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.17,blending:THREE.AdditiveBlending,depthWrite:false}));halo.position.copy(mesh.position);group.add(halo);const ring=new THREE.Mesh(new THREE.TorusGeometry(.42,.025,8,40),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.85,blending:THREE.AdditiveBlending}));ring.position.copy(mesh.position);ring.rotation.x=.6+k*.2;group.add(ring);peers.push({idx,mesh,halo,ring})});
-  // Binary energy stream textures rendered as luminous, moving 0/1 glyphs in 3D.
-  const streams=[];
-  function makeBinaryTexture(seed,orange){const c=document.createElement('canvas');c.width=256;c.height=512;const x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.font='bold 20px monospace';x.textAlign='center';for(let y=12;y<512;y+=22){x.fillStyle=orange?'rgba(255,159,42,'+(0.3+rand(seed+y)*.7)+')':'rgba(37,151,255,'+(0.3+rand(seed+y)*.7)+')';x.fillText(rand(seed+y)>.5?'1':'0',128+Math.sin(y*.07+seed)*22,y)}const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
-  for(let i=0;i<18;i++){const orange=i%4===0,mat=new THREE.SpriteMaterial({map:makeBinaryTexture(i+17,orange),transparent:true,opacity:.72,blending:THREE.AdditiveBlending,depthWrite:false});const sp=new THREE.Sprite(mat);sp.scale.set(1.1,7+rand(i+99)*6,1);sp.position.set((rand(i+31)-.5)*48,(rand(i+41)-.5)*23,(rand(i+51)-.5)*12);sp.userData={x:sp.position.x,y:sp.position.y,z:sp.position.z,phase:rand(i+61)*20,speed:.7+rand(i+71)*1.7};group.add(sp);streams.push(sp)}
-  const ambient=new THREE.PointLight(0x087bff,2.1,65);ambient.position.set(-9,2,9);scene.add(ambient);const gold=new THREE.PointLight(0xff9b22,1.4,55);gold.position.set(12,-3,5);scene.add(gold);
-  const raycaster=new THREE.Raycaster();raycaster.params.Points.threshold=.5;const pointer=new THREE.Vector2();let targetX=0,targetY=0,tiltX=0,tiltY=0,selectedPeer=null;
-  function resize(){renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}
-  window.addEventListener('resize',resize,{passive:true});
-  window.addEventListener('deviceorientation',e=>{if(e.gamma!=null&&e.beta!=null){targetY=Math.max(-.55,Math.min(.55,e.gamma/65));targetX=Math.max(-.45,Math.min(.45,(e.beta-45)/90))}},{passive:true});
-  canvas.addEventListener('pointerup',e=>{if(Math.abs(e.clientX-(canvas._sx??e.clientX))>14||Math.abs(e.clientY-(canvas._sy??e.clientY))>14)return;pointer.x=e.clientX/innerWidth*2-1;pointer.y=-(e.clientY/innerHeight)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(peers.map(p=>p.mesh));if(hits.length){selectedPeer=peers.find(p=>p.mesh===hits[0].object);const nodeIndex=selectedPeer.idx;const legacy=window.__kernelMeshOpenTelemetry;if(typeof legacy==='function')legacy(nodeIndex);else{document.getElementById('nodeLabel').textContent='MESH NODE / '+String(nodeIndex+1).padStart(3,'0');document.getElementById('nodeTelemetry').classList.add('open');root.classList.add('telemetry-active')}}});
-  canvas.addEventListener('pointerdown',e=>{canvas._sx=e.clientX;canvas._sy=e.clientY},{passive:true});
-  function animate(t){requestAnimationFrame(animate);wire.material.uniforms.time.value=t;tiltX+=(targetX-tiltX)*.035;tiltY+=(targetY-tiltY)*.035;group.rotation.y=tiltY+.035*Math.sin(t*.00018);group.rotation.x=tiltX+.025*Math.sin(t*.00023);group.rotation.z=.012*Math.sin(t*.00017);const active=root.classList.contains('telemetry-active');camera.position.z+=((active?23:34)-camera.position.z)*.055;peers.forEach((p,i)=>{const pulse=1+.22*Math.sin(t*.003+i);p.mesh.scale.setScalar(pulse);p.halo.scale.setScalar(1+.16*Math.sin(t*.002+i));p.ring.rotation.z=t*.0006*(i%2?1:-1)});streams.forEach(s=>{s.position.y=s.userData.y+((t*.001*s.userData.speed+s.userData.phase)%34)-17;s.material.rotation=Math.sin(t*.0004+s.userData.phase)*.08});renderer.render(scene,camera)}
-  animate(0);
- }catch(error){console.error('Three.js mesh failed to initialize',error);canvas.style.display='none';document.getElementById('meshGL').style.display='block';document.getElementById('binaryFlow').style.display='block'}
-})();
+const root=document.getElementById('neuralExperience'),canvas=document.getElementById('threeMesh');
+const T=await import('https://unpkg.com/three@0.180.0/build/three.module.js');
+const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(innerWidth,innerHeight);renderer.setClearColor(0x020712,1);renderer.outputColorSpace=T.SRGBColorSpace;
+const scene=new T.Scene();scene.fog=new T.FogExp2(0x020712,.011);const camera=new T.PerspectiveCamera(53,innerWidth/innerHeight,.1,260);camera.position.set(0,0,42);const world=new T.Group();scene.add(world);const core=new T.Group();world.add(core);
+const rand=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)};const cyan=new T.Color(0x19aaff),gold=new T.Color(0xffa52d),red=new T.Color(0xff3d54),white=new T.Color(0xd8ffff);
+const points=[];for(let i=0;i<2400;i++){const u=rand(i+1)*Math.PI*2,v=Math.acos(2*rand(i+2)-1),r=2.1+rand(i+3)*5.2;points.push(new T.Vector3(r*Math.sin(v)*Math.cos(u),r*Math.sin(v)*Math.sin(u),r*Math.cos(v)))}
+const nodePos=[],nodeCol=[],edges=[];points.forEach((p,i)=>{nodePos.push(...p.toArray());const c=rand(i+4)>.91?gold:rand(i+5)>.5?cyan:white;nodeCol.push(c.r,c.g,c.b);for(let k=0;k<3;k++){const j=Math.floor(rand(i*9+k+50)*points.length);if(j!==i&&p.distanceTo(points[j])<2.7)edges.push(...p.toArray(),...points[j].toArray())}});
+const ng=new T.BufferGeometry();ng.setAttribute('position',new T.Float32BufferAttribute(nodePos,3));ng.setAttribute('color',new T.Float32BufferAttribute(nodeCol,3));core.add(new T.Points(ng,new T.PointsMaterial({size:.13,vertexColors:true,transparent:true,opacity:.96,blending:T.AdditiveBlending,depthWrite:false})));
+const eg=new T.BufferGeometry();eg.setAttribute('position',new T.Float32BufferAttribute(edges,3));core.add(new T.LineSegments(eg,new T.LineBasicMaterial({color:0x238ee8,transparent:true,opacity:.31,blending:T.AdditiveBlending,depthWrite:false})));
+for(let i=0;i<13;i++){const torus=new T.Mesh(new T.TorusGeometry(2.5+i*.35,.012,5,192),new T.MeshBasicMaterial({color:i%4===0?gold:cyan,transparent:true,opacity:.62,blending:T.AdditiveBlending,depthWrite:false}));torus.rotation.set(rand(i+22)*3,rand(i+32)*3,rand(i+42)*3);torus.userData.spin=(i%2?1:-1)*(.1+i*.012);core.add(torus)}
+const beam=new T.Mesh(new T.IcosahedronGeometry(1.1,2),new T.MeshBasicMaterial({color:0xe9ffff,wireframe:true,transparent:true,opacity:.86,blending:T.AdditiveBlending}));core.add(beam);const light=new T.PointLight(0x31dfff,10,25);core.add(light);const amber=new T.PointLight(0xff8b24,6,19);amber.position.set(3,-2,2);core.add(amber);
+const dome=new T.Mesh(new T.IcosahedronGeometry(19,3),new T.MeshBasicMaterial({color:0x187ee4,wireframe:true,transparent:true,opacity:.13,blending:T.AdditiveBlending,depthWrite:false}));world.add(dome);
+const bp=[],bc=[];for(let i=0;i<3600;i++){const r=12+rand(i+500)*78,a=rand(i+501)*Math.PI*2;bp.push(Math.cos(a)*r,(rand(i+502)-.5)*58,(rand(i+503)-.5)*86);const c=rand(i+504)>.76?gold:rand(i+505)>.94?red:cyan;bc.push(c.r,c.g,c.b)}const bg=new T.BufferGeometry();bg.setAttribute('position',new T.Float32BufferAttribute(bp,3));bg.setAttribute('color',new T.Float32BufferAttribute(bc,3));world.add(new T.Points(bg,new T.PointsMaterial({size:.13,vertexColors:true,transparent:true,opacity:.82,blending:T.AdditiveBlending,depthWrite:false})));
+const fc=104,fr=64,fp=[],fcol=[],fi=[];for(let z=0;z<fr;z++)for(let x=0;x<fc;x++){const xx=(x/(fc-1)-.5)*82,zz=-5-z/(fr-1)*42;fp.push(xx,-12,zz);const c=(x+z)%11===0?gold:cyan;fcol.push(c.r,c.g,c.b)}for(let z=0;z<fr-1;z++)for(let x=0;x<fc-1;x++){const i=z*fc+x;fi.push(i,i+1,i+fc,i+1,i+fc+1,i+fc)}const fg=new T.BufferGeometry();fg.setAttribute('position',new T.Float32BufferAttribute(fp,3));fg.setAttribute('color',new T.Float32BufferAttribute(fcol,3));fg.setIndex(fi);const floor=new T.Mesh(fg,new T.MeshBasicMaterial({vertexColors:true,wireframe:true,transparent:true,opacity:.24,blending:T.AdditiveBlending,depthWrite:false}));world.add(floor);
+function glyph(one,color){const group=new T.Group(),mat=new T.MeshBasicMaterial({color,blending:T.AdditiveBlending});const seg=one?[[0,-.11,0,0,.11,0]]:[[-.06,-.1,0,.06,-.1,0],[.06,-.1,0,.06,.1,0],[.06,.1,0,-.06,.1,0],[-.06,.1,0,-.06,-.1,0]];for(const s of seg){const a=new T.Vector3(s[0],s[1],s[2]),b=new T.Vector3(s[3],s[4],s[5]),d=b.clone().sub(a);const m=new T.Mesh(new T.BoxGeometry(.013,d.length(),.013),mat);m.position.copy(a.add(b).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.normalize());group.add(m)}return group}
+const highways=[];for(let h=0;h<14;h++){const a=h/14*Math.PI*2,curve=new T.CatmullRomCurve3([new T.Vector3(Math.cos(a)*22,Math.sin(a)*14,-18),new T.Vector3(Math.cos(a+.55)*12,Math.sin(a+.55)*9,-8),new T.Vector3(Math.cos(a+1)*6,Math.sin(a+1)*5,-2),new T.Vector3(0,0,0)]);world.add(new T.Line(new T.BufferGeometry().setFromPoints(curve.getPoints(150)),new T.LineBasicMaterial({color:h%4===0?0xffa22a:0x168eff,transparent:true,opacity:.68,blending:T.AdditiveBlending})));const glyphs=[];for(let n=0;n<25;n++){const g=glyph((n+h)%2===0,(n+h)%5===0?0xffc15b:0x9befff);world.add(g);glyphs.push({g,t:rand(h*50+n),speed:.035+rand(h+n+400)*.07})}highways.push({curve,glyphs})}
+const peers=[];for(let i=0;i<20;i++){const p=points[Math.floor(rand(i+800)*points.length)],color=i%5===1?0xffa32d:i%7===0?0xff4058:0x31baff,g=new T.Group(),s=new T.Mesh(new T.IcosahedronGeometry(.17,2),new T.MeshBasicMaterial({color,blending:T.AdditiveBlending})),ring=new T.Mesh(new T.TorusGeometry(.31,.018,6,36),new T.MeshBasicMaterial({color,transparent:true,opacity:.9,blending:T.AdditiveBlending}));g.add(s,ring);g.position.copy(p);core.add(g);peers.push({g,s,ring,index:i,home:p.clone()})}
+const ray=new T.Raycaster(),pointer=new T.Vector2(),lookTarget=new T.Vector3();let down=null,tiltX=0,tiltY=0,targetX=0,targetY=0,camZ=42,camX=0,camY=0;const panes={telemetry:document.getElementById('nodeTelemetry'),left:document.getElementById('ledgerDrawer'),right:document.getElementById('podsDrawer')};
+function close(){Object.values(panes).forEach(p=>{p.classList.remove('open');p.setAttribute('aria-hidden','true')});document.getElementById('drawerScrim').classList.remove('open');root.classList.remove('telemetry-active');camZ=42;camX=0;camY=0;lookTarget.set(0,0,0)}
+function open(k){close();panes[k].classList.add('open');panes[k].setAttribute('aria-hidden','false');document.getElementById('drawerScrim').classList.add('open');if(k==='telemetry')root.classList.add('telemetry-active')}
+document.querySelectorAll('#neuralExperience [data-close-drawer]').forEach(b=>b.addEventListener('click',close));document.getElementById('drawerScrim').addEventListener('click',close);document.getElementById('closeTelemetry').addEventListener('click',close);
+document.querySelectorAll('#neuralExperience .pod-card').forEach(card=>{const flip=()=>card.classList.toggle('flipped');card.addEventListener('click',e=>{if(e.target.closest('a'))return;flip()});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}})});
+function focus(p){open('telemetry');camZ=24;camX=p.home.x*.4;camY=p.home.y*.4;lookTarget.copy(p.home);document.getElementById('nodeLabel').textContent='PEER NODE / '+String(p.index+1).padStart(3,'0');document.getElementById('meshAnnouncement').textContent='Focused visual peer node '+(p.index+1)+'. Live peer telemetry is available in the embedded mesh console.'}
+canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,edge:e.clientX<38?'left':e.clientX>innerWidth-38?'right':'center'}},{passive:true});canvas.addEventListener('pointerup',e=>{if(!down)return;const d=down,dx=e.clientX-d.x,dy=e.clientY-d.y;down=null;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.2){if(d.edge==='left'&&dx>0){open('left');return}if(d.edge==='right'&&dx<0){open('right');return}if(document.querySelector('.drawer.open'))close();return}if(Math.abs(dx)<12&&Math.abs(dy)<12){pointer.set(e.clientX/innerWidth*2-1,-e.clientY/innerHeight*2+1);ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(peers.map(p=>p.s));if(hit.length)focus(peers.find(p=>p.s===hit[0].object));else if(document.querySelector('.drawer.open'))close()}},{passive:true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.altKey&&e.key==='ArrowLeft')open('left');if(e.altKey&&e.key==='ArrowRight')open('right')});window.addEventListener('deviceorientation',e=>{if(e.gamma!=null&&e.beta!=null){targetY=Math.max(-.35,Math.min(.35,e.gamma/120));targetX=Math.max(-.3,Math.min(.3,(e.beta-45)/150))}},{passive:true});
+function resize(){renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}window.addEventListener('resize',resize,{passive:true});
+const clock=new T.Clock();function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();core.rotation.y=t*.05;core.rotation.x=Math.sin(t*.2)*.06;core.children.forEach(o=>{if(o.geometry?.type==='TorusGeometry')o.rotation.z+=(o.userData.spin||.1)*.01});beam.rotation.set(t*.24,t*.31,t*.17);dome.rotation.y=-t*.015;dome.rotation.x=Math.sin(t*.12)*.04;world.rotation.y+=(targetY-world.rotation.y)*.02;world.rotation.x+=(targetX-world.rotation.x)*.02;const arr=fg.attributes.position.array;for(let z=0;z<fr;z++)for(let x=0;x<fc;x++){const i=(z*fc+x)*3;arr[i+1]=-12+Math.sin(arr[i]*.22+t*1.3)*.27+Math.cos(arr[i+2]*.2+t)*.22}fg.attributes.position.needsUpdate=true;highways.forEach(h=>h.glyphs.forEach(b=>{b.t=(b.t+b.speed*.008)%1;b.g.position.copy(h.curve.getPoint(b.t))}));peers.forEach((p,i)=>{p.s.scale.setScalar(1+.2*Math.sin(t*2.4+i));p.ring.rotation.z+=.008});camera.position.x+=(camX-camera.position.x)*.035;camera.position.y+=(camY-camera.position.y)*.035;camera.position.z+=(camZ-camera.position.z)*.04;camera.lookAt(lookTarget);renderer.render(scene,camera)}animate();
+})().catch(e=>{console.error('Three.js mesh initialization failed',e);document.getElementById('meshAnnouncement').textContent='Three.js initialization failed; see browser console.'});
 </script>
 
 </body>
