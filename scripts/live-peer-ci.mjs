@@ -209,7 +209,7 @@ try {
     }));
     if (!(workerState.count >= 1 && workerState.count <= 2) ||
         !workerState.log.includes("SHA-256") ||
-        !workerState.log.includes("REAL BROWSER WORKER")) {
+        !workerState.log.includes("TASKS VERIFIED")) {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_LOCAL_WORKER_SMOKE_FAILED: " + JSON.stringify(workerState));
     }
