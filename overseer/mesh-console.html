@@ -335,6 +335,12 @@ button.danger{color:#ffb4bd;border-color:rgba(255,101,123,.3)}
 <div class="panel controls"><button id="dispatch" class="primary">DISPATCH TASK</button><button id="sever" class="danger">SEVER PEER</button><button id="scale">START LOCAL WORKERS</button><button id="rejoin">REJOIN SLOT</button><button id="livePeerTest" onclick="location.href='./live-peer-verify.html'">LIVE PEER TEST</button></div>
 <div id="log">BOOTING LOCAL CONSOLE…</div>
 </div>
+<script>
+// Classic-script diagnostics run even when a module import fails before module evaluation.
+window.__kernelConsoleBootTimer=setTimeout(()=>{const out=document.querySelector("#log");if(out&&out.textContent.includes("BOOTING LOCAL CONSOLE"))out.textContent+="\nBOOT WATCHDOG: module startup did not reach its first runtime log. Check module import/network errors above."},12000);
+window.addEventListener("error",e=>{const out=document.querySelector("#log");if(out)out.textContent+="\nGLOBAL SCRIPT ERROR: "+String(e.message||"unknown")+" · "+String(e.filename||"")+" : "+String(e.lineno||"")});
+window.addEventListener("unhandledrejection",e=>{const out=document.querySelector("#log");if(out)out.textContent+="\nGLOBAL UNHANDLED REJECTION: "+String(e.reason?.stack||e.reason||"unknown")});
+</script>
 <script type="module">
 import { initializeProductionOverseer } from "./overseer-production-runtime.mjs?kernelBuild=51fedaf0";
 import { OverseerMeshReplicator } from "./overseer-mesh-sync.mjs?kernelBuild=51fedaf0";
