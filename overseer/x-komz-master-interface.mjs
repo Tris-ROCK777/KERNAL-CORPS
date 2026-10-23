@@ -309,12 +309,18 @@ export class XKomzMasterInterface {
   }
 
   syncNodes(peerList) {
-    const normalized = peerList.slice(0, 1000).map((peer, index) => ({
-      id: String(peer.id ?? peer.peerId ?? peer.peer_id ?? `peer-${index + 1}`),
-      label: String(peer.name ?? peer.label ?? peer.id ?? peer.peerId ?? `PEER ${index + 1}`),
-      state: String(peer.state ?? peer.status ?? peer.connectionState ?? 'unknown').toLowerCase(),
-      raw: peer
-    }));
+    const normalized = peerList.slice(0, 1000).map((peer, index) => {
+      const sourceId = peer.id ?? peer.peerId ?? peer.peer_id ?? peer.nodeId ?? peer.connectionId;
+      const hasSourceId = sourceId !== undefined && sourceId !== null && String(sourceId).trim() !== '';
+      return {
+        id: hasSourceId ? String(sourceId) : `peer-${index + 1}`,
+        meshKey: hasSourceId ? `id:${String(sourceId)}` : `index:${index}`,
+        sourceIndex: index,
+        label: String(peer.name ?? peer.label ?? (hasSourceId ? sourceId : `PEER ${index + 1}`)),
+        state: String(peer.state ?? peer.status ?? peer.connectionState ?? 'unknown').toLowerCase(),
+        raw: peer
+      };
+    });
     const unchanged = normalized.length === this.nodes.length && normalized.every((node, index) =>
       node.id === this.nodes[index]?.id && node.state === this.nodes[index]?.state
     );
@@ -615,7 +621,9 @@ export class XKomzMasterInterface {
     const node = hits[0].object.userData.node;
     this.selectedNode = node.raw;
     if (this.options.viewportOnly) {
-      this.options.onNodeSelected?.(this.selectedNode);
+      // Pass the mesh's stable selection key as well as the raw record. Records
+      // without IDs must be resolved by their mesh slot, never by an empty ID.
+      this.options.onNodeSelected?.(node);
     } else {
       this.renderNodeDetails(this.selectedNode);
       this.openDrawer('telemetry');
