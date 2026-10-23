@@ -52,15 +52,29 @@ function BinaryHighways() {
 function Scene({onNode}) { return <><color attach="background" args={['#000000']}/><fog attach="fog" args={['#000000',13,34]}/><ambientLight intensity={.18}/><Stars radius={90} depth={55} count={2200} factor={2.2} saturation={0}/><Float speed={.45} rotationIntensity={.025} floatIntensity={.06}><Core/></Float><WaveFloor/><Dome onNode={onNode}/><Filaments onNode={onNode}/><BinaryHighways/><OrbitControls enablePan={false} minDistance={8} maxDistance={20} enableDamping dampingFactor={.045}/></>; }
 function Drawer({side,close,children}) { return <section className={'drawer '+side} role="dialog" aria-modal="true"><button className="close" onClick={close} aria-label="Close drawer">×</button>{children}</section>; }
 class SceneErrorBoundary extends React.Component {
- constructor(props){super(props);this.state={failed:false,message:''};}
- static getDerivedStateFromError(error){return {failed:true,message:String(error?.message??error)};}
- componentDidCatch(error){console.error('KERNEL 3D scene failed:',error);}
- render(){if(this.state.failed)return <div className="scene-fallback"><strong>KERNEL MESH RECOVERY</strong><span>The 3D renderer encountered an error.</span><small>{this.state.message}</small><button onClick={()=>this.setState({failed:false,message:''})}>RETRY RENDERER</button></div>;return this.props.children;}
+ constructor(props){super(props);this.state={failed:false,message:'',stack:''};}
+ static getDerivedStateFromError(error){return {failed:true,message:String(error?.message??error),stack:String(error?.stack??'No stack supplied')};}
+ componentDidCatch(error,info){console.error('KERNEL 3D scene failed:',error,info);this.setState({stack:[error?.stack,info?.componentStack].filter(Boolean).join('\\n\\nREACT COMPONENT STACK\\n')});}
+ render(){if(this.state.failed)return <div className="scene-fallback" role="alert"><strong>KERNEL 3D RENDERER FAILURE</strong><span>{this.state.message}</span><pre style={{maxWidth:'100%',maxHeight:'55vh',overflow:'auto',whiteSpace:'pre-wrap',overflowWrap:'anywhere',textAlign:'left',fontSize:11}}>{this.state.stack}</pre><button onClick={()=>this.setState({failed:false,message:'',stack:''})}>RETRY RENDERER</button></div>;return this.props.children;}
 }
 export default function App(){
- const [drawer,setDrawer]=useState(null),[node,setNode]=useState(null),[snapshot,setSnapshot]=useState(()=>{try{return typeof window.KERNEL_TELEMETRY==='function'?window.KERNEL_TELEMETRY():window.KERNEL_TELEMETRY??null;}catch{return null;}}),touchX=useRef(0);
- useEffect(()=>{const receive=e=>setSnapshot(e.detail??null);const readInitial=()=>{try{setSnapshot(typeof window.KERNEL_TELEMETRY==='function'?window.KERNEL_TELEMETRY():window.KERNEL_TELEMETRY??null);}catch{setSnapshot(null);}};readInitial();window.addEventListener('kernel:telemetry',receive);return()=>window.removeEventListener('kernel:telemetry',receive);},[]);
- const read=(...paths)=>{for(const path of paths){const v=path.split('.').reduce((o,k)=>o==null?undefined:o[k],snapshot);if(v!==undefined&&v!==null&&v!=='')return typeof v==='object'?JSON.stringify(v):String(v);}return 'UNAVAILABLE';};
+ const [drawer,setDrawer]=useState(null),[node,setNode]=useState(null),[snapshot,setSnapshot]=useState(null),touchX=useRef(0);
+ useEffect(()=>{
+  let alive=true;
+  const readInitial=()=>{
+   try {
+    const source=window.KERNEL_TELEMETRY;
+    const candidate=typeof source==='function'?source():source;
+    if(candidate&&typeof candidate==='object'&&alive)setSnapshot(candidate);
+   } catch(error){console.error('KERNEL telemetry snapshot read failed',error);}
+  };
+  const receive=e=>{if(alive&&e.detail&&typeof e.detail==='object')setSnapshot(e.detail);};
+  readInitial();
+  window.addEventListener('kernel:telemetry',receive);
+  const poll=window.setInterval(readInitial,1500);
+  return()=>{alive=false;window.clearInterval(poll);window.removeEventListener('kernel:telemetry',receive);};
+ },[]);
+ const read=(...paths)=>{for(const path of paths){const v=path.split('.').reduce((o,k)=>o==null?undefined:o[k],snapshot);if(v!==undefined&&v!==null&&v!=='')return typeof v==='object'?JSON.stringify(v):String(v);}return 'NO LIVE TELEMETRY';};
  const openNode=useCallback(n=>{setNode(n);setDrawer('bottom');},[]);
  const touchStart=useCallback(e=>{touchX.current=e.touches?.[0]?.clientX??0;},[]);
  const touchEnd=useCallback(e=>{const start=touchX.current,x=e.changedTouches?.[0]?.clientX??start,dx=x-start;if(start<28&&dx>65)setDrawer('left');else if(start>window.innerWidth-28&&dx< -65)setDrawer('right');touchX.current=0;},[]);
