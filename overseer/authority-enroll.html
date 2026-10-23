@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#050507">
-  <title>KERNEL CORP. // AUTHORITY ENROLLMENT</title>
+  <title>KERNEL CORP. // SECURITY & AUTHORITY STATUS</title>
   <style>
     :root { color-scheme: dark; }
     body { margin:0; padding:20px; background:#050507; color:#e4e4e7; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
@@ -19,39 +19,51 @@
 </head>
 <body>
   <main>
-    <h1>KERNEL CORP. // EXPLICIT AUTHORITY ENROLLMENT</h1>
-    <p class="warning">This is a deliberate key-provisioning action. Tap only on the device intended to hold the authority identity. The private key stays in this browser's OPFS vault; the public key shown here is safe to copy but must be pinned in a reviewed trusted application release before pinned startup is enabled.</p>
-    <p>This does not silently enable authority operations or configure a trust pin. It uses the production vault folder (<code>kernel_vault</code>), not the isolated diagnostic folder.</p>
-    <button id="run">PROVISION / READ AUTHORITY IDENTITY</button>
-    <pre id="out">No key action has been performed. Tap the button to continue.</pre>
+    <h1>KERNEL CORP. // SECURITY & AUTHORITY STATUS</h1>
+    <p class="warning">Read-only security check. This view does not generate or replace an authority key. Operations remain fail-closed unless the locally stored identity matches the application’s pinned Ed25519 trust root.</p>
+    <p>Checks the production authority vault, non-exportable private-key policy, OPFS durability receipt chain, and pinned-key match. It does not write a task or alter the trust pin.</p>
+    <button id="run">VERIFY AUTHORITY &amp; DURABILITY</button>
+    <pre id="out">No security check has been performed.</pre>
     <p><a href="./index.html">Back to Overseer verifier</a></p>
   </main>
   <script type="module">
-    import { provisionAuthorityIdentity } from "./overseer-authority-bootstrap.mjs";
     const button = document.getElementById("run");
     const output = document.getElementById("out");
     button.addEventListener("click", async () => {
       button.disabled = true;
-      output.textContent = "Checking secure context and opening the production authority vault...";
+      output.textContent = "VERIFYING PINNED AUTHORITY · NON-EXPORTABLE KEY · OPFS RECEIPT CHAIN…";
+      let runtime;
       try {
         if (!globalThis.isSecureContext || !navigator.storage?.getDirectory || !crypto?.subtle) {
-          throw new Error("SECURE_OPFS_UNAVAILABLE: use HTTPS in a supported browser");
+          throw new Error("SECURE_OPFS_WEBCRYPTO_REQUIRED");
         }
-        const result = await provisionAuthorityIdentity({allowFirstBootProvisioning:true});
-        output.textContent = JSON.stringify({
-          status: result.status,
-          publicKeyHex: result.publicKeyHex,
-          vault: "OPFS / kernel_vault / authority.vault.json",
-          next: result.status === "NEW_IDENTITY_CREATED_REQUIRES_TRUSTED_PIN"
-            ? "Copy the publicKeyHex into a reviewed trusted app release as KERNEL_AUTHORITY_PUBKEY_HEX. Do not lose this device's site data before the trusted pin is released."
-            : "An existing identity was read. Confirm this public key against the separately trusted pin before enabling authority operations."
-        }, null, 2);
+        const { initializeProductionOverseer } = await import("./overseer-production-runtime.mjs?securityCheck=" + Date.now());
+        runtime = await initializeProductionOverseer();
+        const chain = await runtime.verifyDurability();
+        const keyStatus = runtime.pipeline?.keyVault?.getStatus?.() || {};
+        const report = {
+          status: chain.valid && keyStatus.privateKeyExtractable === false ? "SECURITY_CHECK_PASS" : "SECURITY_CHECK_FAILED",
+          authorityPinMatched: Boolean(runtime.authorityPublicKeyHex && keyStatus.publicKeyHex === runtime.authorityPublicKeyHex),
+          privateKeyExtractable: keyStatus.privateKeyExtractable ?? null,
+          authorityRestored: runtime.authorityRestored === true,
+          durabilityChainValid: chain.valid === true,
+          durabilityReceiptCount: chain.records,
+          durabilityHead: chain.lastReceiptHash || "EMPTY",
+          storageTarget: chain.target,
+          actionsPerformed: "READ / VERIFY ONLY — NO NEW KEY CREATED; NO TASK WRITTEN"
+        };
+        if (report.status !== "SECURITY_CHECK_PASS" || report.authorityPinMatched !== true) {
+          throw new Error("SECURITY_POLICY_ASSERTION_FAILED: " + JSON.stringify(report));
+        }
+        output.textContent = JSON.stringify(report, null, 2);
       } catch (error) {
-        output.textContent = "AUTHORITY_ENROLLMENT_FAILED\n" + (error?.stack || error?.message || String(error));
+        output.textContent = "SECURITY CHECK BLOCKED / FAILED CLOSED\n" + (error?.stack || error?.message || String(error)) +
+          "\n\nNo replacement key was generated and no trust pin was changed.";
       } finally {
+        try { await runtime?.close?.(); } catch {}
         button.disabled = false;
       }
     });
-  </script>
+  </script>t>
 </body>
 </html>
