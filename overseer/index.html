@@ -432,27 +432,22 @@ const inspectorText = value => { if(value===undefined||value===null||value==='')
 function renderMeshGlobalContext(snapshot) {
  const target=document.getElementById('meshGlobalContext');
  if(!target||!snapshot)return;
+ const val=paths=>inspectorValue(snapshot,paths);
  const fields=[
-  ['LIVE PEERS',['network.livePeerCount','network.peerCount','livePeerCount','peerCount']],
-  ['ACTIVE WORKERS / TARGET',['network.workers.localActive','workers.localActive','localWorkersActive']],
-  ['STORAGE SHARDS / OPFS BYTES',['storage.shardCount','shardCount','storage.opfsBytes','storage.bytes','opfsBytes']],
-  ['RING-WAL / RECOVERY',['storage.ringWalStatus','storage.walStatus','ringWalStatus','storage.recoveryStatus']],
-  ['AUTHORITY / SIGNATURE',['security.authorityStatus','security.authority','authorityStatus','security.signatureStatus','security.signatureVerified']],
-  ['READ-BACK / LAST SHA-256',['security.readbackStatus','storage.readbackStatus','security.lastSha256','security.lastHash','lastSha256','lastHash']]
+  ['NETWORK / LATENCY',()=>{const peers=val(['network.livePeerCount','network.peerCount','livePeerCount','peerCount']);const latency=val(['network.latencyMs','network.latency','latencyMs']);return inspectorText(peers)+' peers / '+(latency===undefined?'UNAVAILABLE':inspectorText(latency)+(typeof latency==='number'?' ms':''));}],
+  ['ACTIVE WORKERS / TARGET',()=>inspectorText(val(['network.workers.localActive','workers.localActive','localWorkersActive']))+' / '+inspectorText(val(['network.workers.architectureTarget','network.architectureTarget','architectureTarget'])??10000)],
+  ['NETWORK RX / TX BYTES',()=>{const rx=val(['network.bytesReceived','bytesReceived']);const tx=val(['network.bytesSent','network.bytesSentTotal','bytesSent']);return 'RX '+inspectorText(rx)+' / TX '+inspectorText(tx);}],
+  ['SHARDS / VERIFIED BYTES',()=>{const shards=val(['storage.shardCount','shardCount']);const bytes=val(['storage.verifiedShardBytes','storage.verifiedBytes','verifiedShardBytes']);return inspectorText(shards)+' / '+inspectorText(bytes)+' bytes';}],
+  ['OPFS BYTES',()=>inspectorText(val(['storage.opfsBytes','storage.bytes','opfsBytes']))],
+  ['RING-WAL / RECOVERY',()=>inspectorText(val(['storage.ringWalStatus','storage.walStatus','ringWalStatus']))+' / '+inspectorText(val(['storage.recoveryStatus']))],
+  ['AUTHORITY / SIGNATURE / GATE',()=>inspectorText(val(['security.authorityStatus','security.authority','authorityStatus']))+' / '+inspectorText((()=>{const x=val(['security.signatureStatus','security.signatureVerified']);return typeof x==='boolean'?(x?'VERIFIED':'NOT VERIFIED'):x})())+' / '+inspectorText(val(['security.gateStatus','security.failClosedStatus','gateStatus']))],
+  ['READ-BACK / SHA-256 / RECEIPTS',()=>inspectorText(val(['security.readbackStatus','storage.readbackStatus','readbackStatus']))+' / '+inspectorText(val(['security.lastSha256','security.lastHash','lastSha256','lastHash']))+' / '+inspectorText(val(['security.receiptCount','storage.receiptCount','receiptCount']))]
  ];
  target.replaceChildren();
- for(const [caption,paths] of fields){
-  let value;
-  for(const path of paths){value=path.split('.').reduce((current,part)=>current==null?undefined:current[part],snapshot);if(value!==undefined&&value!==null&&value!=='')break;}
+ for(const [caption,getValue] of fields){
   const cell=document.createElement('div');if(caption.startsWith('READ-BACK'))cell.className='selected-node-wide';
   const small=document.createElement('small');small.textContent=caption;
-  const strong=document.createElement('strong');
-  if(caption==='ACTIVE WORKERS / TARGET') strong.textContent=(value===undefined?'UNAVAILABLE':String(value))+' / 10,000';
-  else if(caption==='STORAGE SHARDS / OPFS BYTES'&&value!==undefined){const shards=inspectorValue(snapshot,['storage.shardCount','shardCount']);const bytes=inspectorValue(snapshot,['storage.opfsBytes','storage.bytes','opfsBytes']);strong.textContent=inspectorText(shards)+' shards / '+inspectorText(bytes)+' bytes';}
-  else if(caption==='AUTHORITY / SIGNATURE'&&value!==undefined){const auth=inspectorValue(snapshot,['security.authorityStatus','security.authority','authorityStatus']);const sig=inspectorValue(snapshot,['security.signatureStatus','security.signatureVerified']);strong.textContent=inspectorText(auth)+' / '+(typeof sig==='boolean'?(sig?'VERIFIED':'NOT VERIFIED'):inspectorText(sig));}
-  else if(caption==='READ-BACK / LAST SHA-256'&&value!==undefined){const readback=inspectorValue(snapshot,['security.readbackStatus','storage.readbackStatus']);const hash=inspectorValue(snapshot,['security.lastSha256','security.lastHash','lastSha256','lastHash']);strong.textContent=inspectorText(readback)+' / '+inspectorText(hash);}
-  else if(caption==='RING-WAL / RECOVERY'&&value!==undefined){const wal=inspectorValue(snapshot,['storage.ringWalStatus','storage.walStatus','ringWalStatus']);const recovery=inspectorValue(snapshot,['storage.recoveryStatus']);strong.textContent=inspectorText(wal)+' / '+inspectorText(recovery);}
-  else strong.textContent=inspectorText(value);
+  const strong=document.createElement('strong');strong.textContent=getValue();
   cell.append(small,strong);target.append(cell);
  }
 }
