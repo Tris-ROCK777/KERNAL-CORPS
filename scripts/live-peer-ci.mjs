@@ -177,9 +177,38 @@ try {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_UI_ASSERTION_FAILED: " + JSON.stringify(ui));
     }
+    // Exercise all seven canonical app modals and verify the four-area command surface.
+    const appButtons = smokePage.locator("[data-app]");
+    const expectedApps = ["X-KOM’Z", "Planet-K", "KashKorner", "X-Koin’s", "Kernelodie’s", "KernelVision", "X-Shield"];
+    if (await appButtons.count() !== expectedApps.length) {
+      await smokeBrowser.close();
+      throw new Error("CANONICAL_APP_COUNT_FAILED: " + await appButtons.count());
+    }
+    const commandTabs = smokePage.locator(".command-tab");
+    const tabLabels = await commandTabs.allTextContents();
+    if (tabLabels.length !== 4 || !["NETWORK", "STORAGE", "SECURITY", "WORKERS · 10K TARGET"].every(label => tabLabels.some(value => value.trim() === label))) {
+      await smokeBrowser.close();
+      throw new Error("FOUR_AREA_COMMAND_SURFACE_FAILED: " + JSON.stringify(tabLabels));
+    }
+    for (let i = 0; i < expectedApps.length; i++) {
+      const button = appButtons.nth(i);
+      const appName = await button.getAttribute("data-app");
+      await button.click();
+      const modalTitle = (await smokePage.locator("#modalTitle").textContent())?.trim();
+      const modalOpen = await smokePage.locator("#appModal").evaluate(el => el.classList.contains("open"));
+      if (appName !== expectedApps[i] || modalTitle !== expectedApps[i] || !modalOpen) {
+        await smokeBrowser.close();
+        throw new Error("CANONICAL_APP_MODAL_FAILED: " + JSON.stringify({ expected: expectedApps[i], appName, modalTitle, modalOpen }));
+      }
+      await smokePage.locator("#closeModal").click();
+    }
+    console.log(JSON.stringify({ event: "SEVEN_CANONICAL_APP_MODALS_PASS", apps: expectedApps, commandAreas: tabLabels.map(value => value.trim()) }));
     // Exercise the real local RTCDataChannel loopback simulator from the deployed mobile UI.
+    // Open the console drawer first: the mobile layout intentionally keeps controls in the drawer.
     // This remains distinct from the separate two-browser remote-peer transfer test.
-    await smokePage.frameLocator("#commandFrame").locator("#simTransfer").click();
+    const command = smokePage.frameLocator("#commandFrame");
+    await command.locator("#openDrawer").click();
+    await command.locator("#simTransfer").click();
     await smokePage.waitForFunction(() => {
       const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#log")?.textContent || "";
       return output.includes("SIM PASS") || output.includes("96 KiB WEBRTC SIM FAILED");
