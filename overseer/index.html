@@ -105,6 +105,18 @@ header>div:first-child small{display:none}
 #systemModules a{display:flex;align-items:center;justify-content:center;min-height:36px;padding:7px 6px;text-align:center;text-decoration:none;color:#cfe4ff;background:rgba(18,29,45,.72);border:1px solid rgba(157,190,224,.2);border-radius:8px;font-size:8px;letter-spacing:.045em;line-height:1.35}
 #systemModules a:active{background:rgba(53,91,130,.7)}
 
+
+/* Unified responsive command panels: compact overlays instead of competing side drawers. */
+#consolePanel,#peersPanel{position:fixed;z-index:10;display:flex;flex-direction:column;gap:10px;overflow:hidden;inset:auto 12px calc(10px + env(safe-area-inset-bottom,0px));width:auto;height:min(72dvh,690px);max-height:calc(100dvh - 122px);padding:11px;background:rgba(4,7,12,.97);border:1px solid rgba(156,191,230,.25);border-radius:16px;box-shadow:0 18px 70px rgba(0,0,0,.58);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transform:translateY(calc(100% + 30px));visibility:hidden;opacity:0;pointer-events:none;transition:transform .22s ease,opacity .22s ease,visibility .22s}
+body.left-drawer-open #consolePanel,body.right-drawer-open #peersPanel{transform:translateY(0);visibility:visible;opacity:1;pointer-events:auto}
+#systemModules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;flex:none}
+#systemModules a{display:flex;align-items:center;justify-content:center;min-height:34px;padding:7px 6px;text-align:center;text-decoration:none;color:#cfe4ff;background:rgba(18,29,45,.72);border:1px solid rgba(157,190,224,.2);border-radius:8px;font-size:8px;letter-spacing:.045em;line-height:1.35}
+.drawer-content{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain}
+#peersPanel .node-list{min-height:0;flex:1}
+@media(min-width:760px){#consolePanel{left:22px;right:auto;bottom:22px;width:min(520px,46vw);height:min(76dvh,760px);max-height:calc(100dvh - 44px)}#peersPanel{left:auto;right:22px;bottom:22px;width:min(520px,46vw);height:min(76dvh,760px);max-height:calc(100dvh - 44px)}}
+@media(max-width:390px){header>div:first-child{max-width:46%;overflow:hidden}header>div:first-child h1{font-size:9px;letter-spacing:.08em}#openDrawer,#openRightDrawer{min-height:32px;padding:5px 7px;font-size:8px}#consolePanel,#peersPanel{left:7px;right:7px;bottom:calc(7px + env(safe-area-inset-bottom,0px));height:min(68dvh,600px);max-height:calc(100dvh - 112px);padding:9px;gap:8px}#systemModules a{font-size:7px;min-height:32px}.drawer-head h2{font-size:10px}.drawer-tabs button{min-height:32px}}
+@media(prefers-reduced-motion:reduce){#consolePanel,#peersPanel{transition:none}}
+
 </style></head>
 <body>
 <canvas id="scene" aria-label="Full-screen interactive neural network visualization"></canvas><div id="shade"></div>
@@ -117,28 +129,23 @@ header>div:first-child small{display:none}
 <span class="trust-badge" id="trustBadge">TRUST · CHECKING</span>
 </div></div>
 <div id="runtimeWarning"><span id="runtimeWarningText">RUNTIME BLOCKED · AUTHORITY / DURABILITY GATE NOT READY</span><button id="dismissWarning">DISMISS</button></div>
-<div id="drawerScrim"></div>
-<aside id="drawer" aria-label="Network information and controls" aria-hidden="true">
+<section id="consolePanel" class="command-panel" aria-label="Network information and controls" aria-hidden="true">
 <div class="drawer-head"><div><h2>KERNEL // MESH CONSOLE</h2><p>DIAGNOSTICS · CONTROLS · TRUST</p></div><button id="closeDrawer">CLOSE ✕</button></div>
-<div id="drawerClock" style="font-size:9px;color:#74869c">LOCAL CLOCK —</div>
 <nav id="systemModules" aria-label="KERNEL system modules">
-  <a href="./ringwal-console.html">RING-WAL CONSOLE</a>
-  <a href="./pod-command-drawer.html">POD / OPFS INSPECTOR</a>
-  <a href="./live-peer-verify.html">LIVE PEER TEST</a>
-  <a href="./live-peer-persistence-verify.html">RESTART RECOVERY</a>
-  <a href="./authenticated-shard-verify.html">SHARD AUTHENTICATION</a>
-  <a href="./storage-verify.html">REAL OPFS CHECK</a>
-  <a href="./authority-enroll.html">AUTHORITY ENROLLMENT</a>
-  <a href="./authority-migrate.html">AUTHORITY MIGRATION</a>
+<a href="./ringwal-console.html">RING-WAL CONSOLE</a><a href="./pod-command-drawer.html">POD / OPFS INSPECTOR</a>
+<a href="./live-peer-verify.html">LIVE PEER TEST</a><a href="./live-peer-persistence-verify.html">RESTART RECOVERY</a>
+<a href="./authenticated-shard-verify.html">SHARD AUTHENTICATION</a><a href="./storage-verify.html">REAL OPFS CHECK</a>
+<a href="./authority-enroll.html">AUTHORITY ENROLLMENT</a><a href="./authority-migrate.html">AUTHORITY MIGRATION</a>
 </nav>
-<nav class="drawer-tabs" aria-label="Console sections"><button class="active" data-tab="status">STATUS</button><button data-tab="logs">LOGS</button><button data-tab="keys">KEYS</button></nav>
-<div class="drawer-content">
-<section class="drawer-section active" data-section="status" id="statusSection"></section>
-<section class="drawer-section" data-section="controls" id="controlsSection"></section>
-<section class="drawer-section" data-section="logs" id="logsSection"></section>
-<section class="drawer-section" data-section="keys" id="keysSection"></section>
-</div></aside>
-<aside id="rightDrawer" aria-label="Live nodes and network controls" aria-hidden="true"><div class="drawer-head"><div><h2>LIVE MESH // NODES</h2><p>REAL CONNECTIONS · LOCAL SLOTS</p></div><button id="closeRightDrawer">CLOSE ✕</button></div><div class="node-counts"><div><b id="activeNodeCount">0</b><span>ACTIVE PEERS</span></div><div><b id="connectingNodeCount">0</b><span>CONNECTING</span></div><div><b id="inactiveNodeCount">24</b><span>INACTIVE SLOTS</span></div></div><p class="node-note">Only connected WebRTC peers count as real active peers. Ring slots are local visual slots, not remote workers.</p><div id="nodeList" class="node-list"></div><div class="drawer-content" id="rightControls"></div></aside>
+<div class="drawer-tabs" aria-label="Console sections"><button class="active" data-tab="status">STATUS</button><button data-tab="logs">LOGS</button><button data-tab="keys">KEYS</button></div>
+<div class="drawer-content"><section class="drawer-section active" data-section="status" id="statusSection"></section><section class="drawer-section" data-section="controls" id="controlsSection"></section><section class="drawer-section" data-section="logs" id="logsSection"></section><section class="drawer-section" data-section="keys" id="keysSection"></section></div>
+</section>
+<section id="peersPanel" class="command-panel" aria-label="Live nodes and network controls" aria-hidden="true">
+<div class="drawer-head"><div><h2>LIVE MESH // NODES</h2><p>REAL CONNECTIONS · LOCAL SLOTS</p></div><button id="closeRightDrawer">CLOSE ✕</button></div>
+<div class="node-counts"><div><b id="activeNodeCount">0</b><span>ACTIVE PEERS</span></div><div><b id="connectingNodeCount">0</b><span>CONNECTING</span></div><div><b id="inactiveNodeCount">24</b><span>INACTIVE SLOTS</span></div></div>
+<p class="node-note">Only connected WebRTC peers count as real active peers. Ring slots are local visual slots, not remote workers.</p>
+<div id="nodeList" class="node-list"></div><div class="drawer-content" id="rightControls"></div>
+</section>
 <div class="topstats">NETWORK FIELD <span>ACTIVE</span><br>PEER SLOTS <span id="peerCount">24</span><br>VISUAL NODES <span id="workerCount">64</span></div>
 <div class="rightstats">TRUST LAYER<br><span>OPFS · SHA-256 · Ed25519</span><br>TOUCH TO ROTATE / INSPECT</div>
 <section id="inspect" class="panel"><div style="display:flex;justify-content:space-between;gap:12px"><strong id="inspectTitle">PEER INSPECTOR</strong><button id="closeInspect" style="min-height:28px;width:56px">CLOSE</button></div><p id="inspectBody">Visual ring slots are local simulation. Real remote peers appear only after a WebRTC data channel connects.</p></section>
@@ -154,18 +161,18 @@ import { initializeProductionOverseer } from "./overseer-production-runtime.mjs"
 import { OverseerMeshReplicator } from "./overseer-mesh-sync.mjs";
 const canvas=document.querySelector("#scene"),ctx=canvas.getContext("2d",{alpha:false});
 const $=id=>document.getElementById(id);
-const drawer=$("drawer"),rightDrawer=$("rightDrawer"),statusSection=$("statusSection"),controlsSection=$("controlsSection"),logsSection=$("logsSection"),keysSection=$("keysSection");
+const drawer=$("consolePanel"),rightDrawer=$("peersPanel"),statusSection=$("statusSection"),controlsSection=$("controlsSection"),logsSection=$("logsSection"),keysSection=$("keysSection");
 const originalHud=document.querySelector(".hud"),readout=originalHud.querySelector(".readout"),lens=document.querySelector("#lens"),controls=originalHud.querySelector(".controls"),logPanel=document.querySelector("#log"),inspector=document.querySelector("#inspect");
 statusSection.append(readout,inspector);
 $("rightControls").append(lens,controls);
 logsSection.append(logPanel);
 keysSection.innerHTML='<div class="panel readout"><div>AUTHORITY / ED25519<span class="value" id="keySummary">PINNED KEY STATUS PENDING</span></div><div>TRUST MODEL<span class="value">FAIL-CLOSED · LOCAL-FIRST</span></div><div>STORAGE<span class="value">OPFS + RING-WAL</span></div><div>INTEGRITY<span class="value">SHA-256 READ-BACK</span></div></div>';
 function setDrawer(side){const left=side==="left",right=side==="right";document.body.classList.toggle("left-drawer-open",left);document.body.classList.toggle("right-drawer-open",right);drawer.setAttribute("aria-hidden",String(!left));rightDrawer.setAttribute("aria-hidden",String(!right));$("openDrawer").setAttribute("aria-expanded",String(left));$("openRightDrawer").setAttribute("aria-expanded",String(right));if(left)$("closeDrawer").focus();if(right)$("closeRightDrawer").focus()}
-$("openDrawer").addEventListener("click",()=>setDrawer("left"));$("openRightDrawer").addEventListener("click",()=>setDrawer("right"));$("closeDrawer").addEventListener("click",()=>setDrawer(null));$("closeRightDrawer").addEventListener("click",()=>setDrawer(null));$("drawerScrim").addEventListener("click",()=>setDrawer(null));
+$("openDrawer").addEventListener("click",()=>setDrawer("left"));$("openRightDrawer").addEventListener("click",()=>setDrawer("right"));$("closeDrawer").addEventListener("click",()=>setDrawer(null));$("closeRightDrawer").addEventListener("click",()=>setDrawer(null));
 
 $("dismissWarning").addEventListener("click",()=>{$("runtimeWarning").style.display="none";warningDismissed=true});
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll("[data-section]").forEach(x=>x.classList.toggle("active",x.dataset.section===b.dataset.tab))}));
-addEventListener("keydown",e=>{if(e.key==="Escape")setDrawer(null)});let touchStartX=null;addEventListener("touchstart",e=>{if(e.touches.length===1)touchStartX=e.touches[0].clientX},{passive:true});addEventListener("touchend",e=>{if(touchStartX!==null&&touchStartX<22&&e.changedTouches[0].clientX-touchStartX>65)setDrawer("left");else if(touchStartX!==null&&touchStartX>innerWidth-22&&touchStartX-e.changedTouches[0].clientX>65)setDrawer("right");touchStartX=null},{passive:true});
+addEventListener("keydown",e=>{if(e.key==="Escape")setDrawer(null)});let touchStartX=null;addEventListener("touchstart",e=>{if(e.touches.length===1)touchStartX=e.touches[0].clientX},{passive:true});addEventListener("touchend",e=>{touchStartX=null},{passive:true});
 let warningDismissed=false;
 const livePeerHealth=new Map();
 const pageStartedAt=Date.now();
