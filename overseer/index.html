@@ -325,9 +325,6 @@ function openMeshDrawer(key) {
 document.querySelectorAll('#neuralExperience [data-close-drawer]').forEach(button => button.addEventListener('click', closeMeshDrawers));
 scrim.addEventListener('click', closeMeshDrawers);
 document.getElementById('closeTelemetry').addEventListener('click', closeMeshDrawers);
-document.getElementById('openLedgerDrawer').addEventListener('click', () => openMeshDrawer('left'));
-document.getElementById('openNetworkDrawer').addEventListener('click', () => openMeshDrawer('telemetry'));
-document.getElementById('openPodsDrawer').addEventListener('click', () => openMeshDrawer('right'));
 
 // Gesture-first controls: the default scene stays clean; drawers are revealed only by node taps or edge swipes.
 let edgeGestureStart = null;
