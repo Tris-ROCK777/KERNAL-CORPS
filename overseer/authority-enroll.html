@@ -24,9 +24,40 @@
     <p>Checks the production authority vault, non-exportable private-key policy, OPFS durability receipt chain, and pinned-key match. It does not write a task or alter the trust pin.</p>
     <button id="run">VERIFY AUTHORITY &amp; DURABILITY</button>
     <pre id="out">No security check has been performed.</pre>
+    <hr style="border:0;border-top:1px solid #30303b;margin:20px 0">
+    <h2 style="font-size:13px">FIRST-BOOT AUTHORITY ENROLLMENT</h2>
+    <p class="warning">Only use this on the device that will hold the authority identity. This action may create a new key in this device’s production vault. It does not change the app’s trust pin or enable operations.</p>
+    <button id="provision" type="button" style="background:#fbbf24;color:#1a1200">EXPLICITLY PROVISION / READ AUTHORITY KEY</button>
+    <pre id="enrollOut">No enrollment action has been performed.</pre>
     <p><a href="./index.html">Back to X-KOM’Z</a> · <a href="./authority-migrate.html">ADVANCED: VERIFY / MIGRATE EXISTING AUTHORITY</a></p>
   </main>
   <script type="module">
+    import { provisionAuthorityIdentity } from "./overseer-authority-bootstrap.mjs";
+    const provisionButton = document.getElementById("provision");
+    const enrollOutput = document.getElementById("enrollOut");
+    provisionButton.addEventListener("click", async () => {
+      provisionButton.disabled = true;
+      enrollOutput.textContent = "Checking secure context and opening the production authority vault…";
+      try {
+        if (!globalThis.isSecureContext || !navigator.storage?.getDirectory || !crypto?.subtle) {
+          throw new Error("SECURE_OPFS_UNAVAILABLE: use HTTPS in a supported browser");
+        }
+        const result = await provisionAuthorityIdentity({ allowFirstBootProvisioning: true });
+        enrollOutput.textContent = JSON.stringify({
+          status: result.status,
+          publicKeyHex: result.publicKeyHex,
+          vault: "OPFS / kernel_vault / authority.vault.json + non-exportable authority vault",
+          trustPinChanged: false,
+          next: result.status === "NEW_IDENTITY_CREATED_REQUIRES_TRUSTED_PIN"
+            ? "Keep this device’s site data intact. Copy publicKeyHex back into this conversation so the trusted app pin can be updated to this exact public key. The private key is not displayed."
+            : "Existing identity returned. Confirm this public key matches the reviewed application trust pin; do not replace it blindly."
+        }, null, 2);
+      } catch (error) {
+        enrollOutput.textContent = "AUTHORITY_ENROLLMENT_FAILED / FAILED CLOSED\n" + (error?.stack || error?.message || String(error));
+      } finally {
+        provisionButton.disabled = false;
+      }
+    });
     const button = document.getElementById("run");
     const output = document.getElementById("out");
     button.addEventListener("click", async () => {
