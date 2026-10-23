@@ -203,6 +203,25 @@ try {
       await smokePage.locator("#closeModal").click();
     }
     console.log(JSON.stringify({ event: "SEVEN_CANONICAL_APP_MODALS_PASS", apps: expectedApps, commandAreas: tabLabels.map(value => value.trim()) }));
+    // Verify Storage and Security really load their intended views inside the same X-KOMZ frame.
+    await smokePage.getByRole("button", { name: "STORAGE", exact: true }).click();
+    await smokePage.frameLocator("#commandFrame").locator("#walRecords").waitFor({ state: "attached", timeout: 15000 });
+    const storageControls = await smokePage.frameLocator("#commandFrame").locator(".dock button").allTextContents();
+    if (!storageControls.some(value => value.includes("VERIFY WAL CHAIN")) ||
+        !storageControls.some(value => value.includes("REFRESH STORAGE"))) {
+      await smokeBrowser.close();
+      throw new Error("STORAGE_TAB_CONTROLS_FAILED: " + JSON.stringify(storageControls));
+    }
+    await smokePage.getByRole("button", { name: "SECURITY", exact: true }).click();
+    await smokePage.frameLocator("#commandFrame").locator("#run").waitFor({ state: "attached", timeout: 15000 });
+    const securityButton = (await smokePage.frameLocator("#commandFrame").locator("#run").textContent())?.trim();
+    if (!securityButton?.includes("VERIFY AUTHORITY")) {
+      await smokeBrowser.close();
+      throw new Error("SECURITY_TAB_CONTROL_FAILED: " + securityButton);
+    }
+    await smokePage.getByRole("button", { name: "NETWORK", exact: true }).click();
+    await smokePage.frameLocator("#commandFrame").locator("#simTransfer").waitFor({ state: "attached", timeout: 15000 });
+    console.log(JSON.stringify({ event: "FOUR_COMMAND_AREAS_LOAD_PASS", storageControls, securityButton }));
     // Network operations are housed in the live-peer drawer on mobile.
     // Exercise the local RTCDataChannel simulator separately from the two-browser peer test.
     const commandFrame = smokePage.frameLocator("#commandFrame");
