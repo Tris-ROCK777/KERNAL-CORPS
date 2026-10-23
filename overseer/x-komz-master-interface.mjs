@@ -493,7 +493,7 @@ export class XKomzMasterInterface {
     this.scene.add(this.highways);
     this.rings = new THREE.Group();
     [6.5, 9, 12, 15].forEach((r, i) => {
-      const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + .035, 128), new THREE.MeshBasicMaterial({ color: i % 2 ? 0xffbd4a : 0x58d9ff, side: THREE.DoubleSide, transparent: true, opacity: .48 }));
+      const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + .035, 128), new THREE.MeshBasicMaterial({ color: i % 2 ? 0x2f8fff : 0x58d9ff, side: THREE.DoubleSide, transparent: true, opacity: .48 }));
       ring.rotation.x = Math.PI / 2; ring.position.y = -3.8 + i * .15; this.rings.add(ring);
     });
     this.scene.add(this.rings);
