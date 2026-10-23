@@ -669,10 +669,10 @@ document.querySelectorAll('[data-live-tool]').forEach(button=>button.addEventLis
  open?.addEventListener('click',()=>setMode(true));
  back?.addEventListener('click',()=>setMode(false));
  document.querySelectorAll('[data-work-area]').forEach(button=>button.addEventListener('click',()=>{
-  setMode(true);
   const wanted=button.dataset.workArea;
   const target=[...document.querySelectorAll('.command-tab')].find(tab=>tab.textContent.trim()===wanted);
   if(target)target.click();
+  setMode(true);
  }));
  window.addEventListener('keydown',event=>{if(event.key==='Escape'&&html.classList.contains('kernel-dashboard-mode'))setMode(false)});
 })();
