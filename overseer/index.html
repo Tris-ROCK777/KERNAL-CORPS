@@ -276,12 +276,14 @@ header:after{content:"CONTROL PLANE / LIVE";position:absolute;right:12px;bottom:
 <div id="runtimeWarning"><span id="runtimeWarningText">RUNTIME BLOCKED · AUTHORITY / DURABILITY GATE NOT READY</span><button id="dismissWarning">DISMISS</button></div>
 <section id="consolePanel" class="command-panel" aria-label="Network information and controls" aria-hidden="true">
 <div class="drawer-head"><div><h2>KERNEL // MESH CONSOLE</h2><p>DIAGNOSTICS · CONTROLS · TRUST</p></div><button id="closeDrawer">CLOSE ✕</button></div>
-<div class="module-search"><label for="moduleSearch">MODULE DIRECTORY <span>08 SYSTEM TOOLS</span></label><input id="moduleSearch" type="search" placeholder="Find a module…" autocomplete="off" spellcheck="false" aria-label="Filter system modules"></div>
+<div class="module-search"><label for="moduleSearch">SYSTEM MODULE DIRECTORY <span id="moduleCount">11 / 11 TOOLS</span></label><input id="moduleSearch" type="search" placeholder="Search network, storage, authority…" autocomplete="off" spellcheck="false" aria-label="Filter system modules"></div>
 <nav id="systemModules" aria-label="KERNEL system modules">
-<a href="./ringwal-console.html">RING-WAL CONSOLE</a><a href="./pod-command-drawer.html">POD / OPFS INSPECTOR</a>
-<a href="./live-peer-verify.html">LIVE PEER TEST</a><a href="./live-peer-persistence-verify.html">RESTART RECOVERY</a>
-<a href="./authenticated-shard-verify.html">SHARD AUTHENTICATION</a><a href="./storage-verify.html">REAL OPFS CHECK</a>
-<a href="./authority-enroll.html">AUTHORITY ENROLLMENT</a><a href="./authority-migrate.html">AUTHORITY MIGRATION</a>
+<a href="./ringwal-console.html" data-module="storage wal durability">RING-WAL CONSOLE</a><a href="./pod-command-drawer.html" data-module="pods opfs storage inspector">POD / OPFS INSPECTOR</a>
+<a href="./live-peer-verify.html" data-module="network webrtc peer mesh">LIVE PEER TEST</a><a href="./live-peer-persistence-verify.html" data-module="network recovery persistence restart">RESTART RECOVERY</a>
+<a href="./authenticated-shard-verify.html" data-module="security shard signature authentication">SHARD AUTHENTICATION</a><a href="./storage-verify.html" data-module="storage opfs browser">REAL OPFS CHECK</a>
+<a href="./authority-enroll.html" data-module="security authority identity key">AUTHORITY ENROLLMENT</a><a href="./authority-migrate.html" data-module="security authority migration key">AUTHORITY MIGRATION</a>
+<a href="./non-exportable-vault-verify.html" data-module="security authority vault non-exportable">NON-EXPORTABLE KEY VAULT</a><a href="./vault-persistence-verify.html" data-module="security authority vault persistence">VAULT PERSISTENCE CHECK</a>
+<a href="./verify.html" data-module="network mesh shard verification diagnostics">MESH VERIFICATION HARNESS</a>
 </nav>
 <div class="drawer-tabs" aria-label="Console sections"><button class="active" data-tab="status">STATUS</button><button data-tab="controls">OPS</button><button data-tab="logs">LOGS</button><button data-tab="keys">KEYS</button></div>
 <div class="drawer-content"><section class="drawer-section active" data-section="status" id="statusSection"></section><section class="drawer-section" data-section="controls" id="controlsSection"></section><section class="drawer-section" data-section="logs" id="logsSection"></section><section class="drawer-section" data-section="keys" id="keysSection"></section></div>
@@ -318,7 +320,7 @@ $("openDrawer").addEventListener("click",()=>setDrawer("left"));$("openRightDraw
 
 $("dismissWarning").addEventListener("click",()=>{$("runtimeWarning").style.display="none";warningDismissed=true});
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll("[data-section]").forEach(x=>x.classList.toggle("active",x.dataset.section===b.dataset.tab))}));
-const moduleSearch=$("moduleSearch");if(moduleSearch){moduleSearch.addEventListener("input",()=>{const q=moduleSearch.value.trim().toLowerCase();document.querySelectorAll("#systemModules a").forEach(a=>{a.hidden=!a.textContent.toLowerCase().includes(q)});});moduleSearch.addEventListener("keydown",e=>{if(e.key==="Escape"){moduleSearch.value="";moduleSearch.dispatchEvent(new Event("input"));moduleSearch.blur()}})}
+const moduleSearch=$("moduleSearch");if(moduleSearch){const moduleLinks=[...document.querySelectorAll("#systemModules a")],moduleCount=$("moduleCount");const filterModules=()=>{const q=moduleSearch.value.trim().toLowerCase();let visible=0;moduleLinks.forEach(a=>{const match=(a.textContent+" "+(a.dataset.module||"")).toLowerCase().includes(q);a.hidden=!match;if(match)visible++});if(moduleCount)moduleCount.textContent=visible+" / "+moduleLinks.length+" TOOLS";};moduleSearch.addEventListener("input",filterModules);moduleSearch.addEventListener("keydown",e=>{if(e.key==="Escape"){moduleSearch.value="";filterModules();moduleSearch.blur()}});filterModules();}
 addEventListener("keydown",e=>{if(e.key==="Escape")setDrawer(null)});$("closeInspect")?.addEventListener("click",()=>{$("inspect").style.display="none"});let touchStartX=null;addEventListener("touchstart",e=>{if(e.touches.length===1)touchStartX=e.touches[0].clientX},{passive:true});addEventListener("touchend",e=>{touchStartX=null},{passive:true});
 let warningDismissed=false;
 const livePeerHealth=new Map();
