@@ -180,8 +180,8 @@ export class XKomzMasterInterface {
     });
     this.root.querySelectorAll('[data-tool-group] .xk-tool').forEach(link => link.addEventListener('click', event => {
       // Existing tools open in the current UI; no synthetic backend command is issued.
-      if (link.href && link.href !== location.href) return;
       event.preventDefault();
+      this.openDrawer('telemetry');
       this.openTool(link.getAttribute('href'), link.querySelector('strong')?.textContent || 'Existing tool');
     }));
   }
