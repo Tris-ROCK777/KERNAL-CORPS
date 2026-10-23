@@ -209,6 +209,7 @@ function closeMeshDrawers() {
   Object.values(panes).forEach(p => { p.classList.remove('open'); p.setAttribute('aria-hidden', 'true'); });
   scrim.classList.remove('open');
   experience.classList.remove('telemetry-active');
+  if (mesh) mesh.resetCamera();
 }
 function openMeshDrawer(key) {
   closeMeshDrawers();
