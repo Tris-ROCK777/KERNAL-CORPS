@@ -68,6 +68,58 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline-color:#a0efea}
 @media(max-width:600px){.shell{padding:0 12px 26px}.topbar{margin:0 -12px;padding:12px;gap:8px}.brand{gap:8px}.brand h1{font-size:9px}.brand p{font-size:7px}.mark{width:32px;height:32px}.top-actions{gap:5px}.top-actions .btn{font-size:8px;min-height:35px;padding:7px 8px}.status-pill{padding:7px 8px}.hero{margin-top:14px}.hero-main{padding:17px}.hero h2{font-size:29px;margin:13px 0}.hero-copy{font-size:12px}.ai-core{width:52px;height:52px}.ai-core span{font-size:7px}.ai-core small{font-size:7px}.ai-core-wrap .core-label{display:none}.telemetry{margin-top:22px;gap:7px}.metric{padding:12px}.metric label{font-size:8px}.metric small{font-size:9px}.section{margin-top:26px}.apps{gap:8px}.app{min-height:160px;padding:13px;gap:10px}.app strong{font-size:12px}.app p{font-size:10px}.app-foot{font-size:8px}.section-head h3{font-size:13px}.section-head p{font-size:10px}.mini-tag{font-size:7px}.network-frame{height:700px}.command-frame{height:76vh;min-height:620px}.network-shell{padding:9px}.command-tab{font-size:9px;padding:9px 10px}.footer{font-size:8px}}
 @media(max-width:370px){.top-actions .btn:first-child{display:none}.apps{grid-template-columns:1fr}.app{min-height:138px}.hero-top{align-items:center}}
 
+
+/* Immersive neural interface — original command plane is retained below. */
+#neuralExperience{position:fixed;inset:0;z-index:9999;overflow:hidden;background:#02050d;color:#eaf5ff;font-family:Inter,ui-sans-serif,system-ui,sans-serif;touch-action:pan-y;isolation:isolate}
+#neuralExperience *{box-sizing:border-box}
+#neuralExperience .mesh-layer{position:absolute;inset:0;width:100%;height:100%;display:block}
+#neuralExperience #binaryFlow{pointer-events:none;mix-blend-mode:screen;opacity:.92}
+#neuralExperience .mesh-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 20%,rgba(2,5,13,.18) 58%,#02050d 100%),linear-gradient(180deg,rgba(2,5,13,.12),transparent 20%,transparent 76%,rgba(2,5,13,.34)}
+#neuralExperience .drawer{position:absolute;top:0;bottom:0;width:min(430px,88vw);padding:calc(22px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));overflow:auto;background:rgba(5,9,17,.91);backdrop-filter:blur(28px) saturate(125%);-webkit-backdrop-filter:blur(28px) saturate(125%);border-color:rgba(175,205,235,.16);transition:transform .38s cubic-bezier(.2,.8,.2,1);z-index:4;box-shadow:0 0 70px rgba(0,0,0,.48)}
+#neuralExperience #ledgerDrawer{left:0;transform:translateX(-105%);border-right:1px solid rgba(175,205,235,.16)}
+#neuralExperience #podsDrawer{right:0;transform:translateX(105%);border-left:1px solid rgba(175,205,235,.16)}
+#neuralExperience .drawer.open{transform:translateX(0)!important}
+#neuralExperience .drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:22px}
+#neuralExperience .eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#8aa2bd}
+#neuralExperience h2{font-size:23px;letter-spacing:-.04em;margin:7px 0 0;font-weight:650}
+#neuralExperience .close-drawer{font:inherit;color:#c9d7e8;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);border-radius:50%;width:36px;height:36px;flex:none;cursor:pointer}
+#neuralExperience .ledger-note{color:#a9bacd;font-size:12px;line-height:1.6;margin:0 0 20px}
+#neuralExperience .ledger-item{display:block;padding:15px 0;border-top:1px solid rgba(255,255,255,.1);text-decoration:none;color:inherit}
+#neuralExperience .ledger-item strong{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+#neuralExperience .ledger-item span{display:block;color:#8fa2b9;font-size:11px;line-height:1.5}
+#neuralExperience .ledger-item i{font-style:normal;color:#8ce6ff;font-size:9px;letter-spacing:.12em;text-transform:uppercase}
+#neuralExperience .pod-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+#neuralExperience .pod-card{position:relative;min-height:188px;perspective:1000px;cursor:pointer;outline:none}
+#neuralExperience .pod-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.2,.75,.2,1)}
+#neuralExperience .pod-card.flipped .pod-inner{transform:rotateY(180deg)}
+#neuralExperience .pod-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid rgba(255,255,255,.13);border-radius:17px;padding:15px;background:linear-gradient(145deg,rgba(28,39,53,.86),rgba(5,9,16,.96));box-shadow:inset 0 1px rgba(255,255,255,.05);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+#neuralExperience .pod-face:before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent,#61baff);box-shadow:0 0 18px var(--accent,#61baff)}
+#neuralExperience .pod-back{transform:rotateY(180deg);background:linear-gradient(145deg,rgba(15,24,34,.98),rgba(3,6,12,.98))}
+#neuralExperience .pod-index{font-size:9px;letter-spacing:.16em;color:#8295aa}
+#neuralExperience .pod-name{font-size:15px;font-weight:650;letter-spacing:-.02em;margin-top:12px}
+#neuralExperience .pod-desc{font-size:11px;line-height:1.5;color:#9eafc1;margin-top:8px}
+#neuralExperience .pod-hint{font-size:9px;letter-spacing:.12em;color:var(--accent,#61baff);text-transform:uppercase;margin-top:15px}
+#neuralExperience .pod-back .pod-desc{color:#c0cedd}
+#neuralExperience .pod-open{font-size:10px;color:#dbeaff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25);padding-bottom:3px;align-self:flex-start;margin-top:12px}
+#neuralExperience .telemetry{position:absolute;left:50%;bottom:0;transform:translate(-50%,110%);width:min(620px,100%);max-height:72vh;overflow:auto;z-index:5;padding:25px 23px calc(26px + env(safe-area-inset-bottom));background:rgba(7,11,18,.88);border:1px solid rgba(207,225,245,.18);border-bottom:0;border-radius:25px 25px 0 0;backdrop-filter:blur(32px) saturate(125%);-webkit-backdrop-filter:blur(32px) saturate(125%);box-shadow:0 -20px 80px rgba(0,0,0,.45);transition:transform .42s cubic-bezier(.2,.8,.2,1)}
+#neuralExperience .telemetry.open{transform:translate(-50%,0)}
+#neuralExperience .telemetry-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+#neuralExperience .telemetry h2{font-size:22px;margin:6px 0 0}
+#neuralExperience .telemetry-close{border:0;background:transparent;color:#b9c7d8;font-size:25px;padding:4px 8px;cursor:pointer}
+#neuralExperience .telemetry-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
+#neuralExperience .telemetry-cell{padding:13px;border:1px solid rgba(255,255,255,.1);border-radius:13px;background:rgba(255,255,255,.035)}
+#neuralExperience .telemetry-cell small{display:block;color:#8297ae;font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+#neuralExperience .telemetry-cell strong{display:block;font-size:12px;font-weight:550;margin-top:8px;line-height:1.45}
+#neuralExperience .telemetry-copy{font-size:12px;line-height:1.6;color:#9eafc2}
+#neuralExperience .telemetry-link{display:inline-block;margin:8px 12px 0 0;color:#e5f3ff;text-decoration:none;font-size:11px;border-bottom:1px solid rgba(180,210,240,.4);padding-bottom:4px}
+#neuralExperience .gesture-hint{position:absolute;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(178,204,233,.53);white-space:nowrap;pointer-events:none;transition:opacity .5s}
+#neuralExperience .gesture-hint.fade{opacity:0}
+#neuralExperience .drawer-scrim{position:absolute;inset:0;z-index:3;background:rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .3s}
+#neuralExperience .drawer-scrim.open{opacity:1;pointer-events:auto}
+#neuralExperience .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media(max-width:420px){#neuralExperience .pod-grid{gap:8px}#neuralExperience .pod-card{min-height:174px}#neuralExperience .pod-face{padding:12px}#neuralExperience .pod-name{font-size:14px}#neuralExperience .telemetry-grid{grid-template-columns:1fr}#neuralExperience .telemetry-cell{display:flex;justify-content:space-between;gap:12px;align-items:center}#neuralExperience .telemetry-cell strong{text-align:right;margin:0}}
+@media(prefers-reduced-motion:reduce){#neuralExperience .drawer,#neuralExperience .pod-inner,#neuralExperience .telemetry,#neuralExperience .drawer-scrim{transition-duration:.01ms!important}}
+
 </style>
 </head>
 <body>
@@ -146,6 +198,46 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline-color:#a0efea}
 <div class="modal" id="appModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
  <div class="modal-card"><div class="eyebrow">AYE•YAE CORE · CANONICAL APP POD</div><h2 id="modalTitle"></h2><p id="modalText"></p><p class="health-note">This card is a product entry point, not a claim that the full standalone application has shipped. Shared infrastructure remains operated through the X-KOM’Z mesh console.</p><div class="modal-actions"><a class="btn primary" href="./index.html#network">OPEN X-KOM’Z COMMAND CENTER</a><button class="btn" id="closeModal">CLOSE</button></div></div>
 </div>
+
+<div id="neuralExperience" aria-label="KERNELCORP neural network interface">
+ <canvas id="meshGL" class="mesh-layer" aria-hidden="true"></canvas>
+ <canvas id="binaryFlow" class="mesh-layer" aria-hidden="true"></canvas>
+ <div class="mesh-vignette" aria-hidden="true"></div>
+ <div class="sr-only" aria-live="polite" id="meshAnnouncement">Neural mesh active. Tap a node for network tools. Swipe from the left edge for the ledger or right edge for applications.</div>
+ <div class="drawer-scrim" id="drawerScrim"></div>
+ <aside class="drawer" id="ledgerDrawer" aria-label="Sovereign Ledger" aria-hidden="true">
+  <div class="drawer-head"><div><div class="eyebrow">KERNELCORP / RECORDS</div><h2>Sovereign Ledger</h2></div><button class="close-drawer" data-close-drawer aria-label="Close ledger">×</button></div>
+  <p class="ledger-note">Verification entry points for the system’s records. A hash or signature is shown only by the verification tool that produces or validates it; this interface does not invent ledger proofs.</p>
+  <a class="ledger-item" href="./verify.html"><i>Integrity / verify</i><strong>System verification</strong><span>Open the canonical verification workflow and inspect its reported result.</span></a>
+  <a class="ledger-item" href="./live-peer-verify.html"><i>Peer / WebRTC</i><strong>Live peer verification</strong><span>Inspect live peer verification evidence from the existing tool.</span></a>
+  <a class="ledger-item" href="./live-peer-persistence-verify.html"><i>Peer / persistence</i><strong>Peer persistence record</strong><span>Validate persisted peer state using the existing verification route.</span></a>
+  <a class="ledger-item" href="./authenticated-shard-verify.html"><i>Storage / shards</i><strong>Authenticated shard record</strong><span>Inspect authenticated shard verification output.</span></a>
+  <a class="ledger-item" href="./storage-verify.html"><i>Storage / OPFS</i><strong>Storage verification</strong><span>Open the storage verification tool for current evidence.</span></a>
+  <a class="ledger-item" href="./non-exportable-vault-verify.html"><i>Vault / cryptography</i><strong>Non-exportable vault</strong><span>Inspect the vault verification workflow.</span></a>
+  <a class="ledger-item" href="./vault-persistence-verify.html"><i>Vault / persistence</i><strong>Vault persistence record</strong><span>Validate persistence using the existing tool.</span></a>
+  <a class="ledger-item" href="./authority-migrate.html"><i>Authority / migration</i><strong>Authority migration</strong><span>Open the authority migration record and its verification path.</span></a>
+ </aside>
+ <aside class="drawer" id="podsDrawer" aria-label="Dual-State Pods" aria-hidden="true">
+  <div class="drawer-head"><div><div class="eyebrow">X-KOM’Z / ECOSYSTEM</div><h2>Dual-State Pods</h2></div><button class="close-drawer" data-close-drawer aria-label="Close applications">×</button></div>
+  <p class="ledger-note">Tap a card to flip between its consumer-facing purpose and its network role. Back-side descriptions are architecture roles, not live health claims.</p>
+  <div class="pod-grid">
+   <article class="pod-card" tabindex="0" role="button" aria-label="Planet-K, tap to flip" style="--accent:#73d8ff"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 01</div><div class="pod-name">Planet-K</div><div class="pod-desc">A connected home for the KERNEL ecosystem.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Ecosystem surface</div><div class="pod-desc">Consumer entry point coordinated through shared KERNEL infrastructure.</div></div><a class="pod-open" href="./index.html#network">OPEN COMMAND PLANE ↗</a></div></div></article>
+   <article class="pod-card" tabindex="0" role="button" aria-label="KashKorner, tap to flip" style="--accent:#e8bb72"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 02</div><div class="pod-name">KashKorner</div><div class="pod-desc">A finance-focused ecosystem experience.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Transaction surface</div><div class="pod-desc">Financial interactions belong to verified shared services; no transaction state is implied here.</div></div><a class="pod-open" href="./mesh-console.html">OPEN MESH CONSOLE ↗</a></div></div></article>
+   <article class="pod-card" tabindex="0" role="button" aria-label="X-Koin’s, tap to flip" style="--accent:#f3d35b"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 03</div><div class="pod-name">X-Koin’s</div><div class="pod-desc">K-KOINZ and ecosystem value flows.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Toll / value layer</div><div class="pod-desc">Inspect actual toll-lock state through the running mesh console.</div></div><a class="pod-open" href="./mesh-console.html">INSPECT LIVE CONSOLE ↗</a></div></div></article>
+   <article class="pod-card" tabindex="0" role="button" aria-label="Kernelodie’s, tap to flip" style="--accent:#d7a3ff"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 04</div><div class="pod-name">Kernelodie’s</div><div class="pod-desc">The audio and listening experience.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Media surface</div><div class="pod-desc">A consumer media layer connected to shared ecosystem services.</div></div><a class="pod-open" href="./index.html#network">OPEN COMMAND PLANE ↗</a></div></div></article>
+   <article class="pod-card" tabindex="0" role="button" aria-label="KernelVision, tap to flip" style="--accent:#42e2d0"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 05</div><div class="pod-name">KernelVision</div><div class="pod-desc">Cinematic visual media and discovery.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Media delivery</div><div class="pod-desc">Delivery and storage status must come from live services, not this visual layer.</div></div><a class="pod-open" href="./storage-verify.html">OPEN STORAGE VERIFY ↗</a></div></div></article>
+   <article class="pod-card" tabindex="0" role="button" aria-label="X-Shield, tap to flip" style="--accent:#ff8c62"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 06</div><div class="pod-name">X-Shield</div><div class="pod-desc">Privacy and security-focused tools.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Security layer</div><div class="pod-desc">Inspect the actual authority and security workflows; tunnel status is not assumed.</div></div><a class="pod-open" href="./authority-enroll.html">OPEN AUTHORITY TOOLS ↗</a></div></div></article>
+  </div>
+ </aside>
+ <section class="telemetry" id="nodeTelemetry" aria-label="Peer node details" aria-hidden="true">
+  <div class="telemetry-top"><div><div class="eyebrow" id="nodeLabel">NETWORK NODE / SELECTED</div><h2>Peer telemetry</h2></div><button class="telemetry-close" id="closeTelemetry" aria-label="Zoom back to mesh">×</button></div>
+  <div class="telemetry-grid"><div class="telemetry-cell"><small>Peer latency</small><strong>Read from live console</strong></div><div class="telemetry-cell"><small>Active OPFS shards</small><strong>Read from storage state</strong></div><div class="telemetry-cell"><small>K-KOINZ toll locks</small><strong>Read from live toll state</strong></div></div>
+  <p class="telemetry-copy">This view does not substitute estimates for live telemetry. Open the existing console to inspect current peer, storage, and toll state.</p>
+  <a class="telemetry-link" href="./mesh-console.html">OPEN MESH CONSOLE ↗</a><a class="telemetry-link" href="./live-peer-verify.html">VERIFY LIVE PEER ↗</a><a class="telemetry-link" href="./storage-verify.html">VERIFY STORAGE ↗</a><a class="telemetry-link" href="./ringwal-console.html">OPEN RINGWAL ↗</a>
+ </section>
+ <div class="gesture-hint" id="gestureHint">Tap a node · pull edges to explore</div>
+</div>
+
 <script>
 const $=id=>document.getElementById(id);
 const eventLog=$("activity");
@@ -179,5 +271,97 @@ function closeModal(){$("appModal").classList.remove("open")}
 $("closeModal").addEventListener("click",closeModal);$("appModal").addEventListener("click",e=>{if(e.target===$("appModal"))closeModal()});window.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 function clock(){$("clock").textContent=new Date().toLocaleTimeString([], {hour12:false})}clock();setInterval(clock,1000);checkCapabilities();
 </script>
+
+<script>
+(()=> {
+ const root=document.getElementById('neuralExperience'); if(!root)return;
+ const glCanvas=document.getElementById('meshGL'), flowCanvas=document.getElementById('binaryFlow');
+ const gl=glCanvas.getContext('webgl',{alpha:false,antialias:true,powerPreference:'high-performance'});
+ const flow=flowCanvas.getContext('2d');
+ const prefersReduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ let W=0,H=0,D=1,tiltX=0,tiltY=0,targetX=0,targetY=0,zoom=1,zoomTarget=1,selected=-1,drawer=null,frame=0,lastHint=performance.now();
+ const nodes=[],edges=[],streams=[];
+ const randSeed=(n)=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)};
+ function resize(){
+  D=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+  [glCanvas,flowCanvas].forEach(c=>{c.width=Math.round(W*D);c.height=Math.round(H*D);c.style.width=W+'px';c.style.height=H+'px'});
+  if(gl)gl.viewport(0,0,glCanvas.width,glCanvas.height);
+  nodes.length=0;edges.length=0;streams.length=0;
+  const cols=Math.max(7,Math.round(W/105)),rows=Math.max(7,Math.round(H/105)),pad=34;
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+   const i=nodes.length;
+   nodes.push({x:pad+x*(W-pad*2)/(cols-1)+(randSeed(i+3)-.5)*38,y:pad+y*(H-pad*2)/(rows-1)+(randSeed(i+11)-.5)*38,z:randSeed(i+29),bright:randSeed(i+19)>.78,phase:randSeed(i+7)*6.28});
+  }
+  for(let i=0;i<nodes.length;i++){
+   let a=nodes[i];let near=[];
+   for(let j=i+1;j<nodes.length;j++){let b=nodes[j],dx=a.x-b.x,dy=a.y-b.y,d=dx*dx+dy*dy;if(d<Math.pow(Math.min(W/cols,H/rows)*1.8,2))near.push({j,d})}
+   near.sort((a,b)=>a.d-b.d).slice(0,3).forEach(n=>{if(!edges.some(e=>e.a===n.j&&e.b===i||e.a===i&&e.b===n.j))edges.push({a:i,b:n.j,phase:randSeed(i*nodes.length+n.j)*90})});
+  }
+  edges.forEach((e,i)=>{if(i%4===0)streams.push({edge:e,offset:randSeed(i+44),speed:.12+randSeed(i+77)*.22,orange:i%8===0})});
+ }
+ function shader(type,source){const sh=gl.createShader(type);gl.shaderSource(sh,source);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh));return sh}
+ let program=null,posLoc,colLoc,sizeLoc;
+ if(gl){
+  try{
+   const vs='attribute vec2 p;attribute vec4 c;attribute float sz;varying vec4 v;uniform float t;uniform vec2 res;void main(){vec2 q=p/res*2.0-1.0;q.y=-q.y;gl_Position=vec4(q,0.0,1.0);gl_PointSize=sz;v=c;}';
+   const fs='precision mediump float;varying vec4 v;void main(){float d=length(gl_PointCoord-vec2(.5));float glow=1.0-smoothstep(.04,.5,d);gl_FragColor=vec4(v.rgb,v.a*glow);}';
+   program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vs));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);
+   if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
+   posLoc=gl.getAttribLocation(program,'p');colLoc=gl.getAttribLocation(program,'c');sizeLoc=gl.getAttribLocation(program,'sz');
+  }catch(e){program=null}
+ }
+ function project(n,t){const depth=(n.z-.5)*100*zoom;return {x:W/2+(n.x-W/2+tiltX*(n.y/H-.5)*34)*zoom+tiltY*depth*.15,y:H/2+(n.y-H/2+tiltY*(n.x/W-.5)*24)*zoom-tiltX*depth*.12}}
+ function renderGL(t){
+  if(!gl||!program)return;
+  gl.viewport(0,0,glCanvas.width,glCanvas.height);gl.clearColor(.008,.016,.035,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(program);
+  const vertices=[],colors=[],sizes=[];
+  function vertex(p,c,size){vertices.push(p.x,p.y);colors.push(c[0],c[1],c[2],c[3]);sizes.push(size)}
+  edges.forEach((e,i)=>{const a=project(nodes[e.a],t),b=project(nodes[e.b],t);const pulse=.28+.25*(.5+.5*Math.sin(t*.0015+e.phase));vertex(a,[.08,.38,.95,pulse],1);vertex(b,[.08,.38,.95,pulse],1)});
+  const linePos=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,linePos);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(posLoc);gl.vertexAttribPointer(posLoc,2,gl.FLOAT,false,0,0);
+  const cbuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,cbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(colors),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(colLoc);gl.vertexAttribPointer(colLoc,4,gl.FLOAT,false,0,0);
+  const sbuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,sbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(sizes),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(sizeLoc);gl.vertexAttribPointer(sizeLoc,1,gl.FLOAT,false,0,0);
+  gl.uniform2f(gl.getUniformLocation(program,'res'),W,H);gl.drawArrays(gl.LINES,0,vertices.length/2);
+  const np=[],nc=[],ns=[];
+  nodes.forEach((n,i)=>{const p=project(n,t),pulse=.55+.45*Math.sin(t*.002+n.phase);let c=n.bright?[1,.46,.08,.95]:[.12,.67,1,.65];if(i===selected)c=[1,.8,.25,1];np.push(p.x,p.y);nc.push(...c);ns.push((n.bright?9:3.5)+(n.bright?5:2)*pulse)});
+  gl.bindBuffer(gl.ARRAY_BUFFER,linePos);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(np),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(posLoc,2,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,cbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(nc),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(colLoc,4,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,sbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(ns),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(sizeLoc,1,gl.FLOAT,false,0,0);gl.drawArrays(gl.POINTS,0,nodes.length);
+  gl.deleteBuffer(linePos);gl.deleteBuffer(cbuf);gl.deleteBuffer(sbuf);
+ }
+ function renderFlow(t){
+  flow.clearRect(0,0,W,H);flow.save();flow.scale(D,D);flow.globalCompositeOperation='lighter';
+  flow.font='bold 12px ui-monospace,SFMono-Regular,Menlo,monospace';
+  streams.forEach((s,k)=>{const a=project(nodes[s.edge.a],t),b=project(nodes[s.edge.b],t);const phase=(t*.0001*s.speed+s.offset)%1;for(let j=0;j<5;j++){let q=(phase+j*.19)%1,x=a.x+(b.x-a.x)*q,y=a.y+(b.y-a.y)*q;flow.fillStyle=s.orange?'rgba(255,154,43,'+(0.75-j*.12)+')':'rgba(89,197,255,'+(0.72-j*.12)+')';flow.shadowBlur=9;flow.shadowColor=s.orange?'#ff8a23':'#2b9fff';flow.fillText((k+j)%2?'0':'1',x,y)}});flow.restore();
+ }
+ function tick(t){frame=requestAnimationFrame(tick);if(!prefersReduced){tiltX+=(targetX-tiltX)*.055;tiltY+=(targetY-tiltY)*.055;zoom+=(zoomTarget-zoom)*.07}renderGL(t);renderFlow(t);if(t-lastHint>5200)document.getElementById('gestureHint').classList.add('fade')}
+ function closeDrawers(){document.querySelectorAll('#neuralExperience .drawer').forEach(d=>{d.classList.remove('open');d.setAttribute('aria-hidden','true')});document.getElementById('drawerScrim').classList.remove('open');drawer=null}
+ function openDrawer(which){closeDrawers();closeTelemetry();drawer=which;const el=document.getElementById(which==='left'?'ledgerDrawer':'podsDrawer');el.classList.add('open');el.setAttribute('aria-hidden','false');document.getElementById('drawerScrim').classList.add('open');document.getElementById('gestureHint').classList.add('fade')}
+ function closeTelemetry(){const el=document.getElementById('nodeTelemetry');el.classList.remove('open');el.setAttribute('aria-hidden','true');zoomTarget=1;selected=-1}
+ function openTelemetry(index){closeDrawers();selected=index;zoomTarget=1.65;const n=nodes[index];document.getElementById('nodeLabel').textContent='MESH NODE / '+String(index+1).padStart(3,'0');const el=document.getElementById('nodeTelemetry');el.classList.add('open');el.setAttribute('aria-hidden','false');document.getElementById('meshAnnouncement').textContent='Selected mesh node '+(index+1)+'. Open the live console to inspect verified telemetry.';document.getElementById('gestureHint').classList.add('fade')}
+ document.querySelectorAll('#neuralExperience [data-close-drawer]').forEach(b=>b.addEventListener('click',closeDrawers));
+ document.getElementById('drawerScrim').addEventListener('click',closeDrawers);
+ document.getElementById('closeTelemetry').addEventListener('click',closeTelemetry);
+ document.querySelectorAll('#neuralExperience .pod-card').forEach(card=>{const flip=()=>card.classList.toggle('flipped');card.addEventListener('click',e=>{if(e.target.closest('a'))return;flip()});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}})});
+ let start=null;
+ root.addEventListener('pointerdown',e=>{start={x:e.clientX,y:e.clientY,id:e.pointerId};lastHint=performance.now()},{passive:true});
+ root.addEventListener('pointerup',e=>{
+  if(!start)return;const dx=e.clientX-start.x,dy=e.clientY-start.y,sx=start.x,sy=start.y;start=null;
+  if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.2){if(sx<34&&dx>0){openDrawer('left');return}if(sx>W-34&&dx<0){openDrawer('right');return}if(drawer){closeDrawers();return}}
+  if(Math.abs(dx)<12&&Math.abs(dy)<12&&!drawer&&!document.getElementById('nodeTelemetry').classList.contains('open')){
+   let best=-1,bd=Infinity;nodes.forEach((n,i)=>{const p=project(n,performance.now()),d=Math.hypot(p.x-e.clientX,p.y-e.clientY);if(d<bd){bd=d;best=i}});
+   if(best>=0&&bd<Math.max(26,44*D/2))openTelemetry(best);
+  }
+ },{passive:true});
+ let pinchStart=0;
+ root.addEventListener('touchstart',e=>{if(e.touches.length===2)pinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)},{passive:true});
+ root.addEventListener('touchmove',e=>{if(e.touches.length===2){const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(pinchStart&&Math.abs(dist-pinchStart)>28){if(dist<pinchStart)closeTelemetry();pinchStart=dist}}},{passive:true});
+ window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawers();closeTelemetry()}if(e.key==='ArrowLeft'&&e.altKey)openDrawer('left');if(e.key==='ArrowRight'&&e.altKey)openDrawer('right')});
+ window.addEventListener('resize',resize,{passive:true});
+ function motion(e){if(e.gamma==null||e.beta==null)return;targetY=Math.max(-1,Math.min(1,e.gamma/35));targetX=Math.max(-1,Math.min(1,(e.beta-45)/45))}
+ if('DeviceOrientationEvent' in window){const attach=()=>{if(typeof DeviceOrientationEvent.requestPermission==='function'){DeviceOrientationEvent.requestPermission().then(v=>{if(v==='granted')window.addEventListener('deviceorientation',motion,{passive:true})}).catch(()=>{})}else window.addEventListener('deviceorientation',motion,{passive:true})};root.addEventListener('pointerdown',attach,{once:true,passive:true})}
+ resize();tick(0);
+})();
+</script>
+
 </body>
 </html>
