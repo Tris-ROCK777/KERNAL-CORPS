@@ -509,13 +509,18 @@ const mesh = new XKomzMasterInterface(mount, {
     }
   },
   onNodeSelected(node) {
-    // syncNodes wraps the original peer record as .raw; inspect the actual reported peer data.
-    selectedMeshNode = node?.raw && typeof node.raw === 'object' ? node.raw : (node || null);
+    // Resolve the clicked mesh marker to the latest source snapshot immediately.
+    const clicked = node?.raw && typeof node.raw === 'object' ? node.raw : (node || null);
+    const clickedId = inspectorValue(clicked, ['id','peerId','peer_id','nodeId','connectionId']);
+    const peers = inspectorValue(latestMeshSnapshot, ['network.peers','peers','nodes']);
+    selectedMeshNode = Array.isArray(peers)
+      ? (peers.find(peer => String(inspectorValue(peer, ['id','peerId','peer_id','nodeId','connectionId']) ?? '') === String(clickedId ?? '')) || clicked)
+      : clicked;
     openMeshDrawer('telemetry');
     renderSelectedMeshNode(selectedMeshNode, latestMeshSnapshot);
-    const label = node?.name || node?.label || node?.id || node?.peerId || node?.peer_id || 'SELECTED MESH NODE';
+    const label = selectedMeshNode?.name || selectedMeshNode?.label || selectedMeshNode?.id || selectedMeshNode?.peerId || selectedMeshNode?.peer_id || 'SELECTED MESH NODE';
     camFocusLabel.textContent = 'PEER NODE / ' + String(label).toUpperCase();
-    document.getElementById('meshAnnouncement').textContent = 'Selected peer node ' + label + '. The inspector shows reported peer-level fields only.';
+    document.getElementById('meshAnnouncement').textContent = 'Selected peer node ' + label + '. Inspector fields refresh from each incoming telemetry snapshot.';
   },
   onGesture(edge) {
     if (edge === 'left') openMeshDrawer('left');
