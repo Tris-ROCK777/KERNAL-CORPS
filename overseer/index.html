@@ -27,9 +27,9 @@ button:active,button.active{border-color:rgba(174,217,255,.8);color:#eff8ff;back
 /* Immersive peer-first information architecture */
 :root{--healthy:#83baff;--degraded:#e4d27c;--simulated:rgba(145,177,213,.19)}
 header{z-index:5;align-items:center;padding-left:14px;padding-right:14px}
-header>div:first-child small{display:none}
+header>div:first-child small{display:block}
 .status{display:flex;align-items:center;justify-content:flex-end;gap:8px;max-width:64%;line-height:1.4}
-.status small,#liveClock,#runtimeAge{display:none}
+.status small,#runtimeAge{display:none}#liveClock{display:inline-block;font-size:10px;margin:0 0 0 8px;color:#8ea5bd}
 #connection{font-size:9px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #openDrawer,#openRightDrawer{pointer-events:auto;min-height:36px;padding:7px 10px;background:rgba(9,13,21,.82);position:absolute;top:calc(12px + env(safe-area-inset-top,0px))}#openDrawer{left:12px}#openRightDrawer{right:12px}header>div:first-child{position:absolute;left:50%;transform:translateX(-50%);text-align:center;top:calc(15px + env(safe-area-inset-top,0px));white-space:nowrap}header .status{position:absolute;right:12px;top:calc(56px + env(safe-area-inset-top,0px));max-width:calc(100% - 24px)}
 .topstats,.rightstats{display:none}
@@ -117,10 +117,73 @@ body.left-drawer-open #consolePanel,body.right-drawer-open #peersPanel{transform
 @media(max-width:390px){header>div:first-child{max-width:46%;overflow:hidden}header>div:first-child h1{font-size:9px;letter-spacing:.08em}#openDrawer,#openRightDrawer{min-height:32px;padding:5px 7px;font-size:8px}#consolePanel,#peersPanel{left:7px;right:7px;bottom:calc(7px + env(safe-area-inset-bottom,0px));height:min(68dvh,600px);max-height:calc(100dvh - 112px);padding:9px;gap:8px}#systemModules a{font-size:7px;min-height:32px}.drawer-head h2{font-size:10px}.drawer-tabs button{min-height:32px}}
 @media(prefers-reduced-motion:reduce){#consolePanel,#peersPanel{transition:none}}
 
+
+/* KERNEL angular command-plane redesign — hard edges, fixed grid, readable telemetry. */
+:root{--bg:#05080c;--panel:rgba(8,14,22,.94);--line:rgba(115,160,199,.24);--ice:#8de7ff;--blue:#54b8e8;--violet:#9b9bff;--silver:#e5edf5;--muted:#8094a8}
+body:after{background:linear-gradient(90deg,rgba(31,69,91,.07) 1px,transparent 1px),linear-gradient(rgba(31,69,91,.07) 1px,transparent 1px),linear-gradient(180deg,rgba(2,5,9,.08),rgba(2,5,9,.45));background-size:32px 32px,32px 32px,auto}
+#shade{background:linear-gradient(135deg,rgba(18,42,59,.17),transparent 42%),linear-gradient(315deg,rgba(22,30,55,.13),transparent 44%)}
+header{left:0;right:0;display:block;height:auto;padding:calc(12px + min(env(safe-area-inset-top,0px),24px)) 12px 10px;background:linear-gradient(180deg,rgba(3,8,13,.96),rgba(3,8,13,.7));border-bottom:1px solid rgba(116,181,216,.28)}
+header>div:first-child{position:static;transform:none;text-align:left;white-space:normal;padding-left:2px;max-width:56%}
+header>div:first-child h1{font-size:12px;letter-spacing:.14em;line-height:1.5}
+header>div:first-child small{font-size:7px;letter-spacing:.13em;color:#7793a9}
+#openDrawer,#openRightDrawer{top:calc(13px + min(env(safe-area-inset-top,0px),24px));border-radius:2px;min-height:35px;background:#0c1924;border:1px solid rgba(109,203,237,.42);color:#a7eaff}
+#openDrawer{left:auto;right:84px}#openRightDrawer{right:10px}
+header .status{top:calc(58px + min(env(safe-area-inset-top,0px),24px));left:14px;right:14px;max-width:none;justify-content:flex-start;text-align:left;font-size:8px;color:#8da9be}
+#connection{max-width:180px;color:#a8d9ee}
+#liveClock{color:#7d98ab;font-size:9px}
+#criticalHud{top:calc(92px + min(env(safe-area-inset-top,0px),24px));left:10px;right:10px;justify-content:stretch}
+#criticalHud .strip{width:100%;justify-content:space-between;gap:7px 10px;padding:9px 10px;border-radius:2px;border:1px solid rgba(101,178,211,.24);border-left:3px solid #4ab4d9;background:rgba(4,12,19,.88);box-shadow:0 8px 28px rgba(0,0,0,.22)}
+.hudstat{font-size:8px;color:#7e9db1}.hudstat b{color:#d8f2ff}
+.trust-badge{border-radius:2px;border-color:rgba(102,204,227,.35);color:#8de7ff}
+#consolePanel,#peersPanel{border-radius:2px;border-color:rgba(103,183,220,.38);background:rgba(4,10,16,.98);box-shadow:0 16px 60px rgba(0,0,0,.72);backdrop-filter:blur(22px)}
+.drawer-head{padding:3px 0 9px;border-bottom:1px solid rgba(105,177,209,.24)}
+.drawer-head h2{font-size:11px;letter-spacing:.14em;color:#bdeeff}
+.drawer-head p{font-size:7px;letter-spacing:.13em}
+#systemModules a{border-radius:2px;background:rgba(15,30,42,.85);border-color:rgba(95,167,198,.24);color:#a9cfe0;justify-content:flex-start;text-align:left;padding:9px;font-size:8px;min-height:39px}
+#systemModules a:before{content:"↳";color:#56bddf;margin-right:7px}
+button{border-radius:2px;background:rgba(10,23,33,.96);border-color:rgba(108,157,188,.28);color:#b9d3e1}
+button.primary{background:rgba(17,64,84,.75);border-color:rgba(90,202,236,.6);color:#d8f7ff}
+.panel,.readout,.analytics .metric,.node-counts>div,#log,#inspect,.node-row{border-radius:2px}
+.readout{background:rgba(4,11,17,.92);border-color:rgba(102,169,201,.24)}
+.analytics .metric{background:rgba(9,24,34,.9);border-color:rgba(94,170,204,.25)}
+.node-light,.node-light.active,.node-light.connecting,.node-light.inactive{border-radius:0;transform:rotate(45deg)}
+.node-counts>div{text-align:left;border-color:rgba(99,167,196,.25);background:rgba(8,20,29,.9)}
+.node-counts b{font-size:22px;color:#9eeaff}
+.node-counts span{font-size:7px}
+#runtimeWarning{border-radius:2px;background:#17150f;border-left:3px solid #c9a85e}
+@media(max-width:759px){
+ header{min-height:84px;padding-bottom:8px}
+ header>div:first-child{top:auto;left:auto;transform:none}
+ header>div:first-child h1{font-size:11px;letter-spacing:.1em}
+ header>div:first-child small{font-size:6px;letter-spacing:.07em;max-width:100%;display:block}
+ #openDrawer,#openRightDrawer{top:calc(14px + min(env(safe-area-inset-top,0px),24px));min-height:32px;padding:5px 7px;font-size:8px}
+ #openDrawer{right:79px}#openRightDrawer{right:9px}
+ header .status{top:calc(54px + min(env(safe-area-inset-top,0px),24px));left:14px;right:10px;font-size:7px;gap:6px}
+ #connection{max-width:155px}
+ #criticalHud{top:calc(91px + min(env(safe-area-inset-top,0px),24px));left:8px;right:8px}
+ #criticalHud .strip{justify-content:flex-start;gap:7px 12px;padding:8px;border-radius:2px}
+ .hudstat{font-size:7px}
+ .trust-badge{padding:3px 5px;font-size:7px}
+ #consolePanel,#peersPanel{left:7px;right:7px;bottom:calc(7px + env(safe-area-inset-bottom,0px));height:min(69dvh,620px);max-height:calc(100dvh - 155px);padding:10px;border-radius:2px}
+ #systemModules{gap:5px}
+ #systemModules a{min-height:35px;font-size:7px;padding:7px}
+ .drawer-tabs button{border-radius:2px}
+}
+@media(min-width:760px){
+ header{padding:20px 24px 14px}
+ header>div:first-child{max-width:none}
+ header>div:first-child h1{font-size:14px}
+ header .status{top:24px;right:24px;left:auto;max-width:45%;justify-content:flex-end;text-align:right}
+ #openDrawer{right:112px}#openRightDrawer{right:24px}
+ #criticalHud{top:104px;left:24px;right:24px}
+ #criticalHud .strip{width:auto;justify-content:flex-start;gap:22px;padding:12px 15px}
+}
+@media(prefers-reduced-motion:reduce){#consolePanel,#peersPanel{transition:none}}
+
 </style></head>
 <body>
 <canvas id="scene" aria-label="Full-screen interactive neural network visualization"></canvas><div id="shade"></div>
-<header><div><h1>KERNEL <span style="color:var(--ice)">/</span> X-KOM’Z</h1><small>DECENTRALIZED INTELLIGENCE · CONTROL PLANE</small></div><button id="openDrawer" type="button" aria-label="Open command console" aria-controls="drawer" aria-expanded="false">CONSOLE</button><button id="openRightDrawer" type="button" aria-label="Open live peer monitor" aria-controls="rightDrawer" aria-expanded="false">PEERS</button><div class="status"><span class="dot"></span><span id="connection">LOCAL NODE READY</span><br><small>PHANTOM BLACK // LOCAL-FIRST</small><br><span id="liveClock" aria-label="Live local clock">--:--:--</span><br><span id="runtimeAge">PAGE ACTIVE 00:00:00</span></div></header>
+<header><div><h1>KERNEL <span style="color:var(--ice)">/</span> X-KOM’Z</h1><small>DECENTRALIZED INTELLIGENCE · CONTROL PLANE</small></div><button id="openDrawer" type="button" aria-label="Open command console" aria-controls="consolePanel" aria-expanded="false">CONSOLE</button><button id="openRightDrawer" type="button" aria-label="Open live peer monitor" aria-controls="peersPanel" aria-expanded="false">PEERS</button><div class="status"><span class="dot"></span><span id="connection">LOCAL NODE READY</span><br><small>PHANTOM BLACK // LOCAL-FIRST</small><br><span id="liveClock" aria-label="Live local clock">--:--:--</span><br><span id="runtimeAge">PAGE ACTIVE 00:00:00</span></div></header>
 <div id="criticalHud"><div class="strip">
 <span class="hudstat">LIVE PEERS <b id="hudLivePeers">0</b></span>
 <span class="hudstat">VISUAL / SLOTS <b><span id="workerCountHud">64</span> / <span id="peerCountHud">24</span></b></span>
@@ -177,7 +240,7 @@ let warningDismissed=false;
 const livePeerHealth=new Map();
 const pageStartedAt=Date.now();
 const clockFormatter=new Intl.DateTimeFormat(undefined,{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true});
-function updateLiveDisplay(){const now=new Date();$("drawerClock").textContent="LOCAL CLOCK · "+clockFormatter.format(now);const peers=[...(state.mesh?.peers?.entries?.()||[])],count=peers.filter(([id,p])=>["open","connected"].includes(String(livePeerHealth.get(String(id))||p?.readyState||p?.channel?.readyState||"connecting").toLowerCase())).length,connecting=peers.length-count;$("livePeers").textContent=String(count)+" CONNECTED";$("hudLivePeers").textContent=String(count);$("activeNodeCount").textContent=String(count);$("connectingNodeCount").textContent=String(connecting);$("inactiveNodeCount").textContent=String(24-state.dead.size);$("hudWorkers").textContent=String(state.workers);$("workerCountHud").textContent=String(state.workers);$("peerCountHud").textContent=String(24-state.dead.size);$("hudHash").textContent=state.lastHash&&state.lastHash!=="—"?String(state.lastHash).slice(0,10)+"…":"WAITING";$("trustBadge").textContent=state.runtime?(state.authority.startsWith("FAILED")?"TRUST · BLOCKED":"TRUST · "+(state.runtime.authorityRestored?"RESTORED":"PINNED")):"TRUST · CHECKING";renderNodeList(peers)}
+function updateLiveDisplay(){const now=new Date();if($("liveClock"))$("liveClock").textContent=clockFormatter.format(now);const peers=[...(state.mesh?.peers?.entries?.()||[])],count=peers.filter(([id,p])=>["open","connected"].includes(String(livePeerHealth.get(String(id))||p?.readyState||p?.channel?.readyState||"connecting").toLowerCase())).length,connecting=peers.length-count;$("livePeers").textContent=String(count)+" CONNECTED";$("hudLivePeers").textContent=String(count);$("activeNodeCount").textContent=String(count);$("connectingNodeCount").textContent=String(connecting);$("inactiveNodeCount").textContent=String(24-state.dead.size);$("hudWorkers").textContent=String(state.workers);$("workerCountHud").textContent=String(state.workers);$("peerCountHud").textContent=String(24-state.dead.size);$("hudHash").textContent=state.lastHash&&state.lastHash!=="—"?String(state.lastHash).slice(0,10)+"…":"WAITING";$("trustBadge").textContent=state.runtime?(state.authority.startsWith("FAILED")?"TRUST · BLOCKED":"TRUST · "+(state.runtime.authorityRestored?"RESTORED":"PINNED")):"TRUST · CHECKING";renderNodeList(peers)}
 function renderNodeList(peers=[...(state.mesh?.peers?.entries?.()||[])]){const root=$("nodeList");if(!root)return;const real=peers.map(([id,p])=>{const status=String(livePeerHealth.get(String(id))||p?.readyState||p?.channel?.readyState||"connecting").toLowerCase(),kind=["open","connected"].includes(status)?"active":["failed","closed","disconnected","error"].includes(status)?"inactive":"connecting";return `<button class="node-row" data-peer="${escapeHtml(id)}"><i class="node-light ${kind}"></i><span><b>${escapeHtml(id)}</b><small>REAL WEBRTC PEER · ${status.toUpperCase()}</small></span><em>${kind.toUpperCase()}</em></button>`});const slots=Array.from({length:24},(_,i)=>{const dead=state.dead.has(i);return `<button class="node-row simulated" data-slot="${i}"><i class="node-light ${dead?"inactive":"simulated"}"></i><span><b>RING SLOT ${String(i+1).padStart(2,"0")}</b><small>LOCAL VISUAL SLOT · NOT A REMOTE DEVICE</small></span><em>${dead?"INACTIVE":"SIMULATED"}</em></button>`});root.innerHTML=(real.length?real.join(""):`<div class="node-empty">NO REAL WEBRTC PEERS CONNECTED</div>`)+slots.join("");root.querySelectorAll("[data-peer]").forEach(b=>b.onclick=()=>{const id=b.dataset.peer,p=state.mesh?.peers?.get(id);$("inspect").style.display="block";$("inspectTitle").textContent="REAL PEER // "+id;$("inspectBody").innerHTML="<strong>CONNECTION STATE</strong><br>"+escapeHtml(livePeerHealth.get(id)||p?.readyState||p?.channel?.readyState||"unknown")+"<br><br><strong>AUTHORITY</strong><br>"+escapeHtml(state.authority)+"<br><br><strong>LAST SHA-256</strong><br>"+escapeHtml(state.lastHash);setDrawer("left")});root.querySelectorAll("[data-slot]").forEach(b=>b.onclick=()=>{state.selected=Number(b.dataset.slot);inspect(state.selected);setDrawer("left")})}
 const state={lastReceipt:null,lastReceiptSource:"NONE",receiptHistory:[],w:0,h:0,dpr:1,yaw:-.45,pitch:.35,drag:null,selected:0,workers:64,lens:"Mesh",dead:new Set(),wal:[],lastHash:"—",runtime:null,mesh:null,busy:false,authority:"UNINITIALIZED",head:"—",seed:3,points:[]};
 const telemetry={startedAt:Date.now(),bytesReceived:0,messagesReceived:0,verifiedShards:0,verifiedShardBytes:0,localCommits:0,readbackPasses:0,lastRxAt:0,rxWindow:[],pulses:[]};
@@ -223,6 +286,7 @@ function project(x,y,z=0){
   return{x:state.w*.5+xx*scale,y:state.h*.49+yy*scale,z:zz};
 }
 function nodePos(i){const n=neuralNodes[(i*11)%neuralNodes.length];return project(n.x,n.y,n.z)}
+function angularMark(x,y,r,rotation=0){ctx.beginPath();for(let k=0;k<4;k++){const a=rotation+Math.PI/4+k*Math.PI/2,px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;if(k===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.closePath()}
 function draw(){
   const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches,now=performance.now()*.00022,cx=state.w*.5,cy=state.h*.49,min=Math.min(state.w,state.h);
   ctx.fillStyle="#02040a";ctx.fillRect(0,0,state.w,state.h);
@@ -278,7 +342,7 @@ function draw(){
   const liveEntries=[...(state.mesh?.peers?.entries?.()||[])];
   // Activity pulses are driven only by observed inbound data-channel messages or verified shard receipts.
   telemetry.pulses=telemetry.pulses.filter(x=>Date.now()-x.at<1800);
-  for(const pulseEvent of telemetry.pulses){const age=(Date.now()-pulseEvent.at)/1800,origin=project(0,0,0),target=nodePos(pulseEvent.slot),t=Math.min(1,age);const x=origin.x+(target.x-origin.x)*t,y=origin.y+(target.y-origin.y)*t;ctx.beginPath();ctx.arc(x,y,2.4+(1-t)*2,0,Math.PI*2);ctx.fillStyle=pulseEvent.kind==="VERIFIED SHARD"?"rgba(123,255,201,"+(1-t)*.95+")":"rgba(143,215,255,"+(1-t)*.95+")";ctx.shadowBlur=10;ctx.shadowColor=ctx.fillStyle;ctx.fill();ctx.shadowBlur=0}
+  for(const pulseEvent of telemetry.pulses){const age=(Date.now()-pulseEvent.at)/1800,origin=project(0,0,0),target=nodePos(pulseEvent.slot),t=Math.min(1,age),x=origin.x+(target.x-origin.x)*t,y=origin.y+(target.y-origin.y)*t;angularMark(x,y,2.4+(1-t)*2,Math.PI/4);ctx.fillStyle=pulseEvent.kind==="VERIFIED SHARD"?"rgba(123,255,201,"+(1-t)*.95+")":"rgba(143,215,255,"+(1-t)*.95+")";ctx.shadowBlur=10;ctx.shadowColor=ctx.fillStyle;ctx.fill();ctx.shadowBlur=0}
 
   liveEntries.forEach(([id,peer],idx)=>{
     const angle=idx*2.3999632297+motion*.08,radius=.25+(idx%4)*.11,p=project(Math.cos(angle)*radius,Math.sin(angle)*radius,Math.sin(idx*1.4)*.18);
@@ -289,7 +353,7 @@ function draw(){
     ctx.font="8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=unhealthy?"rgba(228,210,124,.9)":"rgba(183,218,255,.95)";ctx.fillText(String(id).slice(0,12),p.x,p.y-11);
   });
   const core=project(0,0,0),pulse=reduceMotion?.5:.5+.5*Math.sin(motion*3.2);
-  ctx.save();ctx.translate(core.x,core.y);ctx.rotate(reduceMotion?0:motion*.22);for(let ring=0;ring<3;ring++){ctx.beginPath();ctx.ellipse(0,0,25+ring*7,10+ring*4,ring*.58,0,Math.PI*2);ctx.strokeStyle=["rgba(177,222,255,.5)","rgba(142,164,255,.35)","rgba(208,224,245,.22)"][ring];ctx.lineWidth=ring===0?1.2:.8;ctx.stroke()}ctx.restore();ctx.beginPath();ctx.arc(core.x,core.y,27+pulse*4,0,Math.PI*2);ctx.strokeStyle="rgba(168,205,255,.22)";ctx.lineWidth=1;ctx.stroke();ctx.beginPath();ctx.arc(core.x,core.y,15+pulse*2,0,Math.PI*2);ctx.fillStyle="rgba(8,20,39,.97)";ctx.fill();ctx.strokeStyle="rgba(192,224,255,.9)";ctx.stroke();ctx.beginPath();ctx.arc(core.x,core.y,5.2,0,Math.PI*2);ctx.fillStyle="#e0f1ff";ctx.shadowColor="#83baff";ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0;ctx.font="bold 8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="rgba(220,236,255,.9)";ctx.fillText("KERNEL CORE",core.x,core.y+43);
+  ctx.save();ctx.translate(core.x,core.y);ctx.rotate(reduceMotion?0:motion*.22);for(let ring=0;ring<3;ring++){ctx.beginPath();for(let k=0;k<6;k++){const a=k*Math.PI/3,rr=27+ring*10,px=Math.cos(a)*rr,py=Math.sin(a)*rr*.72;if(k===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.closePath();ctx.strokeStyle=["rgba(177,222,255,.62)","rgba(142,164,255,.38)","rgba(208,224,245,.2)"][ring];ctx.lineWidth=ring===0?1.2:.8;ctx.stroke()}ctx.restore();angularMark(core.x,core.y,22+pulse*3,Math.PI/4);ctx.strokeStyle="rgba(168,205,255,.42)";ctx.lineWidth=1;ctx.stroke();angularMark(core.x,core.y,13+pulse*1.5,Math.PI/4);ctx.fillStyle="rgba(8,20,39,.97)";ctx.fill();ctx.strokeStyle="rgba(192,224,255,.9)";ctx.stroke();angularMark(core.x,core.y,5.2,0);ctx.fillStyle="#e0f1ff";ctx.shadowColor="#83baff";ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0;ctx.font="bold 8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="rgba(220,236,255,.9)";ctx.fillText("KERNEL CORE",core.x,core.y+43);
   requestAnimationFrame(draw);
 }
 }
