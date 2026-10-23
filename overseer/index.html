@@ -170,6 +170,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#020712}body{padding
 #neuralExperience .mesh-readout .mesh-unit{color:#759bb6;font-size:8px}
 @media(max-width:600px){#neuralExperience .mesh-top-hud{top:calc(8px + env(safe-area-inset-top));left:8px;right:8px;gap:6px}#neuralExperience .mesh-brand{padding:8px 9px;gap:8px}#neuralExperience .mesh-brand-mark{width:30px;height:30px}#neuralExperience .mesh-brand-copy strong{font-size:9px}#neuralExperience .mesh-brand-copy small{font-size:7px;letter-spacing:.06em}#neuralExperience .mesh-status-pill{font-size:8px;padding:8px 9px}#neuralExperience .mesh-edge-controls{padding:0 6px}#neuralExperience .mesh-edge-controls button{min-height:65px;padding:9px 6px;font-size:7px}#neuralExperience .mesh-bottom-hud{left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}#neuralExperience .mesh-readout{padding:8px 10px}#neuralExperience .mesh-readout small{font-size:7px}#neuralExperience .mesh-readout strong{font-size:10px;margin-top:4px}}
 @media(max-height:620px) and (min-width:601px){#neuralExperience .mesh-bottom-hud{bottom:calc(6px + env(safe-area-inset-bottom))}#neuralExperience .mesh-readout{padding:6px 9px}#neuralExperience .mesh-edge-controls{top:42%}}
+<style id="kernel-mode-toggle-styles">
+.mesh-mode-toggle,.return-to-mesh{position:absolute;z-index:8;top:max(14px,env(safe-area-inset-top));right:12px;min-height:40px;padding:10px 12px;border:1px solid #6edaff65;border-radius:11px;background:rgba(3,12,24,.88);color:#d8f5ff;font:600 9px/1.2 ui-monospace,monospace;letter-spacing:.09em;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);cursor:pointer;touch-action:manipulation}
+.mesh-mode-toggle:focus-visible,.return-to-mesh:focus-visible{outline:2px solid #8de2ff;outline-offset:3px}
+.return-to-mesh{position:fixed;display:none;top:auto;right:14px;bottom:max(14px,env(safe-area-inset-bottom));z-index:10000;box-shadow:0 8px 28px #0009}
+html.kernel-dashboard-mode,html.kernel-dashboard-mode body{height:auto!important;min-height:100%!important;overflow:auto!important}
+html.kernel-dashboard-mode body>.shell{display:block!important}
+html.kernel-dashboard-mode body>.modal.open{display:flex!important}
+html.kernel-dashboard-mode #neuralExperience{display:none!important}
+html.kernel-dashboard-mode .return-to-mesh{display:block!important}
+@media(max-width:600px){.mesh-mode-toggle{font-size:8px;padding:9px 10px;right:8px}.return-to-mesh{right:8px;bottom:max(8px,env(safe-area-inset-bottom))}}
+</style>
 </style>
 </head>
 <body>
@@ -247,10 +258,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#020712}body{padding
 </div>
 <div class="modal" id="appModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
  <div class="modal-card"><div class="eyebrow">AYE•YAE CORE · CANONICAL APP POD</div><h2 id="modalTitle"></h2><p id="modalText"></p><p class="health-note">This card is a product entry point, not a claim that the full standalone application has shipped. Shared infrastructure remains operated through the X-KOM’Z mesh console.</p><div class="modal-actions"><a class="btn primary" href="./index.html#network">OPEN X-KOM’Z COMMAND CENTER</a><button class="btn" id="closeModal">CLOSE</button></div></div>
+ <button type="button" id="returnToMesh" class="return-to-mesh" aria-label="Return to the 3D mesh">RETURN TO 3D MESH</button>
 </div>
 
 <div id="neuralExperience" aria-label="KERNELCORP neural network interface">
  <div id="meshViewportMount" aria-label="Live 3D KERNEL mesh viewport"></div>
+ <button type="button" id="openFullDashboard" class="mesh-mode-toggle" aria-label="Open full KERNEL dashboard">FULL DASHBOARD ↗</button>
  <header class="mesh-top-hud">
   <div class="mesh-brand"><span class="mesh-brand-mark" aria-hidden="true">K</span><div class="mesh-brand-copy"><strong>KERNEL / X-KOM’Z</strong><small>PHANTOM BLACK · LIVE MESH VIEW</small></div></div>
   <div class="mesh-status-pill">FAIL-CLOSED · ZERO-TRUST</div>
@@ -454,6 +467,21 @@ document.querySelectorAll('[data-live-tool]').forEach(button=>button.addEventLis
  frame.src=url.href;
  frame.title=title.textContent+' — live KERNEL operational tool';
 }));
+</script>
+<script>
+(() => {
+ const html=document.documentElement;
+ const open=document.getElementById('openFullDashboard');
+ const back=document.getElementById('returnToMesh');
+ const setMode=dashboard=>{
+  html.classList.toggle('kernel-dashboard-mode',dashboard);
+  if(dashboard){window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});back?.focus({preventScroll:true});}
+  else{window.scrollTo({top:0,behavior:'auto'});open?.focus({preventScroll:true});}
+ };
+ open?.addEventListener('click',()=>setMode(true));
+ back?.addEventListener('click',()=>setMode(false));
+ window.addEventListener('keydown',event=>{if(event.key==='Escape'&&html.classList.contains('kernel-dashboard-mode'))setMode(false)});
+})();
 </script>
 </body>
 </html>
