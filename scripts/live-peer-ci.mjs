@@ -119,7 +119,7 @@ try {
     smokePage.on("pageerror", error => consoleErrors.push(String(error?.stack || error)));
     smokePage.on("console", message => { if (message.type() === "error") { const at=message.location(); consoleErrors.push(message.text()+" @ "+String(at.url||"")+":"+String(at.lineNumber||0)); } });
 
-    const appUrl = new URL("../../?ci_smoke=" + Date.now(), pageUrl).href;
+    const appUrl = new URL("../?ci_smoke=" + Date.now(), pageUrl).href;
     await smokePage.goto(appUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
     await smokePage.locator("#root").waitFor({ state: "attached", timeout: 15000 });
     await smokePage.waitForFunction(() => {
