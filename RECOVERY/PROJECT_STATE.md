@@ -41,15 +41,7 @@ Continue from the restored Ring-WAL dashboard. Do not ask the user to repeat exi
 
 Canonical command plane: `/overseer/index.html` (title: **KERNEL UMBRELLA CORP // X-KOM’Z OVERSEER**). The root `/index.html` already redirects here. The historical names below are compatibility entrypoints; they must not fork the UI or create separate dashboards.
 
-Compatibility pages added at repository root:
-- `/command.html` and `/command-center.html`
-- `/dashboard.html`
-- `/overseer.html`
-- `/x-komz.html` and `/x-koms.html`
-- `/kernel.html`
-
-All compatibility pages redirect to the same canonical Overseer command plane. The canonical dashboard hosts the live mesh console and provides one embedded workbench for the existing network, Ring-WAL/storage, peer verification, authenticated shard, and authority/vault tools. The seven canonical product cards are X-KOM’Z (hub) plus Planet-K, KashKorner, X-Koin’s, Kernelodie’s, KernelVision, and X-Shield. A card marked “PRODUCT BRIEF” describes a planned product surface; it is not evidence that a separate production app has been built.
-
+The repository root redirects to the canonical Overseer command plane. No duplicate dashboard pages should be added; historical names are for search and recovery only.
 ### Historical branches checked against `main`
 
 The repository's branch search returned these 13 non-main branches:
