@@ -34,7 +34,28 @@ export async function createRealPeerNode(
   let offerStarted = false;
   let readyTimer = null;
   const pendingIce = [];
+  const pendingLocalIce = [];
   let remotePeerId = null;
+  let cachedOfferMessage = null;
+  let offerCreation = null;
+
+  async function flushLocalIce() {
+    if (!remotePeerId) return;
+    while (pendingLocalIce.length && remotePeerId && !closed) {
+      const candidate = pendingLocalIce.shift();
+      await send({ type: "ICE", candidate, targetPeerId: remotePeerId });
+    }
+  }
+
+  function bindRemotePeer(id) {
+    if (typeof id !== "string" || !/^[A-Za-z0-9_-]{1,96}$/.test(id)) {
+      throw new Error("INVALID_REMOTE_PEER_ID");
+    }
+    if (remotePeerId && remotePeerId !== id) throw new Error("REMOTE_PEER_ID_REBIND_REJECTED");
+    remotePeerId = id;
+    void flushLocalIce().catch(error =>
+      onStateChange({ type: "signaling-error", error: String(error) }));
+  }
   const send = message => {
     if (["OFFER", "ANSWER", "ICE"].includes(message.type) && !remotePeerId) {
       throw new Error("REMOTE_PEER_ID_NOT_ESTABLISHED");
@@ -54,10 +75,14 @@ export async function createRealPeerNode(
   };
 
   pc.addEventListener("icecandidate", event => {
-    if (event.candidate) {
-      Promise.resolve(send({ type: "ICE", candidate: event.candidate.toJSON?.() ?? event.candidate, targetPeerId: remotePeerId }))
-        .catch(error => onStateChange({ type: "signaling-error", error: String(error) }));
+    if (!event.candidate) return;
+    const candidate = event.candidate.toJSON?.() ?? event.candidate;
+    if (!remotePeerId) {
+      pendingLocalIce.push(candidate);
+      return;
     }
+    Promise.resolve(send({ type: "ICE", candidate, targetPeerId: remotePeerId }))
+      .catch(error => onStateChange({ type: "signaling-error", error: String(error) }));
   });
   pc.addEventListener("connectionstatechange", () =>
     onStateChange({ type: "connection", state: pc.connectionState, iceState: pc.iceConnectionState, peerId }));
@@ -90,18 +115,33 @@ export async function createRealPeerNode(
     try {
       switch (message.type) {
         case "READY": {
-          if (!isInitiator || offerStarted) break;
-          if (typeof message.peerId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/.test(message.peerId)) {
-            throw new Error("INVALID_REMOTE_PEER_ID");
+          if (!isInitiator) break;
+          if (remotePeerId && message.peerId !== remotePeerId) {
+            onStateChange({ type: "signaling-rejected", reason: "READY_SENDER_IDENTITY_MISMATCH" });
+            break;
           }
-          remotePeerId = message.peerId;
+          bindRemotePeer(message.peerId);
+          if (cachedOfferMessage) {
+            await send(cachedOfferMessage);
+            onStateChange({ type: "signaling-retry", message: "OFFER_RESENT_AFTER_READY" });
+            break;
+          }
+          if (offerCreation) {
+            await offerCreation;
+            if (cachedOfferMessage) await send(cachedOfferMessage);
+            break;
+          }
           offerStarted = true;
           makingOffer = true;
-          try {
+          offerCreation = (async () => {
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
-            await send({ type: "OFFER", sdp: pc.localDescription, targetPeerId: remotePeerId });
-          } finally { makingOffer = false; }
+            cachedOfferMessage = { type: "OFFER", sdp: pc.localDescription };
+            await send(cachedOfferMessage);
+            await flushLocalIce();
+          })();
+          try { await offerCreation; }
+          finally { makingOffer = false; offerCreation = null; }
           break;
         }
         case "OFFER": {
@@ -112,7 +152,7 @@ export async function createRealPeerNode(
           if (remotePeerId && remotePeerId !== message.peerId) {
             throw new Error("OFFER_SENDER_IDENTITY_MISMATCH");
           }
-          remotePeerId = message.peerId;
+          bindRemotePeer(message.peerId);
           if (readyTimer !== null) { clearInterval(readyTimer); readyTimer = null; }
           await pc.setRemoteDescription(message.sdp);
           await drainIce();
@@ -154,6 +194,9 @@ export async function createRealPeerNode(
   }
 
   const unsubscribe = signalingTransport.subscribe(handleSignal);
+  if (signalingTransport.ready && typeof signalingTransport.ready.then === "function") {
+    await signalingTransport.ready;
+  }
   if (!isInitiator) {
     // Repeat READY until the offer arrives; MQTT QoS 0 can lose early messages
     // while the other peer is still subscribing or registering its listener.
