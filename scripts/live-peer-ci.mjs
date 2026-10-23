@@ -239,6 +239,13 @@ try {
       await smokeBrowser.close();
       throw new Error("SECURITY_TAB_CONTROL_FAILED: " + securityButton);
     }
+    const enrollmentButton = ((await smokePage.frameLocator("#commandFrame").locator("#provision").textContent()) || "").trim();
+    const enrollmentIdle = ((await smokePage.frameLocator("#commandFrame").locator("#enrollOut").textContent()) || "").trim();
+    if (!enrollmentButton.includes("EXPLICITLY PROVISION") || !enrollmentIdle.includes("No enrollment action")) {
+      await smokeBrowser.close();
+      throw new Error("EXPLICIT_AUTHORITY_ENROLLMENT_CONTROL_FAILED: " + JSON.stringify({ enrollmentButton, enrollmentIdle }));
+    }
+    console.log(JSON.stringify({ event: "EXPLICIT_AUTHORITY_ENROLLMENT_CONTROL_PASS", enrollmentButton, autoProvisioned: false }));
     await smokePage.frameLocator("#commandFrame").locator("#run").click();
     await smokePage.waitForFunction(() => {
       const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#out")?.textContent || "";
