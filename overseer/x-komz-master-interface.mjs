@@ -27,10 +27,10 @@ const TOOL_LINKS = [
 
 const PODS = [
   { id: 'planet-k', name: 'Planet-K', desc: 'Knowledge, research, discovery and searchable information', href: './pod-command-drawer.html' },
-  { id: 'kash-korner', name: 'KashKorner', desc: 'Financial tools, ledger visibility and transaction workflows', href: './pod-command-drawer.html' },
+  { id: 'kashkorner', name: 'KashKorner', desc: 'Financial tools, ledger visibility and transaction workflows', href: './pod-command-drawer.html' },
   { id: 'x-koins', name: 'X-Koin’s', desc: 'Digital asset interfaces and authority-controlled services', href: './pod-command-drawer.html' },
   { id: 'kernelodies', name: 'Kernelodie’s', desc: 'Music discovery, listening and AI-assisted audio workflows', href: './pod-command-drawer.html' },
-  { id: 'kernel-vision', name: 'KernelVision', desc: 'Visual production, rendering and publishing workflows', href: './pod-command-drawer.html' },
+  { id: 'kernelvision', name: 'KernelVision', desc: 'Visual production, rendering and publishing workflows', href: './pod-command-drawer.html' },
   { id: 'x-shield', name: 'X-Shield', desc: 'Privacy controls, threat visibility and security tooling', href: './pod-command-drawer.html' }
 ];
 
@@ -449,7 +449,7 @@ export class XKomzMasterInterface {
     this.scene.add(domeDots);
 
     // Layer 3: multi-depth colored filaments and bokeh particles.
-    const palette = [new THREE.Color(0x168dff), new THREE.Color(0x247bff), new THREE.Color(0x36baff), new THREE.Color(0x5ad8ff), new THREE.Color(0x9cefff)];
+    const palette = [new THREE.Color(0x168dff), new THREE.Color(0x247bff), new THREE.Color(0x36baff), new THREE.Color(0x5ad8ff), new THREE.Color(0x9cefff), new THREE.Color(0xffb547), new THREE.Color(0xff8a32)];
     const count = 2400, pos = new Float32Array(count * 3), colors = new Float32Array(count * 3), sizes = new Float32Array(count);
     for (let i = 0; i < count; i++) {
       const r = 7 + Math.random() * 28, a = Math.random() * Math.PI * 2, y = (Math.random() - .5) * 28;
@@ -620,7 +620,10 @@ export class XKomzMasterInterface {
     this.pointer.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const hits = this.raycaster.intersectObjects(this.sceneObjects, false);
-    if (!hits.length) return;
+    if (!hits.length) {
+      if (this.options.viewportOnly) this.options.onGesture?.('close');
+      return;
+    }
     const node = hits[0].object.userData.node;
     this.selectedNode = node.raw;
     if (this.options.viewportOnly) {
