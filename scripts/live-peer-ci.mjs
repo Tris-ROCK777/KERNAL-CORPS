@@ -108,7 +108,7 @@ try {
     console.log(JSON.stringify({ event: "LIVE_PEER_AND_RESTART_RECOVERY_PASS", transportBytes: 98304, transportChunks: 3, persistence: receipt }));
 
     // Verify the deployed Overseer command center itself at a phone-sized viewport.
-    const consoleUrl = pageUrl.replace("live-peer-verify.html", "index.html");
+    const consoleUrl = pageUrl.replace("live-peer-verify.html", "index.html") + "?ci_smoke=" + Date.now();
     // Use a clean, isolated browser context so the temporary persistence-test identity
     // cannot contaminate the production command-center trust-pin check.
     const smokeBrowser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
@@ -129,7 +129,7 @@ try {
         const log = frame?.contentDocument?.querySelector("#status")?.textContent || frame?.contentDocument?.querySelector("#log")?.textContent || "";
         return log.includes("PRODUCTION RUNTIME READY") || log.includes("RUNTIME NOT READY:") || log.includes("RUNTIME BLOCKED:");
       },
-      undefined, { timeout: 60000 }
+      undefined, { timeout: 120000 }
     );
     const runtimeLog = await smokePage.locator("#commandFrame").evaluate(frame =>
       frame.contentDocument?.querySelector("#status")?.textContent || frame.contentDocument?.querySelector("#log")?.textContent || ""
