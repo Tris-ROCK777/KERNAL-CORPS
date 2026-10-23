@@ -265,9 +265,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#020712}body{padding
  <section class="telemetry" id="nodeTelemetry" aria-label="Peer node details" aria-hidden="true">
   <div class="telemetry-top"><div><div class="eyebrow" id="nodeLabel">NETWORK NODE / SELECTED</div><h2>Peer telemetry</h2></div><button class="telemetry-close" id="closeTelemetry" aria-label="Zoom back to mesh">×</button></div>
    <div class="telemetry-grid">
-    <div class="telemetry-cell"><small>LIVE NETWORK</small><strong>Peers <span data-live-value="peers">UNAVAILABLE</span><br>Latency <span data-live-value="latency">UNAVAILABLE</span><br>RX bytes <span data-live-value="rxBytes">UNAVAILABLE</span></strong></div>
+    <div class="telemetry-cell"><small>LIVE NETWORK</small><strong>Peers <span data-live-value="peers">UNAVAILABLE</span><br>Workers active <span data-live-value="workers">UNAVAILABLE</span> · target 10,000<br>Latency <span data-live-value="latency">UNAVAILABLE</span><br>RX bytes <span data-live-value="rxBytes">UNAVAILABLE</span></strong></div>
     <div class="telemetry-cell"><small>VERIFIED STORAGE</small><strong>Shards <span data-live-value="shards">UNAVAILABLE</span><br>Verified bytes <span data-live-value="verifiedBytes">UNAVAILABLE</span><br>Read-back <span data-live-value="readback">UNAVAILABLE</span></strong></div>
-    <div class="telemetry-cell"><small>RING-WAL DURABILITY</small><strong>Status <span data-live-value="wal">UNAVAILABLE</span><br>Commits <span data-live-value="commits">UNAVAILABLE</span><br>Recovery <span data-live-value="recovery">UNAVAILABLE</span></strong></div>
+    <div class="telemetry-cell"><small>RING-WAL DURABILITY</small><strong>Status <span data-live-value="wal">UNAVAILABLE</span><br>Local commits <span data-live-value="commits">UNAVAILABLE</span><br>Recovery <span data-live-value="recovery">UNAVAILABLE</span></strong></div>
     <div class="telemetry-cell"><small>ZERO-TRUST SECURITY</small><strong>Authority <span data-live-value="authority">UNAVAILABLE</span><br>Signature <span data-live-value="signature">UNAVAILABLE</span><br>Read-back gate <span data-live-value="gate">UNAVAILABLE</span></strong></div>
    </div>
    <p class="telemetry-copy">Values update from the existing client console’s telemetry and verified receipts. Unreported fields remain UNAVAILABLE; the embedded workbench exposes the source-of-truth tools.</p>
@@ -369,6 +369,7 @@ const mesh = new XKomzMasterInterface(mount, {
     const paths = {
       peers: ['network.livePeerCount','network.peerCount'],
       latency: ['network.latencyMs'],
+      workers: ['network.workers.localActive'],
       rxBytes: ['network.bytesReceived'],
       shards: ['storage.shardCount'],
       verifiedBytes: ['storage.verifiedShardBytes'],
