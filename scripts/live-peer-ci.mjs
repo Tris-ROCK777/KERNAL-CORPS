@@ -177,6 +177,23 @@ try {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_UI_ASSERTION_FAILED: " + JSON.stringify(ui));
     }
+    // Exercise the real local RTCDataChannel loopback simulator from the deployed mobile UI.
+    // This remains distinct from the separate two-browser remote-peer transfer test.
+    await smokePage.frameLocator("#commandFrame").locator("#simTransfer").click();
+    await smokePage.waitForFunction(() => {
+      const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#log")?.textContent || "";
+      return output.includes("SIM PASS") || output.includes("96 KiB WEBRTC SIM FAILED");
+    }, undefined, { timeout: 25000 });
+    const simulatorLog = await smokePage.locator("#commandFrame").evaluate(frame =>
+      frame.contentDocument?.querySelector("#log")?.textContent || "");
+    const simulatorPass = simulatorLog.split("\n").find(line => line.includes("SIM PASS"));
+    if (!simulatorPass || !simulatorPass.includes("98304 BYTES") ||
+        !simulatorPass.includes("3 × 32 KiB") || !simulatorPass.includes("SHA-256 MATCH") ||
+        !simulatorPass.includes("NO REMOTE PEER")) {
+      await smokeBrowser.close();
+      throw new Error("DEPLOYED_LOOPBACK_SIMULATOR_FAILED: " + simulatorLog);
+    }
+    console.log(JSON.stringify({ event: "DEPLOYED_96KIB_LOOPBACK_SIMULATOR_PASS", receipt: simulatorPass }));
     if (resourceFailures.length || consoleErrors.length) {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_RESOURCE_OR_CONSOLE_ERRORS: " +
