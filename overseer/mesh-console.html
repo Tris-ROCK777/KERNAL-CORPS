@@ -341,9 +341,15 @@ window.__kernelConsoleBootTimer=setTimeout(()=>{const out=document.querySelector
 window.addEventListener("error",e=>{const out=document.querySelector("#log");if(out)out.textContent+="\nGLOBAL SCRIPT ERROR: "+String(e.message||"unknown")+" · "+String(e.filename||"")+" : "+String(e.lineno||"")});
 window.addEventListener("unhandledrejection",e=>{const out=document.querySelector("#log");if(out)out.textContent+="\nGLOBAL UNHANDLED REJECTION: "+String(e.reason?.stack||e.reason||"unknown")});
 </script>
+<script>
+// This classic script runs even when a module dependency fails before module evaluation.
+window.__kernelConsoleBootTimer=setTimeout(()=>{const out=document.querySelector("#log");if(out&&out.textContent.includes("BOOTING LOCAL CONSOLE"))out.textContent+="\\nBOOT WATCHDOG: module startup did not reach runtime initialization; inspect the module/network error."},10000);
+window.addEventListener("error",e=>{const out=document.querySelector("#log");if(out)out.textContent+="\\nGLOBAL SCRIPT ERROR: "+String(e.message||"unknown")+" · "+String(e.filename||"")+" : "+String(e.lineno||"")});
+window.addEventListener("unhandledrejection",e=>{const out=document.querySelector("#log");if(out)out.textContent+="\\nGLOBAL UNHANDLED REJECTION: "+String(e.reason?.stack||e.reason||"unknown")});
+</script>
 <script type="module">
-import { initializeProductionOverseer } from "./overseer-production-runtime.mjs?kernelBuild=3ba98225";
-import { OverseerMeshReplicator } from "./overseer-mesh-sync.mjs?kernelBuild=3ba98225";
+import { initializeProductionOverseer } from "./overseer-production-runtime.mjs?kernelBuild=xkomz-20261023-r1";
+import { OverseerMeshReplicator } from "./overseer-mesh-sync.mjs?kernelBuild=xkomz-20261023-r1";
 window.addEventListener("error",event=>{const node=document.querySelector("#log");if(node)node.textContent+="\nSCRIPT ERROR: "+String(event.message||event.error||"unknown")+" @ "+String(event.filename||"")+" : "+String(event.lineno||"");});
 window.addEventListener("unhandledrejection",event=>{const node=document.querySelector("#log");if(node)node.textContent+="\nUNHANDLED REJECTION: "+String(event.reason?.stack||event.reason||"unknown");});
 const canvas=document.querySelector("#scene"),ctx=canvas.getContext("2d",{alpha:false});
