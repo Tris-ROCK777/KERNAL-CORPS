@@ -46,7 +46,7 @@
         enrollOutput.textContent = JSON.stringify({
           status: result.status,
           publicKeyHex: result.publicKeyHex,
-          vault: "OPFS / kernel_vault / authority.vault.json + non-exportable authority vault",
+          vault: "IndexedDB / kernel-authority-vault (non-exportable CryptoKey); existing legacy OPFS identity is not overwritten",
           trustPinChanged: false,
           next: result.status === "NEW_IDENTITY_CREATED_REQUIRES_TRUSTED_PIN"
             ? "Keep this device’s site data intact. Copy publicKeyHex back into this conversation so the trusted app pin can be updated to this exact public key. The private key is not displayed."
