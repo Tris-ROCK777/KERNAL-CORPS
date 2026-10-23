@@ -481,7 +481,6 @@ function draw(){
   ctx.save();ctx.translate(core.x,core.y);ctx.rotate(reduceMotion?0:motion*.22);for(let ring=0;ring<3;ring++){ctx.beginPath();for(let k=0;k<6;k++){const a=k*Math.PI/3,rr=27+ring*10,px=Math.cos(a)*rr,py=Math.sin(a)*rr*.72;if(k===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.closePath();ctx.strokeStyle=["rgba(177,222,255,.62)","rgba(142,164,255,.38)","rgba(208,224,245,.2)"][ring];ctx.lineWidth=ring===0?1.2:.8;ctx.stroke()}ctx.restore();angularMark(core.x,core.y,22+pulse*3,Math.PI/4);ctx.strokeStyle="rgba(168,205,255,.42)";ctx.lineWidth=1;ctx.stroke();angularMark(core.x,core.y,13+pulse*1.5,Math.PI/4);ctx.fillStyle="rgba(8,20,39,.97)";ctx.fill();ctx.strokeStyle="rgba(192,224,255,.9)";ctx.stroke();angularMark(core.x,core.y,5.2,0);ctx.fillStyle="#e0f1ff";ctx.shadowColor="#83baff";ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0;ctx.font="bold 8px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="rgba(220,236,255,.9)";ctx.fillText("KERNEL CORE",core.x,core.y+43);
   requestAnimationFrame(draw);
 }
-}
 requestAnimationFrame(draw);
 updateLiveDisplay();setInterval(updateLiveDisplay,1000);setInterval(updateAnalytics,1000);
 function escapeHtml(value){return String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
