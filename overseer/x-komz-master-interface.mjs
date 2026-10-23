@@ -326,23 +326,41 @@ export class XKomzMasterInterface {
     this.nodes = normalized;
     if (!this.nodeGroup) return;
     while (this.nodeGroup.children.length) {
-      const child = this.nodeGroup.children.pop();
+      const child = this.nodeGroup.children[this.nodeGroup.children.length - 1];
+      this.nodeGroup.remove(child);
       child.geometry?.dispose();
       if (Array.isArray(child.material)) child.material.forEach(m => m.dispose()); else child.material?.dispose();
     }
     this.sceneObjects = [];
+    if (this.nodeGlow) {
+      this.scene.remove(this.nodeGlow);
+      this.nodeGlow.geometry.dispose();
+      this.nodeGlow = null;
+    }
     const radius = 8.5;
+    const glowPositions = [], glowColors = [];
     normalized.forEach((node, index) => {
       const phi = Math.acos(1 - 2 * (index + .5) / Math.max(1, normalized.length));
       const theta = Math.PI * (1 + Math.sqrt(5)) * index;
       const pos = new THREE.Vector3(radius * Math.sin(phi) * Math.cos(theta), radius * Math.cos(phi), radius * Math.sin(phi) * Math.sin(theta));
       const live = /connected|open|live|active|verified/.test(node.state);
+      glowPositions.push(pos.x, pos.y, pos.z);
+      const glow = live ? new THREE.Color(0x5edfff) : new THREE.Color(0x173450);
+      glowColors.push(glow.r, glow.g, glow.b);
       const geometry = new THREE.SphereGeometry(live ? .17 : .12, 10, 10);
       const material = new THREE.MeshBasicMaterial({ color: live ? 0x8eeaff : 0x31465e, transparent: true, opacity: live ? .98 : .38 });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.copy(pos); mesh.userData.node = node; mesh.userData.isPeerNode = true;
       this.nodeGroup.add(mesh); this.sceneObjects.push(mesh);
     });
+    if (this.nodeGlowMaterial && normalized.length) {
+      const glowGeometry = new THREE.BufferGeometry();
+      glowGeometry.setAttribute('position', new THREE.Float32BufferAttribute(glowPositions, 3));
+      glowGeometry.setAttribute('color', new THREE.Float32BufferAttribute(glowColors, 3));
+      this.nodeGlow = new THREE.Points(glowGeometry, this.nodeGlowMaterial);
+      this.nodeGlow.renderOrder = 2;
+      this.scene.add(this.nodeGlow);
+    }
   }
 
   initThreeScene() {
@@ -357,13 +375,26 @@ export class XKomzMasterInterface {
       this.reportError('WebGL initialization failed', error);
       return;
     }
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.7));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.matchMedia('(max-width: 700px)').matches ? 1.25 : 1.6));
     this.renderer.setSize(this.viewport.clientWidth || window.innerWidth, this.viewport.clientHeight || window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.domElement.setAttribute('aria-label', 'Interactive 3D mesh; select a glowing peer node');
     this.renderer.domElement.tabIndex = 0;
     this.viewport.appendChild(this.renderer.domElement);
     this.scene.add(new THREE.AmbientLight(0x7ebfff, .65));
+    const glowCanvas = document.createElement('canvas');
+    glowCanvas.width = glowCanvas.height = 64;
+    const glowContext = glowCanvas.getContext('2d');
+    if (glowContext) {
+      const gradient = glowContext.createRadialGradient(32, 32, 1, 32, 32, 32);
+      gradient.addColorStop(0, 'rgba(205,248,255,1)');
+      gradient.addColorStop(.18, 'rgba(81,203,255,.8)');
+      gradient.addColorStop(.48, 'rgba(28,125,255,.22)');
+      gradient.addColorStop(1, 'rgba(0,50,130,0)');
+      glowContext.fillStyle = gradient; glowContext.fillRect(0, 0, 64, 64);
+      this.nodeGlowTexture = new THREE.CanvasTexture(glowCanvas);
+      this.nodeGlowMaterial = new THREE.PointsMaterial({ size: .9, map: this.nodeGlowTexture, vertexColors: true, transparent: true, opacity: .62, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+    }
 
     // Layer 1: engineered digital core (interlocking toroidal lattices; no biological silhouette).
     this.coreGroup = new THREE.Group();
@@ -376,7 +407,12 @@ export class XKomzMasterInterface {
     const torusB = new THREE.Mesh(new THREE.TorusKnotGeometry(3.5, .34, 180, 10, 3, 7), coreMaterials[1]);
     torusB.rotation.set(1.1, .4, .7);
     const nucleus = new THREE.Mesh(new THREE.IcosahedronGeometry(1.4, 2), coreMaterials[2]);
-    this.coreGroup.add(torusA, torusB, nucleus);
+    this.coreHalo = new THREE.Mesh(new THREE.SphereGeometry(1.95, 32, 24), new THREE.MeshBasicMaterial({ color: 0x158cff, transparent: true, opacity: .075, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false }));
+    this.coreOrbit = new THREE.Mesh(new THREE.TorusGeometry(5.8, .035, 8, 180), new THREE.MeshBasicMaterial({ color: 0x65dcff, transparent: true, opacity: .68 }));
+    this.coreOrbit.rotation.set(.72, .15, .25);
+    this.coreOrbit2 = new THREE.Mesh(new THREE.TorusGeometry(6.15, .022, 8, 180), new THREE.MeshBasicMaterial({ color: 0xffb34d, transparent: true, opacity: .38 }));
+    this.coreOrbit2.rotation.set(1.25, .65, -.2);
+    this.coreGroup.add(torusA, torusB, nucleus, this.coreHalo, this.coreOrbit, this.coreOrbit2);
     const corePoints = new THREE.Points(new THREE.IcosahedronGeometry(5.1, 4), new THREE.PointsMaterial({ color: 0xb8f5ff, size: .045, transparent: true, opacity: .9 }));
     this.coreGroup.add(corePoints);
     this.scene.add(this.coreGroup);
@@ -474,6 +510,9 @@ export class XKomzMasterInterface {
     this.raf = requestAnimationFrame(() => this.animate());
     const t = performance.now() * .001;
     if (this.coreGroup) { this.coreGroup.rotation.x = Math.sin(t * .17) * .12; this.coreGroup.rotation.y = t * .14; }
+    if (this.coreHalo) { const pulse = 1 + Math.sin(t * 1.4) * .055; this.coreHalo.scale.setScalar(pulse); this.coreHalo.material.opacity = .055 + (Math.sin(t * 1.4) + 1) * .018; }
+    if (this.coreOrbit) this.coreOrbit.rotation.z = t * .12;
+    if (this.coreOrbit2) this.coreOrbit2.rotation.y = -t * .09;
     if (this.dome) { this.dome.rotation.y = -t * .025; this.dome.rotation.x = Math.sin(t * .07) * .025; }
     if (this.bokeh) this.bokeh.rotation.y = t * .012;
     if (this.filaments) { this.filaments.rotation.y = -t * .03; this.filaments.rotation.x = Math.sin(t * .09) * .04; }
@@ -604,6 +643,8 @@ export class XKomzMasterInterface {
       if (Array.isArray(object.material)) object.material.forEach(m => m.dispose?.());
       else object.material?.dispose?.();
     });
+    this.nodeGlowTexture?.dispose();
+    this.nodeGlowMaterial?.dispose();
     this.container.innerHTML = '';
   }
 }
