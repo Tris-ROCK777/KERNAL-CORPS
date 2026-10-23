@@ -27,6 +27,10 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 20
+      - name: Preserve existing Overseer backend assets
+        run: |
+          mkdir -p public/overseer
+          cp -R overseer/. public/overseer/
       - name: Install dependencies
         run: npm install
       - name: Build with Vite
