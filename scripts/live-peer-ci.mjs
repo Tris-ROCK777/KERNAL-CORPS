@@ -120,7 +120,7 @@ try {
     smokePage.on("response", response => {
       if (response.status() >= 400) resourceFailures.push({ url: response.url(), status: response.status() });
     });
-    smokePage.on("pageerror", error => consoleErrors.push(String(error)));
+    smokePage.on("pageerror", error => consoleErrors.push(String(error?.stack || error)));
     smokePage.on("console", message => { if (message.type() === "error") consoleErrors.push(message.text()); });
     await smokePage.goto(consoleUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
     await smokePage.waitForFunction(
