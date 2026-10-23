@@ -341,12 +341,6 @@ window.__kernelConsoleBootTimer=setTimeout(()=>{const out=document.querySelector
 window.addEventListener("error",e=>{const out=document.querySelector("#log");if(out)out.textContent+="\nGLOBAL SCRIPT ERROR: "+String(e.message||"unknown")+" · "+String(e.filename||"")+" : "+String(e.lineno||"")});
 window.addEventListener("unhandledrejection",e=>{const out=document.querySelector("#log");if(out)out.textContent+="\nGLOBAL UNHANDLED REJECTION: "+String(e.reason?.stack||e.reason||"unknown")});
 </script>
-<script>
-// This classic script runs even when a module dependency fails before module evaluation.
-window.__kernelConsoleBootTimer=setTimeout(()=>{const out=document.querySelector("#log");if(out&&out.textContent.includes("BOOTING LOCAL CONSOLE"))out.textContent+="\\nBOOT WATCHDOG: module startup did not reach runtime initialization; inspect the module/network error."},10000);
-window.addEventListener("error",e=>{const out=document.querySelector("#log");if(out)out.textContent+="\\nGLOBAL SCRIPT ERROR: "+String(e.message||"unknown")+" · "+String(e.filename||"")+" : "+String(e.lineno||"")});
-window.addEventListener("unhandledrejection",e=>{const out=document.querySelector("#log");if(out)out.textContent+="\\nGLOBAL UNHANDLED REJECTION: "+String(e.reason?.stack||e.reason||"unknown")});
-</script>
 <script type="module">
 import { initializeProductionOverseer } from "./overseer-production-runtime.mjs?kernelBuild=xkomz-20261023-r1";
 import { OverseerMeshReplicator } from "./overseer-mesh-sync.mjs?kernelBuild=xkomz-20261023-r1";
@@ -519,8 +513,8 @@ async function runLoopbackTransferSimulation(){
   await sender.setLocalDescription(await sender.createOffer());await gather(sender);
   await receiver.setRemoteDescription(sender.localDescription);await receiver.setLocalDescription(await receiver.createAnswer());await gather(receiver);
   await sender.setRemoteDescription(receiver.localDescription);
-  timeoutId=setTimeout(()=>doneReject(new Error("SIM_TRANSFER_TIMEOUT")),15000);
-  await opened;
+  const timeoutPromise=new Promise((_,reject)=>{timeoutId=setTimeout(()=>{const error=new Error("SIM_TRANSFER_TIMEOUT");doneReject(error);reject(error)},15000)});
+  await Promise.race([opened,timeoutPromise]);
   for(let offset=0;offset<totalBytes;offset+=chunkBytes)tx.send(payload.slice(offset,Math.min(offset+chunkBytes,totalBytes)));
   const receipt=await receiptPromise;
   log("SIM PASS · LOCAL RTCDataChannel LOOPBACK ONLY · "+receipt.receivedBytes+" BYTES · "+receipt.chunks+" × 32 KiB · SHA-256 MATCH "+receipt.actualSha256+" · NO REMOTE PEER");
