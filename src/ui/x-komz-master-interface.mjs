@@ -26,12 +26,12 @@ const TOOL_LINKS = [
 ];
 
 const PODS = [
-  { id: 'kernel-vision', name: 'KernelVision', desc: 'Visual telemetry, frame buffer and node inspection', href: './pod-command-drawer.html' },
-  { id: 'planet-apex', name: 'PlanetApeX', desc: 'Peer topography and decentralized state mapping', href: './pod-command-drawer.html' },
-  { id: 'kash-korner', name: 'KashKorner', desc: 'Ledger visibility, balance auditing and escrow state', href: './pod-command-drawer.html' },
-  { id: 'koin-kobs', name: "KoinKob's", desc: 'Asset liquidity and peer exchange operations', href: './pod-command-drawer.html' },
-  { id: 'kernelodies', name: "Kernelodie'z", desc: 'State-machine and audio-visual stream synchronization', href: './pod-command-drawer.html' },
-  { id: 'x-shield', name: 'XShield', desc: 'Authority verification, security gates and firewall status', href: './pod-command-drawer.html' }
+  { id: 'planet-k', name: 'Planet-K', desc: 'Knowledge, research, discovery and searchable information', href: './pod-command-drawer.html' },
+  { id: 'kash-korner', name: 'KashKorner', desc: 'Financial tools, ledger visibility and transaction workflows', href: './pod-command-drawer.html' },
+  { id: 'x-koins', name: 'X-Koin’s', desc: 'Digital asset interfaces and authority-controlled services', href: './pod-command-drawer.html' },
+  { id: 'kernelodies', name: 'Kernelodie’s', desc: 'Music discovery, listening and AI-assisted audio workflows', href: './pod-command-drawer.html' },
+  { id: 'kernel-vision', name: 'KernelVision', desc: 'Visual production, rendering and publishing workflows', href: './pod-command-drawer.html' },
+  { id: 'x-shield', name: 'X-Shield', desc: 'Privacy controls, threat visibility and security tooling', href: './pod-command-drawer.html' }
 ];
 
 const UNKNOWN = 'UNAVAILABLE';
@@ -75,6 +75,14 @@ export class XKomzMasterInterface {
   }
 
   renderShell() {
+    if (this.options.viewportOnly) {
+      this.container.innerHTML = '<div class="xk-root xk-viewport-only" aria-label="Interactive X-KOM’Z 3D peer mesh"><div class="xk-viewport" data-xk-viewport aria-label="Interactive three-dimensional peer mesh"></div></div>';
+      this.root = this.container.querySelector('.xk-root');
+      this.viewport = this.container.querySelector('[data-xk-viewport]');
+      this.scrim = null;
+      this.drawers = {};
+      return;
+    }
     this.container.innerHTML = `
       <section class="xk-root" aria-label="X-KOM'Z Overseer command center">
         <div class="xk-viewport" data-xk-viewport aria-label="Interactive three-dimensional peer mesh"></div>
@@ -146,7 +154,7 @@ export class XKomzMasterInterface {
     style.id = 'xk-master-styles';
     style.textContent = `
       .xk-root{position:relative;isolation:isolate;width:100%;height:100%;min-height:560px;overflow:hidden;background:#02050c;color:#e7f4ff;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.015em;user-select:none}
-      .xk-root *{box-sizing:border-box}.xk-viewport{position:absolute;inset:0;z-index:0;touch-action:pan-y}.xk-viewport canvas{display:block;width:100%;height:100%;outline:none}
+      .xk-root *{box-sizing:border-box}.xk-root.xk-viewport-only{position:absolute;inset:0;width:100%;height:100%;min-height:0;overflow:hidden;background:transparent}.xk-viewport{position:absolute;inset:0;z-index:0;touch-action:pan-y}.xk-viewport canvas{display:block;width:100%;height:100%;outline:none}
       .xk-hud{position:absolute;z-index:2;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(620px,calc(100% - 28px));padding:12px 16px;text-align:center;border:1px solid #8ddcff30;border-radius:15px;background:#040b16b8;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 10px 45px #0008;pointer-events:none}
       .xk-brand{display:flex;align-items:center;justify-content:center;gap:10px;font-size:12px;letter-spacing:.14em}.xk-mark{color:#fff;font-weight:800}.xk-brand b{color:#a5eaff}.xk-subtitle{margin-top:4px;color:#8198af;font-size:9px;letter-spacing:.16em}.xk-statusline{display:flex;justify-content:center;gap:8px;align-items:center;margin-top:9px;color:#8fa9c2;font:9px/1.4 ui-monospace,monospace;letter-spacing:.07em}.xk-live-dot{width:6px;height:6px;border-radius:50%;background:#8adfff;box-shadow:0 0 12px #48caff}
       .xk-side-hints{position:absolute;z-index:2;top:48%;left:0;right:0;display:flex;justify-content:space-between;padding:0 10px;pointer-events:none}.xk-side-hints button{pointer-events:auto;writing-mode:vertical-rl;padding:12px 8px;border:1px solid #8ddcff30;border-radius:10px;background:#050c18a8;color:#b4d9ef;font:9px ui-monospace,monospace;letter-spacing:.12em;backdrop-filter:blur(12px)}
@@ -211,6 +219,12 @@ export class XKomzMasterInterface {
   consumeSnapshot(snapshot, source = 'external') {
     if (!snapshot || typeof snapshot !== 'object') return;
     this.snapshot = snapshot;
+    if (this.options.viewportOnly) {
+      const peers = readPath(snapshot, ['network.peers','peers','nodes']);
+      if (Array.isArray(peers)) this.syncNodes(peers);
+      this.options.onSnapshot?.(snapshot, source);
+      return;
+    }
     const peerCount = readPath(snapshot, ['network.livePeerCount','network.peerCount','livePeerCount','peerCount','metrics.peers']);
     const shardCount = readPath(snapshot, ['storage.shardCount','shardCount','metrics.shards']);
     const latency = readPath(snapshot, ['network.latencyMs','network.latency','latencyMs','metrics.latencyMs']);
@@ -475,8 +489,12 @@ export class XKomzMasterInterface {
     if (!hits.length) return;
     const node = hits[0].object.userData.node;
     this.selectedNode = node.raw;
-    this.renderNodeDetails(this.selectedNode);
-    this.openDrawer('telemetry');
+    if (this.options.viewportOnly) {
+      this.options.onNodeSelected?.(this.selectedNode);
+    } else {
+      this.renderNodeDetails(this.selectedNode);
+      this.openDrawer('telemetry');
+    }
     const target = hits[0].object.position.clone();
     const direction = target.clone().normalize();
     const end = target.clone().add(direction.multiplyScalar(4));
@@ -486,6 +504,22 @@ export class XKomzMasterInterface {
   }
 
   bindEvents() {
+    if (this.options.viewportOnly) {
+      let startX = 0, startY = 0, startAt = 0;
+      this.root.addEventListener('touchstart', event => {
+        const touch = event.changedTouches[0]; startX = touch.clientX; startY = touch.clientY; startAt = performance.now();
+      }, { passive: true });
+      this.root.addEventListener('touchend', event => {
+        const touch = event.changedTouches[0], dx = touch.clientX - startX, dy = touch.clientY - startY;
+        if (performance.now() - startAt > 900 || Math.abs(dx) < 65 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+        if (startX < 38 && dx > 0) this.options.onGesture?.('left');
+        else if (startX > window.innerWidth - 38 && dx < 0) this.options.onGesture?.('right');
+      }, { passive: true });
+      this.onKeyDown = event => { if (event.key === 'Escape') this.options.onGesture?.('close'); };
+      window.addEventListener('keydown', this.onKeyDown);
+      this.cleanups.push(() => window.removeEventListener('keydown', this.onKeyDown));
+      return;
+    }
     this.root.querySelectorAll('[data-open]').forEach(button => button.addEventListener('click', () => this.openDrawer(button.dataset.open)));
     this.root.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => this.closeDrawers()));
     this.scrim.addEventListener('click', () => this.closeDrawers());
