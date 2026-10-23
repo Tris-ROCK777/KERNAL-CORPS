@@ -482,6 +482,33 @@ export class XKomzMasterInterface {
     bokehGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     this.bokeh = new THREE.Points(bokehGeometry, new THREE.PointsMaterial({ size: .105, vertexColors: true, transparent: true, opacity: .82, depthWrite: false, sizeAttenuation: true }));
     this.scene.add(this.bokeh);
+    // Deliberate orange/gold particle clusters create concentrated warm energy pockets.
+    const clusterPositions = [], clusterColors = [];
+    const clusterCenters = [
+      new THREE.Vector3(12, 5, -5), new THREE.Vector3(-13, -2, 7),
+      new THREE.Vector3(4, -9, 14), new THREE.Vector3(-8, 10, -12),
+      new THREE.Vector3(18, -5, -9), new THREE.Vector3(-17, 4, -4)
+    ];
+    const warmPalette = [new THREE.Color(0xffa12f), new THREE.Color(0xffc45c), new THREE.Color(0xffdf91)];
+    for (let i = 0; i < 1050; i++) {
+      const center = clusterCenters[i % clusterCenters.length];
+      const spread = .45 + Math.random() * 2.3;
+      clusterPositions.push(
+        center.x + (Math.random() - .5) * spread * 2,
+        center.y + (Math.random() - .5) * spread * 2,
+        center.z + (Math.random() - .5) * spread * 2
+      );
+      const color = warmPalette[Math.floor(Math.random() * warmPalette.length)];
+      clusterColors.push(color.r, color.g, color.b);
+    }
+    const clusterGeometry = new THREE.BufferGeometry();
+    clusterGeometry.setAttribute('position', new THREE.Float32BufferAttribute(clusterPositions, 3));
+    clusterGeometry.setAttribute('color', new THREE.Float32BufferAttribute(clusterColors, 3));
+    this.goldClusters = new THREE.Points(clusterGeometry, new THREE.PointsMaterial({
+      size: .13, vertexColors: true, transparent: true, opacity: .92,
+      blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+    }));
+    this.scene.add(this.goldClusters);
     this.filaments = new THREE.Group();
     for (let j = 0; j < 26; j++) {
       const pts = [];
@@ -572,6 +599,7 @@ export class XKomzMasterInterface {
     if (this.coreOrbit2) this.coreOrbit2.rotation.y = -t * .09;
     if (this.dome) { this.dome.rotation.y = -t * .025; this.dome.rotation.x = Math.sin(t * .07) * .025; }
     if (this.bokeh) this.bokeh.rotation.y = t * .012;
+    if (this.goldClusters) { this.goldClusters.rotation.y = -t * .018; this.goldClusters.material.opacity = .68 + (Math.sin(t * 1.7) + 1) * .13; }
     if (this.filaments) { this.filaments.rotation.y = -t * .03; this.filaments.rotation.x = Math.sin(t * .09) * .04; }
     if (this.highways) this.highways.rotation.y = t * .07;
     if (this.rings) this.rings.rotation.y = -t * .06;
