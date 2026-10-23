@@ -175,6 +175,7 @@ try {
     }
     console.log(JSON.stringify({ event: "NEURAL_OVERSEER_MOBILE_UI_PASS", ...neuralUi }));
     const expectedWorkAreas = ["NETWORK", "STORAGE", "SECURITY", "WORKERS · 10K TARGET"];
+    const expectedWorkAreaTitles = ["NETWORK", "STORAGE", "SECURITY", "WORKERS · LOCAL EXECUTION"];
     const workAreaButtons = smokePage.locator("#neuralExperience [data-work-area]");
     if (await workAreaButtons.count() !== expectedWorkAreas.length) {
       await smokeBrowser.close();
@@ -196,7 +197,7 @@ try {
       await smokePage.waitForFunction(expected => {
         const title = document.querySelector("#commandViewTitle")?.textContent?.trim();
         return document.documentElement.classList.contains("kernel-dashboard-mode") && title === expected;
-      }, expectedWorkAreas[i], { timeout: 10000 });
+      }, expectedWorkAreaTitles[i], { timeout: 10000 });
       const activeTab = await smokePage.locator(".command-tab.active").textContent();
       if (activeTab?.trim() !== expectedWorkAreas[i]) {
         await smokeBrowser.close();
