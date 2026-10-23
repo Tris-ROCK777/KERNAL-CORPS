@@ -142,6 +142,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#020712}body{padding
 #neuralExperience .telemetry-actions a{display:inline-flex;padding:10px;border:1px solid #61dfff48;border-radius:8px;font-size:10px;color:#bdefff}
 @media(max-width:700px){#neuralExperience .drawer{width:min(92vw,440px);padding:18px 14px}#neuralExperience .telemetry{left:8px;right:8px;max-height:72dvh}#neuralExperience .telemetry-console{height:43dvh;min-height:280px}}
 
+
+/* Unified live workbench inside the node telemetry drawer. All metrics remain sourced from real tools. */
+#neuralExperience .telemetry-tool-title{margin-top:10px;padding:10px 12px;border:1px solid #64dfff2e;border-radius:9px;background:rgba(6,14,25,.92);color:#c8efff;font-size:10px;letter-spacing:.1em}
+#neuralExperience .telemetry-actions button{min-height:40px;display:inline-flex;align-items:center;justify-content:center;padding:9px 10px;border:1px solid #61dfff48;border-radius:8px;background:rgba(8,17,30,.94);font-size:9px;letter-spacing:.04em;color:#bdefff;touch-action:manipulation}
+#neuralExperience .telemetry-actions button.active{background:rgba(33,75,102,.72);border-color:#a7e8ff;color:#fff}
+#neuralExperience .telemetry-console{height:min(52dvh,620px);min-height:360px}
+@media(max-width:700px){#neuralExperience .telemetry-console{height:45dvh;min-height:300px}}
 </style>
 </head>
 <body>
@@ -256,11 +263,32 @@ html,body{width:100%;height:100%;overflow:hidden;background:#020712}body{padding
  </aside>
  <section class="telemetry" id="nodeTelemetry" aria-label="Peer node details" aria-hidden="true">
   <div class="telemetry-top"><div><div class="eyebrow" id="nodeLabel">NETWORK NODE / SELECTED</div><h2>Peer telemetry</h2></div><button class="telemetry-close" id="closeTelemetry" aria-label="Zoom back to mesh">×</button></div>
-  <div class="telemetry-grid"><div class="telemetry-cell"><small>Peer latency</small><strong>Read from live console</strong></div><div class="telemetry-cell"><small>Active OPFS shards</small><strong>Read from storage state</strong></div><div class="telemetry-cell"><small>K-KOINZ toll locks</small><strong>Read from live toll state</strong></div></div>
-  <p class="telemetry-copy">This view does not substitute estimates for live telemetry. Open the existing console to inspect current peer, storage, and toll state.</p>
-  <div class="telemetry-actions"><a href="./ringwal-console.html">RING-WAL LOGS</a><a href="./storage-verify.html">OPFS SHARDS</a><a href="./authenticated-shard-verify.html">AUTHENTICATED SHARDS</a><a href="./live-peer-verify.html">LIVE WEBRTC VERIFY</a><a href="./authority-enroll.html">AUTHORITY TOOLS</a><a href="./verify.html">MESH VERIFY</a></div>
-  <iframe class="telemetry-console" title="Full live KERNEL mesh console" src="./mesh-console.html" loading="eager" allow="clipboard-read; clipboard-write"></iframe>
-  <a class="telemetry-link" href="./mesh-console.html">OPEN MESH CONSOLE ↗</a><a class="telemetry-link" href="./live-peer-verify.html">VERIFY LIVE PEER ↗</a><a class="telemetry-link" href="./storage-verify.html">VERIFY STORAGE ↗</a><a class="telemetry-link" href="./ringwal-console.html">OPEN RINGWAL ↗</a>
+  <div class="telemetry-grid">
+   <div class="telemetry-cell"><small>Live peer count / latency / bandwidth</small><strong>Read from live WebRTC console below</strong></div>
+   <div class="telemetry-cell"><small>OPFS shards / bytes / read-back</small><strong>Read from storage console below</strong></div>
+   <div class="telemetry-cell"><small>Ring-WAL commits / recovery</small><strong>Read from Ring-WAL tool below</strong></div>
+   <div class="telemetry-cell"><small>Authority / signatures / toll-lock</small><strong>Read from verified security tools below</strong></div>
+  </div>
+  <p class="telemetry-copy">Live values are rendered by the existing operational tools, not guessed in this scene. Switch the embedded workbench to inspect the corresponding source of truth.</p>
+  <div class="telemetry-actions" role="group" aria-label="Live operations workbench">
+   <button type="button" data-live-tool="./mesh-console.html" data-live-title="NETWORK · WEBRTC PEERS">NETWORK / PEERS</button>
+   <button type="button" data-live-tool="./ringwal-console.html" data-live-title="STORAGE · RING-WAL">STORAGE / RING-WAL</button>
+   <button type="button" data-live-tool="./pod-command-drawer.html" data-live-title="STORAGE · OPFS SHARDS">OPFS / SHARDS</button>
+   <button type="button" data-live-tool="./authenticated-shard-verify.html" data-live-title="SECURITY · SHARD AUTHENTICATION">SHARD AUTH</button>
+   <button type="button" data-live-tool="./authority-enroll.html" data-live-title="SECURITY · AUTHORITY">AUTHORITY</button>
+   <button type="button" data-live-tool="./non-exportable-vault-verify.html" data-live-title="SECURITY · KEY VAULT">KEY VAULT</button>
+   <button type="button" data-live-tool="./live-peer-verify.html" data-live-title="NETWORK · LIVE PEER VERIFICATION">LIVE PEER VERIFY</button>
+   <button type="button" data-live-tool="./live-peer-persistence-verify.html" data-live-title="NETWORK · PEER RECOVERY">PEER RECOVERY</button>
+   <button type="button" data-live-tool="./storage-verify.html" data-live-title="STORAGE · OPFS VERIFICATION">OPFS VERIFY</button>
+   <button type="button" data-live-tool="./vault-persistence-verify.html" data-live-title="SECURITY · VAULT PERSISTENCE">VAULT PERSISTENCE</button>
+   <button type="button" data-live-tool="./authority-migrate.html" data-live-title="SECURITY · AUTHORITY MIGRATION">AUTHORITY MIGRATION</button>
+   <button type="button" data-live-tool="./verify.html" data-live-title="MESH · VERIFICATION HARNESS">MESH HARNESS</button>
+  </div>
+  <div class="telemetry-tool-title" id="telemetryToolTitle" aria-live="polite">NETWORK · WEBRTC PEERS</div>
+  <iframe class="telemetry-console" id="telemetryConsole" title="Live KERNEL network, storage, and security workbench" src="./mesh-console.html" loading="eager" allow="clipboard-read; clipboard-write"></iframe>
+  <div class="telemetry-actions">
+   <a href="./mesh-console.html">OPEN MESH CONSOLE ↗</a><a href="./live-peer-verify.html">VERIFY LIVE PEER ↗</a><a href="./storage-verify.html">VERIFY STORAGE ↗</a><a href="./ringwal-console.html">OPEN RING-WAL ↗</a><a href="./verify.html">RUN MESH HARNESS ↗</a>
+  </div>
  </section>
  <div class="sr-only" id="gestureHint">Tap a bright node to inspect. Pull from the left edge for the Sovereign Ledger or the right edge for Dual-State Pods. Pinch to zoom out.</div>
 </div>
@@ -334,5 +362,19 @@ const clock=new T.Clock();function animate(){requestAnimationFrame(animate);cons
 })().catch(e=>{console.error('Three.js mesh initialization failed',e);document.getElementById('meshAnnouncement').textContent='Three.js initialization failed; see browser console.'});
 </script>
 
+
+<script>
+// Keep the immersive viewport uncluttered; expose every operational tool through the node drawer.
+document.querySelectorAll('[data-live-tool]').forEach(button=>button.addEventListener('click',()=>{
+ const frame=document.getElementById('telemetryConsole');
+ const title=document.getElementById('telemetryToolTitle');
+ if(!frame||!title)return;
+ document.querySelectorAll('[data-live-tool]').forEach(item=>item.classList.toggle('active',item===button));
+ title.textContent=button.dataset.liveTitle||'LIVE OPERATIONS';
+ const url=new URL(button.dataset.liveTool,location.href);url.searchParams.set('kernelBuild','mesh-drawer-v1');
+ frame.src=url.href;
+ frame.title=title.textContent+' — live KERNEL operational tool';
+}));
+</script>
 </body>
 </html>
