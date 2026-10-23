@@ -320,10 +320,73 @@ button.danger{color:#ffb4bd;border-color:rgba(255,101,123,.3)}
  #liveAnalytics .metric span{font-size:7px;letter-spacing:.04em}
  #liveAnalytics .metric small{font-size:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
+
+/* X-KOM'Z experience: luminous mesh first, information only on interaction. */
+#criticalHud,.topstats,.rightstats,.hud>.readout,.hud>.analytics,.hud>#lens,.hud>.controls,.hud>#log{display:none!important}
+header{z-index:20;align-items:flex-start;padding-left:calc(16px + env(safe-area-inset-left,0px));padding-right:calc(16px + env(safe-area-inset-right,0px))}
+header h1{font-size:13px;letter-spacing:.22em;text-shadow:0 0 18px rgba(112,186,255,.35)}
+header small{letter-spacing:.13em}
+#openDrawer,#openRightDrawer{pointer-events:auto;position:fixed;top:calc(68px + env(safe-area-inset-top,0px));min-height:36px;border:1px solid rgba(128,194,255,.32);background:rgba(3,9,19,.72);color:#cce8ff;box-shadow:0 0 22px rgba(61,139,255,.12);backdrop-filter:blur(16px);font-size:9px;letter-spacing:.13em}
+#openDrawer{left:calc(12px + env(safe-area-inset-left,0px))}
+#openRightDrawer{right:calc(12px + env(safe-area-inset-right,0px))}
+#shade{background:radial-gradient(ellipse at 50% 48%,rgba(18,57,107,.2),rgba(4,10,25,.03) 48%,transparent 70%)}
+#consolePanel,#peersPanel{z-index:30;background:rgba(3,7,15,.96);border:1px solid rgba(105,188,255,.36);box-shadow:0 0 60px rgba(28,106,215,.15),0 24px 90px rgba(0,0,0,.8);backdrop-filter:blur(26px)}
+#consolePanel .drawer-head h2,#peersPanel .drawer-head h2{font-size:12px;letter-spacing:.13em;color:#e2f2ff}
+#consolePanel .drawer-head p,#peersPanel .drawer-head p{font-size:9px;color:#83a4c4;letter-spacing:.08em}
+#kernelMilestones,#kernelPods{display:block;overflow:auto;min-height:0;overscroll-behavior:contain;padding:4px 2px 24px}
+.story-kicker{font-size:9px;letter-spacing:.2em;color:#6fd9ff;margin:6px 0 12px}
+.drawer-story h3,.pod-story h3{font-family:system-ui,-apple-system,sans-serif;font-weight:500;font-size:23px;line-height:1.12;letter-spacing:-.035em;color:#f0f7ff;margin:0 0 10px}
+.story-intro{font:12px/1.55 system-ui,-apple-system,sans-serif;color:#91a7bf;margin:0 0 20px}
+.milestone{position:relative;margin:0 0 10px;padding:14px 13px 13px 15px;border:1px solid rgba(127,171,221,.15);background:linear-gradient(115deg,rgba(15,31,54,.74),rgba(4,9,18,.7));border-radius:10px}
+.milestone:before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:2px;background:linear-gradient(#67e7ff,#837cff);box-shadow:0 0 12px rgba(103,231,255,.35)}
+.milestone h4{font:600 13px/1.35 system-ui,-apple-system,sans-serif;color:#e5f1ff;margin:8px 0 5px}
+.milestone p,.pod-copy p,.pod-footer p{font:12px/1.55 system-ui,-apple-system,sans-serif;color:#9db0c5;margin:0}
+.milestone-state{display:inline-block;font-size:8px;letter-spacing:.14em;border-radius:3px;padding:4px 6px;background:rgba(100,171,231,.1);color:#a7d9ff}
+.state-peer{color:#7effd2;background:rgba(72,245,187,.09)}.state-sim{color:#f3d39c;background:rgba(245,189,91,.09)}.state-next{color:#b7b2ff;background:rgba(143,132,255,.1)}
+.story-foot{padding:14px 4px;color:#6084a7;font-size:8px;letter-spacing:.14em;line-height:1.8}
+#kernelPods{display:flex;flex-direction:column;gap:9px}
+.pod-card{border:1px solid rgba(115,168,221,.2);border-radius:10px;overflow:hidden;background:linear-gradient(120deg,rgba(14,27,47,.78),rgba(4,8,16,.82))}
+.pod-card summary{list-style:none;display:grid;grid-template-columns:35px minmax(0,1fr) 16px;align-items:center;gap:10px;padding:13px;cursor:pointer;min-height:64px}
+.pod-card summary::-webkit-details-marker{display:none}
+.pod-glyph{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(122,200,255,.35);border-radius:9px;color:#bde8ff;font:600 15px system-ui,sans-serif;background:radial-gradient(circle,rgba(63,146,235,.22),rgba(7,13,25,.7));box-shadow:inset 0 0 15px rgba(80,155,255,.12)}
+.pod-card summary b{display:block;color:#e7f3ff;font:600 13px system-ui,sans-serif}
+.pod-card summary small{display:block;margin-top:4px;color:#829cb7;font:10px system-ui,sans-serif}
+.pod-open{color:#71cfff;font-size:18px;transition:transform .2s}
+.pod-card[open] .pod-open{transform:rotate(45deg)}
+.pod-copy{padding:0 14px 15px 58px}
+.pod-copy h4{font-size:8px;letter-spacing:.15em;color:#71d8ff;text-transform:uppercase;margin:3px 0 5px}
+.pod-copy p{margin-bottom:12px}
+.pod-footer{padding:18px 14px;border:1px solid rgba(119,179,243,.25);border-radius:10px;background:radial-gradient(ellipse at 0 0,rgba(43,103,175,.2),transparent 70%)}
+.pod-footer span{display:block;font-size:8px;letter-spacing:.17em;color:#7599bd}.pod-footer b{display:block;margin:7px 0;color:#e6f5ff;font-size:16px;letter-spacing:.1em}
+#inspect{display:none;position:fixed;z-index:25;left:50%;top:50%;transform:translate(-50%,-50%);width:min(680px,calc(100vw - 24px));max-height:calc(100dvh - 130px - env(safe-area-inset-top,0px));overflow:auto;overscroll-behavior:contain;padding:16px;background:rgba(3,8,17,.95);border:1px solid rgba(127,201,255,.46);box-shadow:0 0 55px rgba(37,130,255,.17),0 24px 90px rgba(0,0,0,.7);backdrop-filter:blur(24px);border-radius:12px}
+#inspect>p{font:12px/1.55 system-ui,-apple-system,sans-serif;color:#a9bfd5;margin:12px 0 16px}
+#inspect .readout,#inspect #liveAnalytics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0;background:transparent;border:0;box-shadow:none}
+#inspect .readout>div,#inspect .metric{min-width:0;padding:10px;border:1px solid rgba(118,171,226,.17);background:rgba(15,29,48,.55);border-radius:7px;font-size:9px}
+#inspect .readout .value{display:block;margin-top:6px;overflow-wrap:anywhere;color:#d5ebff}
+#inspect #lens{display:flex;gap:5px;margin-top:10px}
+#inspect #lens button{flex:1;min-height:34px}
+#inspect .controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px;background:rgba(5,12,22,.75);padding:8px;border:1px solid rgba(111,175,237,.18)}
+#inspect .controls button{min-height:40px;font-size:9px}
+#inspect #log{max-height:110px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:9px;padding:10px;border:1px solid rgba(115,167,221,.16);background:rgba(0,0,0,.25);color:#90d9ff;font-size:9px;line-height:1.5}
+#inspect .analytics .metric b{font-size:17px;color:#e6f4ff}#inspect .analytics .metric span{display:block;color:#8ba8c7;font-size:8px;margin-top:4px}
+#inspect .analytics .metric small{display:block;color:#647f9e;font-size:8px;margin-top:4px}
+#closeInspect{width:auto!important;min-width:62px;padding:6px 10px!important;font-size:9px!important}
+@media(max-width:759px){
+ header{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+ header h1{font-size:11px;letter-spacing:.14em}header small{font-size:8px}
+ header .status{font-size:8px;max-width:120px}
+ #openDrawer,#openRightDrawer{top:calc(68px + env(safe-area-inset-top,0px));min-height:34px;padding:7px 9px}
+ #consolePanel,#peersPanel{inset:auto 7px calc(7px + env(safe-area-inset-bottom,0px));height:min(80dvh,760px);max-height:calc(100dvh - 100px);padding:10px}
+ #kernelMilestones,#kernelPods{padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+ #inspect{width:calc(100vw - 16px);max-height:calc(100dvh - 122px - env(safe-area-inset-top,0px));padding:11px}
+ #inspect .readout>div,#inspect .metric{padding:8px}
+ #inspect .controls button{font-size:8px;min-height:38px}
+}
+
 </style></head>
 <body>
 <canvas id="scene" aria-label="Full-screen interactive neural network visualization"></canvas><div id="shade"></div>
-<header><div><h1>KERNEL <span style="color:var(--ice)">/</span> X-KOM’Z</h1><small>DECENTRALIZED INTELLIGENCE · CONTROL PLANE</small></div><button id="openDrawer" type="button" aria-label="Open command console" aria-controls="consolePanel" aria-expanded="false">CONSOLE</button><button id="openRightDrawer" type="button" aria-label="Open live peer monitor" aria-controls="peersPanel" aria-expanded="false">PEERS</button><div class="status"><span class="dot"></span><span id="connection">LOCAL NODE READY</span><br><small>PHANTOM BLACK // LOCAL-FIRST</small><br><span id="liveClock" aria-label="Live local clock">--:--:--</span><br><span id="runtimeAge">PAGE ACTIVE 00:00:00</span></div></header>
+<header><div><h1>KERNEL <span style="color:var(--ice)">/</span> X-KOM’Z</h1><small>AYE•YAE · SOVEREIGN PEER MESH</small></div><button id="openDrawer" type="button" aria-label="Open KERNEL CORP milestones" aria-controls="consolePanel" aria-expanded="false">CHRONICLE</button><button id="openRightDrawer" type="button" aria-label="Open the six KERNEL CORP apps" aria-controls="peersPanel" aria-expanded="false">THE SIX PODS</button><div class="status"><span class="dot"></span><span id="connection">LOCAL NODE READY</span><br><small>PHANTOM BLACK // LOCAL-FIRST</small><br><span id="liveClock" aria-label="Live local clock">--:--:--</span><br><span id="runtimeAge">PAGE ACTIVE 00:00:00</span></div></header>
 <div id="criticalHud"><div class="strip">
 <span class="hudstat">LIVE PEERS <b id="hudLivePeers">0</b></span>
 <span class="hudstat">LOCAL WORKERS / VISUAL CELLS <b><span id="workerCountHud">0</span> / <span id="peerCountHud">24</span></b></span>
@@ -333,9 +396,9 @@ button.danger{color:#ffb4bd;border-color:rgba(255,101,123,.3)}
 </div></div>
 <div id="runtimeWarning"><span id="runtimeWarningText">RUNTIME BLOCKED · AUTHORITY / DURABILITY GATE NOT READY</span><button id="dismissWarning">DISMISS</button></div>
 <section id="consolePanel" class="command-panel" aria-label="Network information and controls" aria-hidden="true">
-<div class="drawer-head"><div><h2>KERNEL // MESH CONSOLE</h2><p>DIAGNOSTICS · CONTROLS · TRUST</p></div><button id="closeDrawer">CLOSE ✕</button></div>
-<div class="module-search"><label for="moduleSearch">SYSTEM MODULE DIRECTORY <span id="moduleCount">11 / 11 TOOLS</span></label><input id="moduleSearch" type="search" placeholder="Search network, storage, authority…" autocomplete="off" spellcheck="false" aria-label="Filter system modules"></div>
-<nav id="systemModules" aria-label="KERNEL system modules">
+<div class="drawer-head"><div><h2>KERNEL CORP // CHRONICLE</h2><p>EVENTS · ACHIEVEMENTS · MILESTONES</p></div><button id="closeDrawer">CLOSE ✕</button></div>
+<div class="module-search"><label for="moduleSearch">MILESTONE SEARCH</label><input id="moduleSearch" type="search" placeholder="Search milestones…" autocomplete="off" spellcheck="false" aria-label="Filter KERNEL CORP milestones"></div>
+<nav id="systemModules" aria-label="KERNEL system modules" hidden>
 <a href="./ringwal-console.html" data-module="storage wal durability">RING-WAL CONSOLE</a><a href="./pod-command-drawer.html" data-module="pods opfs storage inspector">POD / OPFS INSPECTOR</a>
 <a href="./live-peer-verify.html" data-module="network webrtc peer mesh">LIVE PEER TEST</a><a href="./live-peer-persistence-verify.html" data-module="network recovery persistence restart">RESTART RECOVERY</a>
 <a href="./authenticated-shard-verify.html" data-module="security shard signature authentication">SHARD AUTHENTICATION</a><a href="./storage-verify.html" data-module="storage opfs browser">REAL OPFS CHECK</a>
@@ -343,17 +406,41 @@ button.danger{color:#ffb4bd;border-color:rgba(255,101,123,.3)}
 <a href="./non-exportable-vault-verify.html" data-module="security authority vault non-exportable">NON-EXPORTABLE KEY VAULT</a><a href="./vault-persistence-verify.html" data-module="security authority vault persistence">VAULT PERSISTENCE CHECK</a>
 <a href="./verify.html" data-module="network mesh shard verification diagnostics">MESH VERIFICATION HARNESS</a>
 </nav>
-<div class="drawer-tabs" aria-label="Console sections"><button class="active" data-tab="status">STATUS</button><button data-tab="controls">OPS</button><button data-tab="logs">LOGS</button><button data-tab="keys">KEYS</button></div>
+
+<div id="kernelMilestones" class="drawer-story">
+<div class="story-kicker">KERNEL CORP · LIVE CHRONICLE</div>
+<h3>Built in public. Built to decentralize.</h3>
+<p class="story-intro">Infrastructure milestones and verified evidence. A target is never displayed as a live result.</p>
+<article class="milestone"><span class="milestone-state state-core">CORE</span><h4>Local-first durability chain</h4><p>Sandbox gate → OPFS write → SHA-256 read-back → Ring-WAL append → memory swap. The intended recovery path preserves a known-good state.</p></article>
+<article class="milestone"><span class="milestone-state state-peer">DEVICE TEST</span><h4>Authenticated shard read-back</h4><p>A 32 KiB shard was received on a second handset with matching expected and actual SHA-256. This proves that shard test—not a complete 10K mesh.</p></article>
+<article class="milestone"><span class="milestone-state state-core">NETWORK</span><h4>Peer-to-peer transport</h4><p>WebRTC data channels and authenticated shard handling are in the project. Live remote-peer health is counted only after a real channel opens.</p></article>
+<article class="milestone"><span class="milestone-state state-sim">SIMULATOR</span><h4>96 KiB · 3 × 32 KiB</h4><p>The loopback simulator is a local transport test. It is not evidence of 96 KiB transferred to a remote peer.</p></article>
+<article class="milestone"><span class="milestone-state state-core">WORKERS</span><h4>Local worker execution</h4><p>The browser worker prototype performs real SHA-256 tasks. The current local pool is small; 10,000 active workers is the architecture target, not a live count.</p></article>
+<article class="milestone"><span class="milestone-state state-next">NEXT MILESTONE</span><h4>Recover, authenticate, persist, restart</h4><p>Prove a real peer transfer, validate authority and signature, persist through OPFS/Ring-WAL, then recover after a reload. Each gate needs its own passing evidence.</p></article>
+<div class="story-foot">ZERO-TRUST · MOBILE-FIRST · LOCAL-FIRST · DECENTRALIZED BY DESIGN</div>
+</div><div class="drawer-tabs" aria-label="Console sections"><button class="active" data-tab="status">STATUS</button><button data-tab="controls">OPS</button><button data-tab="logs">LOGS</button><button data-tab="keys">KEYS</button></div>
 <div class="drawer-content"><section class="drawer-section active" data-section="status" id="statusSection"></section><section class="drawer-section" data-section="controls" id="controlsSection"></section><section class="drawer-section" data-section="logs" id="logsSection"></section><section class="drawer-section" data-section="keys" id="keysSection"></section></div>
 </section>
 <section id="peersPanel" class="command-panel" aria-label="Live nodes and network controls" aria-hidden="true">
-<div class="drawer-head"><div><h2>LIVE MESH // NODES</h2><p>REAL CONNECTIONS · LOCAL SLOTS</p></div><button id="closeRightDrawer">CLOSE ✕</button></div>
-<div class="node-counts"><div><b id="activeNodeCount">0</b><span>ACTIVE PEERS</span></div><div><b id="connectingNodeCount">0</b><span>CONNECTING</span></div><div><b id="inactiveNodeCount">24</b><span>INACTIVE SLOTS</span></div></div>
-<p class="node-note">Only connected WebRTC peers count as real active peers. Ring slots are local visual slots, not remote workers.</p>
+<div class="drawer-head"><div><h2>KERNEL CORP // THE SIX PODS</h2><p>PRODUCT PURPOSE · NETWORK CONTRIBUTION</p></div><button id="closeRightDrawer">CLOSE ✕</button></div>
+<div class="node-counts" hidden><div><b id="activeNodeCount">0</b><span>ACTIVE PEERS</span></div><div><b id="connectingNodeCount">0</b><span>CONNECTING</span></div><div><b id="inactiveNodeCount">24</b><span>INACTIVE SLOTS</span></div></div>
+<p class="node-note" hidden>Only connected WebRTC peers count as real active peers. Ring slots are local visual slots, not remote workers.</p>
+<div id="kernelPods" class="pod-story">
+<div class="story-kicker">THE SIX PODS · ONE SHARED MESH</div>
+<h3>Each app serves people. Each app strengthens the network.</h3>
+<p class="story-intro">Select a pod to inspect its dual purpose: what people use it for, and what it contributes to the wider decentralized ecosystem.</p>
+<details class="pod-card" open><summary><span class="pod-glyph">P</span><span><b>Planet-K</b><small>People · knowledge · discovery</small></span><span class="pod-open">＋</span></summary><div class="pod-copy"><h4>Purpose for people</h4><p>A place for community, research, analytics, knowledge discovery and Bible study.</p><h4>Contribution to KERNEL CORP</h4><p>Builds a distributed knowledge layer: shared discovery, community participation and locally contributed information rather than one central knowledge gatekeeper.</p></div></details>
+<details class="pod-card"><summary><span class="pod-glyph">K</span><span><b>KashKorner</b><small>Finance · earning · exchange</small></span><span class="pod-open">＋</span></summary><div class="pod-copy"><h4>Purpose for people</h4><p>Personal finance tools and pathways for earning and managing money.</p><h4>Contribution to KERNEL CORP</h4><p>Supports practical participation in the ecosystem and future peer incentives without making the core network depend on one centralized financial service.</p></div></details>
+<details class="pod-card"><summary><span class="pod-glyph">X</span><span><b>X-Koin’s</b><small>Digital value · APIs · monetization</small></span><span class="pod-open">＋</span></summary><div class="pod-copy"><h4>Purpose for people</h4><p>Crypto-related value tools and API-based monetization workflows.</p><h4>Contribution to KERNEL CORP</h4><p>Provides a path for sustainable ecosystem economics and service-level value exchange while keeping network routing and storage modular.</p></div></details>
+<details class="pod-card"><summary><span class="pod-glyph">♫</span><span><b>Kernelodie’s</b><small>Music · listening · creation</small></span><span class="pod-open">＋</span></summary><div class="pod-copy"><h4>Purpose for people</h4><p>Music discovery, listening, libraries and creative tools.</p><h4>Contribution to KERNEL CORP</h4><p>Exercises distributed media discovery and content delivery, creating a real-world use case for peer-assisted delivery and user-owned libraries.</p></div></details>
+<details class="pod-card"><summary><span class="pod-glyph">V</span><span><b>KernelVision</b><small>Film · editing · rendering · publishing</small></span><span class="pod-open">＋</span></summary><div class="pod-copy"><h4>Purpose for people</h4><p>Tools for creating, editing, rendering and publishing film and video.</p><h4>Contribution to KERNEL CORP</h4><p>Supplies demanding media workloads for future cooperative compute, chunked assets and peer-assisted distribution—without pretending that those workloads are already running across 10,000 peers.</p></div></details>
+<details class="pod-card"><summary><span class="pod-glyph">盾</span><span><b>X-Shield</b><small>Security · privacy · protection</small></span><span class="pod-open">＋</span></summary><div class="pod-copy"><h4>Purpose for people</h4><p>Privacy and threat protection, including ad/tracker blocking and safer browsing.</p><h4>Contribution to KERNEL CORP</h4><p>Strengthens the trust layer with privacy-first defaults, threat awareness and security tooling that helps peers contribute without surrendering unnecessary data.</p></div></details>
+<div class="pod-footer"><span>COMMAND CENTER</span><b>X-KOM’Z</b><p>Coordinates shared infrastructure: network, storage, security and worker orchestration. The six pods stay distinct; X-KOM’Z connects them.</p></div>
+</div>
 <div class="drawer-content" id="rightControls"></div><div id="nodeList" class="node-list"></div>
 </section>
-<div class="topstats">NETWORK FIELD <span id="connectionState">CHECKING</span><br>VISUAL GRID CELLS <span id="peerCount">24</span><br>LOCAL WORKERS <span id="workerCount">0</span><br>ARCHITECTURE TARGET <span>10,000</span></div>
-<div class="rightstats">TRUST LAYER<br><span>OPFS · SHA-256 · Ed25519</span><br>TOUCH TO ROTATE / INSPECT</div>
+<div class="topstats" aria-hidden="true">NETWORK FIELD <span id="connectionState">CHECKING</span><br>VISUAL GRID CELLS <span id="peerCount">24</span><br>LOCAL WORKERS <span id="workerCount">0</span><br>ARCHITECTURE TARGET <span>10,000</span></div>
+<div class="rightstats" aria-hidden="true">TOUCH TO ROTATE · TAP A NODE FOR NETWORK TELEMETRY</div>
 <section id="inspect" class="panel"><div style="display:flex;justify-content:space-between;gap:12px"><strong id="inspectTitle">PEER INSPECTOR</strong><button id="closeInspect" style="min-height:28px;width:56px">CLOSE</button></div><p id="inspectBody">Visual ring slots are local simulation. Real remote peers appear only after a WebRTC data channel connects.</p></section>
 <div class="hud">
 <div class="panel readout"><div>AUTHORITY PIN<span id="pin" class="value">Loading…</span></div><div>WAL HEAD<span id="head" class="value">—</span></div><div>LAST SHA-256<span id="hash" class="value">—</span></div><div>NOMINAL RING SLOT SHARE<span id="share" class="value">4.17% · SIMULATED</span></div><div>SHARD PERSISTENCE<span id="shardStatus" class="value">WAITING</span></div><div>READ-BACK SHA-256<span id="readbackStatus" class="value">NOT YET VERIFIED</span></div><div>LIVE DATA PEERS<span id="livePeers" class="value">0 CONNECTED</span></div></div>
@@ -380,13 +467,10 @@ const $=id=>document.getElementById(id);
 const drawer=$("consolePanel"),rightDrawer=$("peersPanel"),statusSection=$("statusSection"),controlsSection=$("controlsSection"),logsSection=$("logsSection"),keysSection=$("keysSection");
 const originalHud=document.querySelector(".hud"),readout=originalHud.querySelector(".readout"),lens=document.querySelector("#lens"),controls=originalHud.querySelector(".controls"),logPanel=document.querySelector("#log"),inspector=document.querySelector("#inspect");
 statusSection.append(readout,inspector);
-$("rightControls").append(lens,controls); // Keep network and worker operations together in the mobile peer drawer.
-controls.style.display="grid";
-controls.style.flex="0 0 auto";
-// Keep operational controls above the scrollable peer list so they remain visible on phone screens.
-rightDrawer.insertBefore($("rightControls"),$("nodeList"));
-$("rightControls").style.flex="0 0 auto";
-$("rightControls").style.overflow="visible";
+const liveAnalytics=$("liveAnalytics");
+inspector.append(readout,liveAnalytics,lens,controls,logPanel);
+controls.style.display="grid";controls.style.flex="0 0 auto";
+$("rightControls").hidden=true;$("rightControls").append(lens,controls);
 logsSection.append(logPanel);
 keysSection.innerHTML='<div class="panel readout"><div>AUTHORITY / ED25519<span class="value" id="keySummary">PINNED KEY STATUS PENDING</span></div><div>TRUST MODEL<span class="value">FAIL-CLOSED · LOCAL-FIRST</span></div><div>STORAGE<span class="value">OPFS + RING-WAL</span></div><div>INTEGRITY<span class="value">SHA-256 READ-BACK</span></div></div>';
 function setDrawer(side){const left=side==="left",right=side==="right";document.body.classList.toggle("left-drawer-open",left);document.body.classList.toggle("right-drawer-open",right);drawer.setAttribute("aria-hidden",String(!left));rightDrawer.setAttribute("aria-hidden",String(!right));$("openDrawer").setAttribute("aria-expanded",String(left));$("openRightDrawer").setAttribute("aria-expanded",String(right));if(left)$("closeDrawer").focus();if(right)$("closeRightDrawer").focus()}
@@ -519,9 +603,9 @@ function draw(){
 requestAnimationFrame(draw);
 updateLiveDisplay();setInterval(updateLiveDisplay,1000);setInterval(updateAnalytics,1000);
 function escapeHtml(value){return String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
-function inspect(i){state.selected=i;setDrawer("left");document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab==="status"));document.querySelectorAll("[data-section]").forEach(x=>x.classList.toggle("active",x.dataset.section==="status"));$("inspect").style.display="block";$("inspectTitle").textContent="VISUAL CELL "+String(i+1).padStart(2,"0")+" // "+(state.dead.has(i)?"DISABLED":"AVAILABLE");$("inspectBody").innerHTML="<strong>PINNED ED25519 KEY</strong><br>"+(state.authority==="UNINITIALIZED"?"Not initialized":state.authority)+"<br><br><strong>WAL HEAD</strong><br>"+state.head+"<br><br><strong>LAST SHA-256</strong><br>"+state.lastHash+"<br><br><strong>CELL ROLE</strong><br>Visual topology marker only; not a connected peer or worker.<br><br><strong>SEGMENT STATUS</strong><br>"+(state.dead.has(i)?"Rehomed locally; no remote/cloud failover":"Ring slot active; remote replication requires connected peers") ;$("share").textContent="VISUAL ONLY"}
+function inspect(i){state.selected=i;$("inspect").style.display="block";$("inspectTitle").textContent="VISUAL CELL "+String(i+1).padStart(2,"0")+" // "+(state.dead.has(i)?"DISABLED":"AVAILABLE");$("inspectBody").innerHTML="<strong>PINNED ED25519 KEY</strong><br>"+(state.authority==="UNINITIALIZED"?"Not initialized":state.authority)+"<br><br><strong>WAL HEAD</strong><br>"+state.head+"<br><br><strong>LAST SHA-256</strong><br>"+state.lastHash+"<br><br><strong>CELL ROLE</strong><br>Visual topology marker only; not a connected peer or worker.<br><br><strong>SEGMENT STATUS</strong><br>"+(state.dead.has(i)?"Rehomed locally; no remote/cloud failover":"Ring slot active; remote replication requires connected peers") ;$("share").textContent="VISUAL ONLY"}
 $("closeInspect").onclick=()=>$("inspect").style.display="none";
-function pick(x,y){const ps=Array.from({length:24},(_,i)=>nodePos(i));let best=-1,dist=1e9;ps.forEach((p,i)=>{const d=Math.hypot(x-p.x,y-p.y);if(d<dist){dist=d;best=i}});if(dist<28)inspect(best)}
+function pick(x,y){const ps=Array.from({length:24},(_,i)=>nodePos(i));let best=-1,dist=1e9;ps.forEach((p,i)=>{const d=Math.hypot(x-p.x,y-p.y);if(d<dist){dist=d;best=i}});if(best>=0)inspect(best)}
 canvas.addEventListener("pointerdown",e=>{state.drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false};canvas.setPointerCapture(e.pointerId)});
 canvas.addEventListener("pointermove",e=>{if(!state.drag)return;const dx=e.clientX-state.drag.x,dy=e.clientY-state.drag.y;if(Math.abs(e.clientX-state.drag.startX)+Math.abs(e.clientY-state.drag.startY)>6)state.drag.moved=true;state.yaw+=dx*.008;state.pitch=Math.max(-1.05,Math.min(1.05,state.pitch+dy*.006));state.drag.x=e.clientX;state.drag.y=e.clientY});
 canvas.addEventListener("pointerup",e=>{if(state.drag&&!state.drag.moved)pick(e.clientX,e.clientY);state.drag=null});
