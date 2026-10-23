@@ -498,9 +498,21 @@ export class XKomzMasterInterface {
     this.scene.add(this.binaryGroup);
     this.nodeGroup = new THREE.Group(); this.scene.add(this.nodeGroup);
     this.raycaster = new THREE.Raycaster(); this.pointer = new THREE.Vector2();
-    this.onCanvasPointer = event => this.pickNode(event);
-    this.renderer.domElement.addEventListener('pointerup', this.onCanvasPointer);
-    this.cleanups.push(() => this.renderer?.domElement.removeEventListener('pointerup', this.onCanvasPointer));
+    this.activePointers = new Map();
+    this.gesturePinchDistance = 0;
+    this.onCanvasPointerDown = event => this.handlePointerDown(event);
+    this.onCanvasPointerMove = event => this.handlePointerMove(event);
+    this.onCanvasPointerUp = event => this.handlePointerUp(event);
+    this.renderer.domElement.addEventListener('pointerdown', this.onCanvasPointerDown);
+    this.renderer.domElement.addEventListener('pointermove', this.onCanvasPointerMove);
+    this.renderer.domElement.addEventListener('pointerup', this.onCanvasPointerUp);
+    this.renderer.domElement.addEventListener('pointercancel', this.onCanvasPointerUp);
+    this.cleanups.push(() => {
+      this.renderer?.domElement.removeEventListener('pointerdown', this.onCanvasPointerDown);
+      this.renderer?.domElement.removeEventListener('pointermove', this.onCanvasPointerMove);
+      this.renderer?.domElement.removeEventListener('pointerup', this.onCanvasPointerUp);
+      this.renderer?.domElement.removeEventListener('pointercancel', this.onCanvasPointerUp);
+    });
     this.resize();
     this.animate();
   }
@@ -534,6 +546,52 @@ export class XKomzMasterInterface {
     if (!this.renderer || !this.camera || !this.viewport) return;
     const width = Math.max(1, this.viewport.clientWidth), height = Math.max(1, this.viewport.clientHeight);
     this.camera.aspect = width / height; this.camera.updateProjectionMatrix(); this.renderer.setSize(width, height, false);
+  }
+
+  handlePointerDown(event) {
+    if (event.button !== undefined && event.button !== 0) return;
+    this.activePointers.set(event.pointerId, {
+      x: event.clientX, y: event.clientY,
+      lastX: event.clientX, lastY: event.clientY,
+      moved: false
+    });
+    try { event.target.setPointerCapture(event.pointerId); } catch {}
+    if (this.activePointers.size === 2) {
+      const points = [...this.activePointers.values()];
+      this.gesturePinchDistance = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
+    }
+  }
+
+  handlePointerMove(event) {
+    const pointer = this.activePointers.get(event.pointerId);
+    if (!pointer) return;
+    const dx = event.clientX - pointer.lastX;
+    const dy = event.clientY - pointer.lastY;
+    if (Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) > 8) pointer.moved = true;
+    pointer.lastX = event.clientX; pointer.lastY = event.clientY;
+    if (this.activePointers.size >= 2) {
+      const points = [...this.activePointers.values()];
+      const distance = Math.hypot(points[1].lastX - points[0].lastX, points[1].lastY - points[0].lastY);
+      if (this.gesturePinchDistance > 0 && distance > 0) {
+        const ratio = this.gesturePinchDistance / distance;
+        this.camera.position.z = Math.max(15, Math.min(58, this.camera.position.z * ratio));
+      }
+      this.gesturePinchDistance = distance;
+      return;
+    }
+    if (pointer.moved && this.scene) {
+      this.scene.rotation.y += dx * .004;
+      this.scene.rotation.x = Math.max(-.65, Math.min(.65, this.scene.rotation.x + dy * .003));
+    }
+  }
+
+  handlePointerUp(event) {
+    const pointer = this.activePointers.get(event.pointerId);
+    if (!pointer) return;
+    const moved = pointer.moved;
+    this.activePointers.delete(event.pointerId);
+    if (this.activePointers.size < 2) this.gesturePinchDistance = 0;
+    if (!moved && this.activePointers.size === 0) this.pickNode(event);
   }
 
   pickNode(event) {
