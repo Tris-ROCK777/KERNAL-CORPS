@@ -55,6 +55,15 @@ header>div:first-child small{display:none}
 @media(max-width:390px){h1{font-size:10px}.status{gap:5px;max-width:62%}#criticalHud .strip{gap:6px 8px;padding:7px 8px;font-size:8px}.hudstat:nth-child(3){display:none}}
 @media(prefers-reduced-motion:reduce){#drawer,#drawerScrim{transition:none!important}}
 .node-counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.node-counts>div{padding:10px 6px;border:1px solid var(--line);border-radius:9px;background:rgba(12,18,28,.7);text-align:center}.node-counts b{display:block;color:#dceeff;font-size:19px;font-weight:500}.node-counts span{display:block;margin-top:5px;font-size:7px;letter-spacing:.08em;color:#8294a9}.node-note{margin:0;color:#93a5bb;font-size:9px;line-height:1.55}.node-list{overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;min-height:0;flex:1;padding:1px 1px 12px;touch-action:pan-y}.node-row{display:flex;align-items:center;gap:9px;text-align:left;min-height:54px;padding:8px;border-radius:9px}.node-row span{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}.node-row b{font-size:9px;overflow-wrap:anywhere;color:#dbe8f7}.node-row small{font-size:7px;color:#8496aa;line-height:1.4}.node-row em{font-style:normal;font-size:7px;color:#a8bed8}.node-light{width:9px;height:9px;border-radius:50%;flex:none;background:#526070;box-shadow:0 0 0 3px rgba(130,150,170,.08)}.node-light.active{background:#83baff;box-shadow:0 0 10px rgba(131,186,255,.9)}.node-light.connecting{background:#e4d27c;box-shadow:0 0 9px rgba(228,210,124,.6);animation:nodePulse 1.4s infinite}.node-light.inactive{background:#647080;opacity:.55}.node-light.simulated{background:transparent;border:1px dashed #64758a;box-shadow:none}@keyframes nodePulse{50%{opacity:.35}}.node-row.simulated{background:rgba(7,10,16,.48)}.node-empty{padding:12px;border:1px dashed var(--line);border-radius:9px;color:#9caec2;font-size:9px;line-height:1.5}
+/* iOS embedded-browser safe-area guard: clamp unreliable oversized inset values. */
+@media(max-width:759px){
+  header{padding-top:calc(12px + min(env(safe-area-inset-top,0px), 24px))}
+  #openDrawer,#openRightDrawer{top:calc(8px + min(env(safe-area-inset-top,0px), 24px))}
+  header>div:first-child{top:calc(11px + min(env(safe-area-inset-top,0px), 24px))}
+  header .status{top:calc(52px + min(env(safe-area-inset-top,0px), 24px))}
+  #criticalHud{top:calc(66px + min(env(safe-area-inset-top,0px), 24px))}
+  .hud{bottom:calc(8px + min(env(safe-area-inset-bottom,0px), 24px));max-height:calc(100dvh - 148px);overflow-y:auto;overscroll-behavior:contain;padding-bottom:2px}
+}
 </style></head>
 <body>
 <canvas id="scene" aria-label="Full-screen interactive neural network visualization"></canvas><div id="shade"></div>
