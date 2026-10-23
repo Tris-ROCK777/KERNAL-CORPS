@@ -3,8 +3,8 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Html, Line, OrbitControls, Stars } from '@react-three/drei';
 
 const PODS = [
-  ['Planet-K','planet-k'], ['KashKorner','kashkorner'], ['X-Koin’s','x-koins'],
-  ['Kernelodie’z','kernelodies'], ['KernelVision','kernelvision'], ['X-Shield','x-shield'],
+  ['PlanetApeX','planetapex'], ['KashKorner','kashkorner'], ['KoinKob’s','koinkobs'],
+  ['Kernelodie’z','kernelodiez'], ['KernelVision','kernelvision'], ['XShield','xshield'],
 ];
 
 function CoreNexus({onNode, selected}) {
@@ -52,7 +52,29 @@ function BinaryHighways(){
  return <group ref={ref}>{paths.map((p,i)=><group key={i}><Line points={p} color={i%2?'#00d9ff':'#f5a623'} lineWidth={i%2?1.5:1.2} transparent opacity={.72}/>{Array.from({length:18},(_,j)=>{const q=p[(j*8+i*5)%p.length];return <mesh key={j} position={q}><sphereGeometry args={[.025,6,6]}/><meshBasicMaterial color={i%2?'#58eaff':'#ffc25c'}/></mesh>;})}</group>)}
  {Array.from({length:5},(_,i)=><mesh key={'ring'+i} rotation={[Math.PI/2+i*.08,0,i*.12]}><torusGeometry args={[5.6+i*.18,.009,6,240]}/><meshBasicMaterial color={i%2?'#ffad2f':'#00bfff'} transparent opacity={.55}/></mesh>)}</group>;
 }
-function Scene({onNode,selected}){return <><color attach="background" args={['#000000']}/><fog attach="fog" args={['#000000',13,34]}/><ambientLight intensity={.18}/><Stars radius={90} depth={55} count={1800} factor={2.2} saturation={0}/><Float speed={.45} rotationIntensity={.025} floatIntensity={.06}><CoreNexus onNode={onNode} selected={selected}/></Float><WaveFloor/><ContainmentDome onNode={onNode}/><BokehFilaments onNode={onNode} selected={selected}/><BinaryHighways/><OrbitControls enablePan={false} minDistance={8} maxDistance={20} enableDamping dampingFactor={.045}/></>;}
+function InfrastructureStations({onNode,selected}) {
+ const stations = [
+  {id:'worker-pool',label:'WORKER POOL',kind:'WORKERS',p:[-2.9,.25,1.15],color:'#ffad2f'},
+  {id:'network-router',label:'PEER NETWORK',kind:'NETWORK',p:[2.9,.25,1.15],color:'#19cfff'},
+  {id:'security-authority',label:'AUTHORITY SECURITY',kind:'SECURITY',p:[-2.9,-.95,-.75],color:'#d7f7ff'},
+  {id:'opfs-storage',label:'OPFS / RING-WAL',kind:'STORAGE',p:[2.9,-.95,-.75],color:'#398cff'},
+ ];
+ return <group>{stations.map((s,i)=><group key={s.id} position={s.p}>
+  <mesh onClick={e=>{e.stopPropagation();onNode({id:s.id,name:s.label,kind:s.kind,source:'infrastructure-station',position:s.p});}} onPointerDown={e=>{if(e.pointerType==='touch'){e.stopPropagation();onNode({id:s.id,name:s.label,kind:s.kind,source:'infrastructure-station',position:s.p});}}}>
+   <octahedronGeometry args={[.22,1]}/><meshStandardMaterial color={s.color} emissive={s.color} emissiveIntensity={1.6} wireframe/>
+  </mesh>
+  <mesh rotation={[Math.PI/2,0,0]}><torusGeometry args={[.34,.006,5,64]}/><meshBasicMaterial color={s.color} transparent opacity={.65}/></mesh>
+  <Line points={[[0,0,0],[s.p[0]*-.18,.12,s.p[2]*-.18]]} color={s.color} transparent opacity={.65}/>
+  {selected?.id===s.id&&<Html position={[0,.48,0]} center distanceFactor={8} zIndexRange={[80,0]}><div className="world-telemetry"><strong>{s.label}</strong><span>INFRASTRUCTURE NODE</span><small>Runtime status: telemetry bridge required</small></div></Html>}
+ </group>)}</group>;
+}
+function WorkerPlacement({onNode,selected}) {
+ const workers=useMemo(()=>Array.from({length:24},(_,i)=>{const ring=Math.floor(i/8),a=(i%8)*Math.PI/4+ring*.19,r=1.9+ring*.82;return {id:'worker-slot-'+String(i+1).padStart(2,'0'),p:[Math.cos(a)*r,Math.sin(i*1.9)*1.15-.15,Math.sin(a)*r],live:false};}),[]);
+ return <group>{workers.map((w,i)=><mesh key={w.id} position={w.p} onClick={e=>{e.stopPropagation();onNode({id:w.id,name:'WORKER PLACEMENT '+String(i+1).padStart(2,'0'),kind:'WORKER-SLOT',source:'visual-placement-fixture',position:w.p});}} onPointerDown={e=>{if(e.pointerType==='touch'){e.stopPropagation();onNode({id:w.id,name:'WORKER PLACEMENT '+String(i+1).padStart(2,'0'),kind:'WORKER-SLOT',source:'visual-placement-fixture',position:w.p});}}}>
+ <dodecahedronGeometry args={[i%6===0?.095:.052,0]}/><meshBasicMaterial color={i%6===0?'#ffad2f':'#168cff'} transparent opacity={.82}/>
+ </mesh>)}</group>;
+}
+function Scene({onNode,selected}){return <><color attach="background" args={['#000000']}/><fog attach="fog" args={['#000000',13,34]}/><ambientLight intensity={.18}/><Stars radius={90} depth={55} count={1800} factor={2.2} saturation={0}/><Float speed={.45} rotationIntensity={.025} floatIntensity={.06}><CoreNexus onNode={onNode} selected={selected}/></Float><WaveFloor/><ContainmentDome onNode={onNode}/><BokehFilaments onNode={onNode} selected={selected}/><WorkerPlacement onNode={onNode} selected={selected}/><InfrastructureStations onNode={onNode} selected={selected}/><BinaryHighways/><OrbitControls enablePan={false} minDistance={8} maxDistance={20} enableDamping dampingFactor={.045}/></>;}
 function Drawer({side,close,children}){return <section className={'drawer '+side} role="dialog" aria-modal="true"><button className="close" onClick={close} aria-label="Close drawer">×</button>{children}</section>;}
 class SceneErrorBoundary extends React.Component{
  constructor(props){super(props);this.state={failed:false,message:'',stack:''};}
@@ -70,8 +92,8 @@ export default function App(){
  const touchEnd=e=>{const start=touchX.current,x=e.changedTouches?.[0]?.clientX??start,dx=x-start;if(start<28&&dx>65)setDrawer('left');else if(start>window.innerWidth-28&&dx< -65)setDrawer('right');touchX.current=0;};
  return <main className="app" onTouchStart={touchStart} onTouchEnd={touchEnd}>
   <div className="mesh-viewport"><SceneErrorBoundary><Canvas fallback={<div className="scene-fallback"><strong>KERNEL MESH</strong><span>WebGL renderer unavailable on this device.</span></div>} onPointerMissed={()=>{setNode(null);setDrawer(null);}} className="mesh-canvas" dpr={[1,1.7]} camera={{position:[0,1.2,12],fov:52}} gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}><Scene onNode={openNode} selected={node}/></Canvas></SceneErrorBoundary></div>
-  {drawer==='bottom'&&<Drawer side="bottom" close={()=>setDrawer(null)}><h2>NODE TELEMETRY</h2><p className="selected">{node?.name??node?.id??'unknown'} · {node?.kind??'NODE'} · {node?.source??'unknown source'}</p><dl><dt>WebRTC peers</dt><dd>{read('network.peerCount','peerCount','network.peers.length')}</dd><dt>Workers</dt><dd>{read('workers.active','workerCount','workers.activeCount')} / 10,000 target</dd><dt>OPFS bytes</dt><dd>{read('storage.opfsBytes','storage.bytes','opfsBytes')}</dd><dt>OPFS shard target</dt><dd>3,145,728 bytes (target; not a live measurement)</dd><dt>Ring-WAL status</dt><dd>{read('storage.ringWalStatus','storage.walStatus','ringWalStatus')}</dd><dt>Ring-WAL file</dt><dd>Server-local path is not browser-readable without an authorized API bridge.</dd><dt>SHA-256 read-back</dt><dd>{read('security.readbackStatus','storage.readbackStatus','readbackStatus')}</dd></dl></Drawer>}
-  {drawer==='left'&&<Drawer side="left" close={()=>setDrawer(null)}><h2>SOVEREIGN LEDGER</h2><p>Authority security records</p><p>Authority: {read('security.authorityStatus','authorityStatus')} · Signature: {read('security.signatureStatus','signatureStatus')}</p><p>SHA-256: {read('security.lastSha256','security.lastHash','lastSha256','lastHash')}</p><p>Read-back: {read('security.readbackStatus','storage.readbackStatus','readbackStatus')} · Receipts: {read('security.receiptCount','storage.receiptCount','receiptCount')}</p></Drawer>}
+  {drawer==='bottom'&&<Drawer side="bottom" close={()=>setDrawer(null)}><h2>NODE TELEMETRY</h2><p className="selected">{node?.name??node?.id??'unknown'} · {node?.kind??'NODE'} · {node?.source??'unknown source'}</p><dl><dt>Network · WebRTC peers</dt><dd>{read('network.peerCount','peerCount','network.peers.length')}</dd><dt>Network · latency</dt><dd>{read('network.latencyMs','network.rttMs','latencyMs','rttMs')}</dd><dt>Network · bandwidth</dt><dd>{read('network.bandwidth','network.bytesPerSecond','bandwidth')}</dd><dt>Workers · active</dt><dd>{read('workers.active','workerCount','workers.activeCount')} / 10,000 target</dd><dt>Workers · placement</dt><dd>24 visible representative placement slots; not a claim of live workers.</dd><dt>Storage · OPFS bytes</dt><dd>{read('storage.opfsBytes','storage.bytes','opfsBytes')}</dd><dt>Storage · verified shards</dt><dd>{read('storage.verifiedShardCount','storage.activeShardCount','verifiedShardCount','activeShardCount')}</dd><dt>Storage · Ring-WAL status</dt><dd>{read('storage.ringWalStatus','storage.walStatus','ringWalStatus')}</dd><dt>Storage · OPFS shard target</dt><dd>3,145,728 bytes (target; not a live measurement)</dd><dt>Security · authority</dt><dd>{read('security.authorityStatus','authorityStatus')}</dd><dt>Security · SHA-256 read-back</dt><dd>{read('security.readbackStatus','storage.readbackStatus','readbackStatus')}</dd><dt>Security · signature</dt><dd>{read('security.signatureStatus','signatureStatus')}</dd><dt>Runtime source</dt><dd>{snapshot?'KERNEL_TELEMETRY / event bridge detected':'No live telemetry bridge detected'}</dd></dl></Drawer>}
+  {drawer==='left'&&<Drawer side="left" close={()=>setDrawer(null)}><h2>SOVEREIGN LEDGER</h2><p>Sovereign cryptographic ledger · live values only when supplied by the runtime telemetry bridge.</p><p>Authority: {read('security.authorityStatus','authorityStatus')} · Signature: {read('security.signatureStatus','signatureStatus')}</p><p>SHA-256: {read('security.lastSha256','security.lastHash','lastSha256','lastHash')}</p><p>Read-back: {read('security.readbackStatus','storage.readbackStatus','readbackStatus')} · Receipts: {read('security.receiptCount','storage.receiptCount','receiptCount')}</p></Drawer>}
   {drawer==='right'&&<Drawer side="right" close={()=>setDrawer(null)}><h2>APPLICATION PODS</h2><div className="pods">{PODS.map(pod=><button className="pod-card" key={pod[1]} onClick={()=>selectPod(pod)}><strong>{pod[0]}</strong><small>{pod[1]}</small><span>STATUS {read('pods.'+pod[1]+'.status','apps.'+pod[1]+'.status')}</span></button>)}</div></Drawer>}
  </main>;
 }
