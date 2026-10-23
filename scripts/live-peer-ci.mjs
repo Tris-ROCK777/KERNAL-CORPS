@@ -213,6 +213,8 @@ try {
       throw new Error("STORAGE_TAB_CONTROLS_FAILED: " + JSON.stringify(storageControls));
     }
     const storageFrame = smokePage.frameLocator("#commandFrame");
+    // The command frame is below the app cards in the top-level mobile page; bring its whole viewport on-screen.
+    await smokePage.locator("#commandFrame").scrollIntoViewIfNeeded();
     await storageFrame.getByRole("button", { name: "REFRESH STORAGE", exact: true }).click();
     await smokePage.waitForFunction(() => {
       const text = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#status")?.textContent || "";
