@@ -264,13 +264,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#020712}body{padding
  </aside>
  <section class="telemetry" id="nodeTelemetry" aria-label="Peer node details" aria-hidden="true">
   <div class="telemetry-top"><div><div class="eyebrow" id="nodeLabel">NETWORK NODE / SELECTED</div><h2>Peer telemetry</h2></div><button class="telemetry-close" id="closeTelemetry" aria-label="Zoom back to mesh">×</button></div>
-  <div class="telemetry-grid">
-   <div class="telemetry-cell"><small>Live peer count / latency / bandwidth</small><strong>Read from live WebRTC console below</strong></div>
-   <div class="telemetry-cell"><small>OPFS shards / bytes / read-back</small><strong>Read from storage console below</strong></div>
-   <div class="telemetry-cell"><small>Ring-WAL commits / recovery</small><strong>Read from Ring-WAL tool below</strong></div>
-   <div class="telemetry-cell"><small>Authority / signatures / toll-lock</small><strong>Read from verified security tools below</strong></div>
-  </div>
-  <p class="telemetry-copy">Live values are rendered by the existing operational tools, not guessed in this scene. Switch the embedded workbench to inspect the corresponding source of truth.</p>
+   <div class="telemetry-grid">
+    <div class="telemetry-cell"><small>LIVE NETWORK</small><strong>Peers <span data-live-value="peers">UNAVAILABLE</span><br>Latency <span data-live-value="latency">UNAVAILABLE</span><br>RX bytes <span data-live-value="rxBytes">UNAVAILABLE</span></strong></div>
+    <div class="telemetry-cell"><small>VERIFIED STORAGE</small><strong>Shards <span data-live-value="shards">UNAVAILABLE</span><br>Verified bytes <span data-live-value="verifiedBytes">UNAVAILABLE</span><br>Read-back <span data-live-value="readback">UNAVAILABLE</span></strong></div>
+    <div class="telemetry-cell"><small>RING-WAL DURABILITY</small><strong>Status <span data-live-value="wal">UNAVAILABLE</span><br>Commits <span data-live-value="commits">UNAVAILABLE</span><br>Recovery <span data-live-value="recovery">UNAVAILABLE</span></strong></div>
+    <div class="telemetry-cell"><small>ZERO-TRUST SECURITY</small><strong>Authority <span data-live-value="authority">UNAVAILABLE</span><br>Signature <span data-live-value="signature">UNAVAILABLE</span><br>Read-back gate <span data-live-value="gate">UNAVAILABLE</span></strong></div>
+   </div>
+   <p class="telemetry-copy">Values update from the existing client console’s telemetry and verified receipts. Unreported fields remain UNAVAILABLE; the embedded workbench exposes the source-of-truth tools.</p>
   <div class="telemetry-actions" role="group" aria-label="Live operations workbench">
    <button type="button" data-live-tool="./mesh-console.html" data-live-title="NETWORK · WEBRTC PEERS">NETWORK / PEERS</button>
    <button type="button" data-live-tool="./ringwal-console.html" data-live-title="STORAGE · RING-WAL">STORAGE / RING-WAL</button>
@@ -365,6 +365,31 @@ document.querySelectorAll('#neuralExperience .pod-card').forEach(card => {
 });
 const mesh = new XKomzMasterInterface(mount, {
   viewportOnly: true,
+  onSnapshot(snapshot) {
+    const paths = {
+      peers: ['network.livePeerCount','network.peerCount'],
+      latency: ['network.latencyMs'],
+      rxBytes: ['network.bytesReceived'],
+      shards: ['storage.shardCount'],
+      verifiedBytes: ['storage.verifiedShardBytes'],
+      readback: ['security.readbackStatus'],
+      wal: ['storage.ringWalStatus'],
+      commits: ['storage.commitCount'],
+      recovery: ['storage.recoveryStatus'],
+      authority: ['security.authorityStatus'],
+      signature: ['security.signatureStatus'],
+      gate: ['security.gateStatus']
+    };
+    for (const [key, candidates] of Object.entries(paths)) {
+      let value;
+      for (const path of candidates) {
+        value = path.split('.').reduce((current, part) => current == null ? undefined : current[part], snapshot);
+        if (value !== undefined && value !== null && value !== '') break;
+      }
+      const target = document.querySelector('[data-live-value="' + key + '"]');
+      if (target) target.textContent = value === undefined || value === null || value === '' ? 'UNAVAILABLE' : String(value);
+    }
+  },
   onNodeSelected(node) {
     openMeshDrawer('telemetry');
     const label = node?.name || node?.id || node?.peerId || 'SELECTED MESH NODE';
