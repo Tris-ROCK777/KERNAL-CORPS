@@ -45,11 +45,18 @@ export async function runRealPeerVerification() {
     const node = await createRealPeerNode(mesh, {
       peerId: "local-alias", isInitiator: true, signalingTransport: signaling
     });
+    // ICE can fire before the READY message binds the remote identity.
+    node.pc.emit("icecandidate", { candidate: { toJSON: () => ({ candidate: "early-ice" }) } });
+    assert.equal(signaling.sent.filter(item => item.type === "ICE").length, 0,
+      "local ICE must wait until the remote peer identity is bound");
     signaling.emit({ type: "READY", peerId: "remote-actual-id" });
     await new Promise(resolve => setTimeout(resolve, 0));
     const offer = signaling.sent.find(item => item.type === "OFFER");
     assert.ok(offer, "initiator should send an offer after READY");
     assert.equal(offer.targetPeerId, "remote-actual-id", "offer must target actual remote identity");
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.ok(signaling.sent.some(item => item.type === "ICE" && item.candidate.candidate === "early-ice"),
+      "queued local ICE must flush once the remote peer identity is bound");
     // Lost QoS-0 signaling packets must recover when the receiver repeats READY.
     signaling.emit({ type: "READY", peerId: "remote-actual-id" });
     await new Promise(resolve => setTimeout(resolve, 0));
