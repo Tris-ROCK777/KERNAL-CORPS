@@ -68,7 +68,7 @@ button,input,a{font:inherit}button,a{touch-action:manipulation}button{cursor:poi
 <button class="command-tab" type="button" data-command-view="./mesh-console.html#workers" data-command-title="Workers · local execution">WORKERS · 10K TARGET</button>
 </div>
   <div class="command-toolbar"><div><strong id="commandViewTitle">LIVE MESH CONSOLE</strong><span id="commandViewStatus" aria-live="polite">Loading the original network console.</span></div><a class="btn" id="commandOpenStandalone" href="./mesh-console.html" target="_blank" rel="noopener">OPEN STANDALONE ↗</a></div>
-  <iframe class="command-frame" id="commandFrame" src="./mesh-console.html" title="KERNEL live neural mesh command console" loading="eager" allow="clipboard-read; clipboard-write" referrerpolicy="same-origin"></iframe>
+  <iframe class="command-frame" id="commandFrame" src="about:blank" title="KERNEL live neural mesh command console" loading="eager" allow="clipboard-read; clipboard-write" referrerpolicy="same-origin"></iframe>
  </div>
 </section>
 
@@ -109,12 +109,12 @@ function event(message,kind="info"){if(!eventLog)return;const row=document.creat
 function setState(id,text,kind){const el=$(id);el.textContent=text;el.classList.remove("good","warn","bad");if(kind)el.classList.add(kind)}
 async function checkCapabilities(){setState("netState",navigator.onLine?"ONLINE":"OFFLINE",navigator.onLine?"good":"warn");setState("onlineLabel",navigator.onLine?"DEVICE ONLINE":"DEVICE OFFLINE",navigator.onLine?"good":"warn");$("onlineDot").style.background=navigator.onLine?"var(--green)":"var(--gold)";setState("secureState",isSecureContext?"SECURE CONTEXT":"NOT SECURE",isSecureContext?"good":"bad");const rtc=typeof RTCPeerConnection==="function";setState("rtcState",rtc?"SUPPORTED":"UNAVAILABLE",rtc?"good":"bad");let opfs=false;try{opfs=!!navigator.storage&&typeof navigator.storage.getDirectory==="function"}catch{}setState("storageState",opfs?"SUPPORTED":"UNAVAILABLE",opfs?"good":"bad");setState("opfsMetric",opfs?"AVAILABLE":"UNAVAILABLE",opfs?"good":"bad");const cryptoOk=!!globalThis.crypto?.subtle;setState("cryptoMetric",cryptoOk?"WEB CRYPTO READY":"UNAVAILABLE",cryptoOk?"good":"bad");setState("peerMetric","Open mesh console");event("Browser capability scan complete: "+(navigator.onLine?"online":"offline")+", secure context "+(isSecureContext?"yes":"no")+", WebRTC "+(rtc?"supported":"unavailable")+", OPFS "+(opfs?"supported":"unavailable")+".");}
 const commandFrame=$("commandFrame"),commandTitle=$("commandViewTitle"),commandStatus=$("commandViewStatus"),standalone=$("commandOpenStandalone");
-commandFrame.src=new URL("./mesh-console.html?kernelBuild=be04efe4",location.href).href;
+commandFrame.src=new URL("./mesh-console.html?kernelBuild=xkomz-20261023-r1",location.href).href;
 function openCommandView(url,title,source="command deck"){
  const resolved=new URL(url,location.href);
  // GitHub Pages and mobile WebViews can retain an old embedded module document after a deploy.
  // Bust the document cache whenever a command view is opened, without changing its canonical path.
- resolved.searchParams.set("kernelBuild", "be04efe4");
+ resolved.searchParams.set("kernelBuild", "xkomz-20261023-r1");
  if(resolved.origin!==location.origin){event("Blocked a command view outside this repository origin.","error");return}
  commandFrame.src=resolved.href;commandFrame.title="KERNEL "+title;commandTitle.textContent=title.toUpperCase();commandStatus.textContent="Opening "+title+" · source: "+source+".";
  standalone.href=resolved.href;
