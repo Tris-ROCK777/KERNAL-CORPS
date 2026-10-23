@@ -349,7 +349,7 @@ function updateAnalytics(){if(!$("metricPeers"))return;const now=Date.now(),rate
   const snapshot={
    updatedAt:new Date().toISOString(),
    connected:!!state.runtime,
-   network:{peers,livePeerCount:peers.filter(p=>["open","connected"].includes(p.state)).length,peerCount:peers.length,workers:{localActive:Number(state.localWorkers?.length)||0}},
+   network:{peers,livePeerCount:peers.filter(p=>["open","connected"].includes(p.state)).length,peerCount:peers.length,workers:{localActive:undefined,architectureTarget:10000}},
    storage:{shardCount:Number(telemetry.verifiedShards)||0,verifiedShardBytes:Number(telemetry.verifiedShardBytes)||0,ringWalStatus:state.runtime?"RUNTIME INITIALIZED · DURABILITY CHECKED":"UNAVAILABLE"},
    security:{authorityStatus:authorityReady?(state.runtime.authorityRestored?"AUTHORITY RESTORED":"AUTHORITY PINNED"):(String(state.authority).startsWith("FAILED")?"FAIL-CLOSED":"UNAVAILABLE"),signatureStatus:receipt?(receipt.signatureVerified===true&&receipt.authorityPinMatched===true?"VERIFIED":"NOT VERIFIED"):"UNAVAILABLE",lastSha256:/^[a-f0-9]{64}$/i.test(String(state.lastHash||""))?state.lastHash:undefined,receiptCount:state.receiptHistory?.length||0,readbackStatus:receipt?.readBackVerified===true?"VERIFIED":"UNAVAILABLE",gateStatus:receipt?(receipt.signatureVerified===true&&receipt.authorityPinMatched===true&&receipt.readBackVerified===true?"PASS":"BLOCKED"):"UNAVAILABLE",records:(state.receiptHistory||[]).map(item=>({at:item.at,source:item.source,sha256:item.receipt?.sha256,byteLength:item.receipt?.byteLength,signatureVerified:item.receipt?.signatureVerified,authorityPinMatched:item.receipt?.authorityPinMatched,readBackVerified:item.receipt?.readBackVerified}))}
   };
