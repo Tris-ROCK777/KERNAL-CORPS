@@ -279,12 +279,36 @@ export function createMqttSignaling({
   };
 
   client.on("message", onMessage);
-  client.subscribe(topic, { qos: 0 });
+
+  // Do not announce peer readiness until the broker confirms this subscription.
+  // MQTT.js invokes the callback with an error or granted subscriptions.
+  let subscriptionTimer;
+  const ready = new Promise((resolve, reject) => {
+    subscriptionTimer = setTimeout(() => reject(new Error("MQTT_SUBSCRIBE_TIMEOUT")), 10000);
+    try {
+      client.subscribe(topic, { qos: 0 }, (error, granted) => {
+        clearTimeout(subscriptionTimer);
+        if (error) {
+          reject(new Error("MQTT_SUBSCRIBE_FAILED: " + String(error)));
+          return;
+        }
+        if (!Array.isArray(granted) || !granted.some(item => item.topic === topic && item.qos !== 128)) {
+          reject(new Error("MQTT_SUBSCRIPTION_NOT_GRANTED"));
+          return;
+        }
+        resolve();
+      });
+    } catch (error) {
+      clearTimeout(subscriptionTimer);
+      reject(new Error("MQTT_SUBSCRIBE_FAILED: " + String(error)));
+    }
+  });
 
   return {
     topic,
-    ready: Promise.resolve(),
+    ready,
     async send(payload) {
+      await ready;
       if (closed) throw new Error("MQTT_SIGNALING_CLOSED");
       if (!payload || !["READY", "OFFER", "ANSWER", "ICE"].includes(payload.type)) {
         throw new Error("UNSUPPORTED_SIGNAL_TYPE");
@@ -308,6 +332,7 @@ export function createMqttSignaling({
     close() {
       if (closed) return;
       closed = true;
+      clearTimeout(subscriptionTimer);
       listeners.clear();
       if (typeof client.removeListener === "function") client.removeListener("message", onMessage);
       else if (typeof client.off === "function") client.off("message", onMessage);
