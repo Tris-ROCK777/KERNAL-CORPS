@@ -28,6 +28,8 @@ jobs:
         run: npm install --no-save fake-indexeddb
       - name: Check all Overseer JavaScript module syntax
         run: find overseer -type f -name '*.mjs' -print0 | xargs -0 -n1 node --check
+      - name: Check Overseer UI local links and imports
+        run: node overseer/overseer-ui-smoke.test.mjs
       - name: Run authority key vault tests
         run: node overseer/overseer-key-vault.test.mjs
       - name: Run pinned authority tests
