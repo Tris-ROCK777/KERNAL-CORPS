@@ -308,6 +308,17 @@ button.danger{color:#ffb4bd;border-color:rgba(255,101,123,.3)}
   #peersPanel #rightControls #lens{padding:4px!important}
   #peersPanel #rightControls #lens button{min-height:30px}
 }
+
+/* Keep the four core actions reachable in the iPhone viewport even when telemetry expands. */
+@media(max-width:759px){
+ .hud .controls{position:fixed;z-index:12;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:6px;background:rgba(3,8,14,.97);border:1px solid rgba(83,183,217,.42);box-shadow:0 8px 28px rgba(0,0,0,.58)}
+ .hud .controls button{min-height:39px;padding:7px 4px;font-size:8px;letter-spacing:.06em}
+ #liveAnalytics{position:fixed;z-index:11;left:8px;right:8px;bottom:calc(154px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:5px;background:rgba(3,8,14,.93);border:1px solid rgba(83,183,217,.26);box-shadow:0 5px 20px rgba(0,0,0,.45)}
+ #liveAnalytics .metric{min-width:0;padding:4px 6px;display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center}
+ #liveAnalytics .metric b{font-size:11px;grid-row:span 2}
+ #liveAnalytics .metric span{font-size:7px;letter-spacing:.04em}
+ #liveAnalytics .metric small{font-size:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
 </style></head>
 <body>
 <canvas id="scene" aria-label="Full-screen interactive neural network visualization"></canvas><div id="shade"></div>
