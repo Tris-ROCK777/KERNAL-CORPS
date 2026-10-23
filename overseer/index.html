@@ -190,6 +190,15 @@ html,body{margin:0!important;padding:0!important;width:100vw!important;height:10
 #neuralExperience .selected-node-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}#neuralExperience .selected-node-grid strong{overflow-wrap:anywhere!important}#neuralExperience .selected-node-wide{grid-column:1/-1!important}
 @media(max-width:600px){#neuralExperience #nodeTelemetry{padding:12px!important}}
 </style>
+
+<style id="kernel-drawer-motion-fix">
+#neuralExperience .drawer,#neuralExperience #nodeTelemetry{transition-duration:.35s!important;transition-timing-function:cubic-bezier(.16,1,.3,1)!important}
+#neuralExperience .drawer:not(.open),#neuralExperience #nodeTelemetry:not(.open){pointer-events:none!important}
+#neuralExperience #ledgerDrawer.open{transform:translateX(0)!important}
+#neuralExperience #podsDrawer.open{transform:translateX(0)!important}
+#neuralExperience #nodeTelemetry.open{transform:translateY(0)!important}
+#neuralExperience .drawer-scrim:not(.open){pointer-events:none!important}
+</style>
 </head>
 <body>
 <div id="neuralExperience" aria-label="KERNELCORP neural network interface">
