@@ -206,9 +206,9 @@ try {
     // Exercise the real local RTCDataChannel loopback simulator from the deployed mobile UI.
     // Open the console drawer first: the mobile layout intentionally keeps controls in the drawer.
     // This remains distinct from the separate two-browser remote-peer transfer test.
-    const command = smokePage.frameLocator("#commandFrame");
-    await command.locator("#openDrawer").click();
-    await command.locator("#simTransfer").click();
+    const commandFrame = smokePage.frameLocator("#commandFrame");
+    await commandFrame.locator("#openDrawer").click();
+    await commandFrame.locator("#simTransfer").click();
     await smokePage.waitForFunction(() => {
       const output = document.querySelector("#commandFrame")?.contentDocument?.querySelector("#log")?.textContent || "";
       return output.includes("SIM PASS") || output.includes("96 KiB WEBRTC SIM FAILED");
