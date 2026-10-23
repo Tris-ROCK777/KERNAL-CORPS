@@ -357,6 +357,10 @@ const drawer=$("consolePanel"),rightDrawer=$("peersPanel"),statusSection=$("stat
 const originalHud=document.querySelector(".hud"),readout=originalHud.querySelector(".readout"),lens=document.querySelector("#lens"),controls=originalHud.querySelector(".controls"),logPanel=document.querySelector("#log"),inspector=document.querySelector("#inspect");
 statusSection.append(readout,inspector);
 $("rightControls").append(lens,controls);
+// Keep operational controls above the scrollable peer list so they remain visible on phone screens.
+rightDrawer.insertBefore($("rightControls"),$("nodeList"));
+$("rightControls").style.flex="0 0 auto";
+$("rightControls").style.overflow="visible";
 logsSection.append(logPanel);
 keysSection.innerHTML='<div class="panel readout"><div>AUTHORITY / ED25519<span class="value" id="keySummary">PINNED KEY STATUS PENDING</span></div><div>TRUST MODEL<span class="value">FAIL-CLOSED · LOCAL-FIRST</span></div><div>STORAGE<span class="value">OPFS + RING-WAL</span></div><div>INTEGRITY<span class="value">SHA-256 READ-BACK</span></div></div>';
 function setDrawer(side){const left=side==="left",right=side==="right";document.body.classList.toggle("left-drawer-open",left);document.body.classList.toggle("right-drawer-open",right);drawer.setAttribute("aria-hidden",String(!left));rightDrawer.setAttribute("aria-hidden",String(!right));$("openDrawer").setAttribute("aria-expanded",String(left));$("openRightDrawer").setAttribute("aria-expanded",String(right));if(left)$("closeDrawer").focus();if(right)$("closeRightDrawer").focus()}
