@@ -36,4 +36,4 @@ for (const file of htmlFiles) {
 }
 assert.equal(missing.length, 0, "Broken local UI links/imports:\n" + JSON.stringify(missing, null, 2));
 assert.ok(htmlFiles.some(file => path.relative(root, file) === "index.html"), "Overseer entry page is missing");
-console.log(\`Overseer UI smoke check passed: \${htmlFiles.length} HTML pages and their literal local references.\`);
+console.log("Overseer UI smoke check passed: " + htmlFiles.length + " HTML pages and their literal local references.");
