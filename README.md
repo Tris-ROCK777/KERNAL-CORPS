@@ -11,14 +11,7 @@ The root site redirects to the X-KOM’Z Overseer at `overseer/index.html`. Keep
 3. **Security** — pinned authority and durability verification; fail closed when trust requirements are not met.
 4. **Workers · 10K target** — actual local browser-worker execution and progress toward a future distributed worker grid.
 
-The UI includes the AYE•YAE core and interactive modals for the seven canonical apps: X-KOM’Z, Planet-K, KashKorner, X-Koin’s, Kernelodie’s, KernelVision, and X-Shield.
-
-## Implementation truth
-
-- The current local worker control starts at most two real browser Workers on the current device and continuously runs SHA-256 tasks. It does **not** activate 10,000 workers.
-- The 96 KiB loopback simulator tests a local RTCDataChannel pair. It is not proof of remote-device transfer; use the separate live-peer verification workflow for that.
-- OPFS is origin- and device-local unless an authenticated replication flow transfers data. A local WAL view is not evidence that another phone has the same data.
-- Do not label visual topology cells as connected peers or count a design target as live capacity.
+The UI includes the AYE•YAE core and interactive modals for the seven canonical apps: X-KOM’Z, Planet-K, KashKorner, X-Koin’s, Kernelodie’s, KernelVision, and X-Shield
 
 ## Canonical code and recovery records
 
