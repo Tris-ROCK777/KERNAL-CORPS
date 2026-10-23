@@ -125,7 +125,11 @@ try {
     await smokePage.locator("#root").waitFor({ state: "attached", timeout: 15000 });
     await smokePage.waitForFunction(() => {
       const canvas = document.querySelector("#root canvas");
-      return Boolean(canvas && canvas.width > 0 && canvas.height > 0);
+      if (!canvas || canvas.width <= 0 || canvas.height <= 0) return false;
+      const rect = canvas.getBoundingClientRect();
+      return Math.abs(rect.width - innerWidth) < 2 &&
+        Math.abs(rect.height - innerHeight) < 2 &&
+        getComputedStyle(canvas).position === "fixed";
     }, undefined, { timeout: 30000 });
     const r3fScene = await smokePage.evaluate(() => {
       const canvas = document.querySelector("#root canvas");
