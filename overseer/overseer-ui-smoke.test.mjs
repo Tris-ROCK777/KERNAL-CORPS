@@ -14,8 +14,8 @@ function walk(dir) {
 }
 walk(root);
 const missing = [];
-const attributePattern = /\\b(?:href|src)\\s*=\\s*["']([^"'<>]+)["']/gi;
-const importPattern = /\\b(?:from\\s*|import\\s*\\()\\s*["']([^"'"]+)["']/g;
+const attributePattern = /\b(?:href|src)\s*=\s*["']([^"'<>]+)["']/gi;
+const importPattern = /\b(?:from\s*|import\s*\()\s*["']([^"'"]+)["']/g;
 
 for (const file of htmlFiles) {
   const source = readFileSync(file, "utf8");
