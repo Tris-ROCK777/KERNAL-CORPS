@@ -154,6 +154,34 @@ try {
       await smokeBrowser.close();
       throw new Error("DEPLOYED_COMMAND_CENTER_RUNTIME_FAILED: " + runtimeLog);
     }
+    const neuralUi = await smokePage.evaluate(() => {
+      const root = document.querySelector("#neuralExperience");
+      return {
+        present: Boolean(root),
+        visible: Boolean(root && getComputedStyle(root).display !== "none" && root.getBoundingClientRect().width > 0),
+        meshCanvas: Boolean(root?.querySelector("#meshGL")),
+        binaryCanvas: Boolean(root?.querySelector("#binaryFlow")),
+        ledgerDrawer: Boolean(root?.querySelector("#ledgerDrawer a[href*='verify']")),
+        podsDrawer: Boolean(root?.querySelector("#podsDrawer .pod-card")),
+        sixPods: root?.querySelectorAll("#podsDrawer .pod-card").length ?? 0,
+        peerTelemetry: Boolean(root?.querySelector("#nodeTelemetry")),
+        preservedCommandFrame: Boolean(document.querySelector("#commandFrame"))
+      };
+    });
+    if (!neuralUi.present || !neuralUi.visible || !neuralUi.meshCanvas || !neuralUi.binaryCanvas ||
+        !neuralUi.ledgerDrawer || !neuralUi.podsDrawer || neuralUi.sixPods !== 6 ||
+        !neuralUi.peerTelemetry || !neuralUi.preservedCommandFrame) {
+      await smokeBrowser.close();
+      throw new Error("NEURAL_OVERSEER_UI_ASSERTION_FAILED: " + JSON.stringify(neuralUi));
+    }
+    console.log(JSON.stringify({ event: "NEURAL_OVERSEER_MOBILE_UI_PASS", ...neuralUi }));
+    // The new full-screen mesh is the intended production surface. Disable its
+    // pointer interception only inside this smoke-test page so legacy command
+    // controls beneath it can still be regression-tested without changing UI state.
+    await smokePage.locator("#neuralExperience").evaluate(root => {
+      root.style.pointerEvents = "none";
+      root.querySelectorAll("*").forEach(node => { node.style.pointerEvents = "none"; });
+    });
     const ui = await smokePage.evaluate(() => {
       const frame = document.querySelector("#commandFrame");
       const doc = frame?.contentDocument;
