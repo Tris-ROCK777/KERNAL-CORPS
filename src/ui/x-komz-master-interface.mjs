@@ -76,6 +76,7 @@ export class XKomzMasterInterface {
 
   renderShell() {
     if (this.options.viewportOnly) {
+      this.installStyles();
       this.container.innerHTML = '<div class="xk-root xk-viewport-only" aria-label="Interactive X-KOM’Z 3D peer mesh"><div class="xk-viewport" data-xk-viewport aria-label="Interactive three-dimensional peer mesh"></div></div>';
       this.root = this.container.querySelector('.xk-root');
       this.viewport = this.container.querySelector('[data-xk-viewport]');
