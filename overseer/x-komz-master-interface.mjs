@@ -615,13 +615,13 @@ export class XKomzMasterInterface {
     this.raf = requestAnimationFrame(() => this.animate());
     const t = performance.now() * .001;
     if (this.cameraTargetPosition) {
-      this.camera.position.lerp(this.cameraTargetPosition, 0.085);
+      const targetPosition = this.cameraTargetPosition.clone();
+      if (this.orientation) {
+        targetPosition.x += this.orientation.y * 1.35;
+        targetPosition.y -= this.orientation.x * 1.1;
+      }
+      this.camera.position.lerp(targetPosition, 0.085);
       this.camera.lookAt(this.cameraLookTarget || new THREE.Vector3(0, 0, 0));
-    }
-    if (this.orientation && !this.cameraTargetPosition) {
-      this.camera.position.x += (this.orientation.y * 1.35 - this.camera.position.x) * 0.025;
-      this.camera.position.y += (9 - this.orientation.x * 1.1 - this.camera.position.y) * 0.025;
-      this.camera.lookAt(0, 0, 0);
     }
     if (this.coreGroup) { this.coreGroup.rotation.x = Math.sin(t * .17) * .12; this.coreGroup.rotation.y = t * .14; }
     if (this.coreHalo) { const pulse = 1 + Math.sin(t * 1.4) * .055; this.coreHalo.scale.setScalar(pulse); this.coreHalo.material.opacity = .055 + (Math.sin(t * 1.4) + 1) * .018; }
