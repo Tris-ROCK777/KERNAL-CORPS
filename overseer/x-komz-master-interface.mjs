@@ -758,6 +758,7 @@ export class XKomzMasterInterface {
     direction.normalize();
     const end = target.clone().add(direction.multiplyScalar(5.5));
     end.y += 1.2;
+    end.y += 2.4; // Lift the selected mesh into the upper visual field; telemetry stays screen-space.
     this.cameraTargetPosition = end;
     this.cameraLookTarget = target;
     this.dispatch('xkomz:node-selected', { node: this.selectedNode });
