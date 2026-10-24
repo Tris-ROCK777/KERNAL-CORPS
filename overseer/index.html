@@ -174,7 +174,7 @@ a{color:inherit;text-decoration:none}
 
 
 <script type="module">
-import XKomzMasterInterface from './x-komz-master-interface.mjs?build=meshfix-20261023b';
+import XKomzMasterInterface from './x-komz-master-interface.mjs?build=podnodes-20261023c';
 const experience = document.getElementById('neuralExperience');
 const mount = document.getElementById('meshViewportMount');
 const panes = {
@@ -385,6 +385,17 @@ const mesh = new XKomzMasterInterface(mount, {
     // The mesh passes its explicit key for anonymous nodes. Never match two
     // missing IDs as equal: that cross-wires the inspector to an unrelated peer.
     const clicked = node?.raw && typeof node.raw === 'object' ? node.raw : (node || null);
+    const isPod = clicked?.type === 'POD' || String(node?.meshKey || '').startsWith('pod:');
+    if (isPod) {
+      selectedMeshKey = node.meshKey || 'pod:' + String(clicked.podId || clicked.id || 'unknown');
+      selectedMeshNode = clicked;
+      openMeshDrawer('telemetry');
+      renderSelectedMeshNode(selectedMeshNode, latestMeshSnapshot);
+      const label = clicked.name || clicked.label || clicked.id || 'APPLICATION POD';
+      if (camFocusLabel) camFocusLabel.textContent = 'APPLICATION POD / ' + String(label).toUpperCase();
+      document.getElementById('meshAnnouncement').textContent = 'Selected application pod ' + label + '. This is an app node, not a live network peer.';
+      return;
+    }
     const clickedId = inspectorValue(clicked, ['id','peerId','peer_id','nodeId','connectionId']);
     const peers = inspectorValue(latestMeshSnapshot, ['network.peers','peers','nodes']);
     selectedMeshKey = typeof node?.meshKey === 'string' ? node.meshKey : null;
