@@ -566,6 +566,32 @@ export class XKomzMasterInterface {
     this.nodeGroup = new THREE.Group(); this.scene.add(this.nodeGroup);
     this.raycaster = new THREE.Raycaster(); this.pointer = new THREE.Vector2();
     this.activePointers = new Map();
+    // Device-orientation parallax is presentation-only and is opt-in on iOS.
+    // Request permission only after a user gesture; unsupported browsers stay usable.
+    this.orientationPermissionRequested = false;
+    this.orientation = { x: 0, y: 0 };
+    this.onDeviceOrientation = event => {
+      if (event.beta == null || event.gamma == null || this.destroyed) return;
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reducedMotion) return;
+      this.orientation.x = Math.max(-1, Math.min(1, event.beta / 45));
+      this.orientation.y = Math.max(-1, Math.min(1, event.gamma / 35));
+    };
+    this.requestOrientation = async () => {
+      if (this.orientationPermissionRequested) return;
+      this.orientationPermissionRequested = true;
+      try {
+        const permission = window.DeviceOrientationEvent?.requestPermission;
+        if (typeof permission === 'function' && await permission.call(window.DeviceOrientationEvent) !== 'granted') return;
+        if ('DeviceOrientationEvent' in window) {
+          window.addEventListener('deviceorientation', this.onDeviceOrientation, { passive: true });
+          this.cleanups.push(() => window.removeEventListener('deviceorientation', this.onDeviceOrientation));
+        }
+      } catch { /* Gyroscope is optional; touch interaction remains available. */ }
+    };
+    this.onFirstGesture = () => this.requestOrientation();
+    this.viewport.addEventListener('pointerdown', this.onFirstGesture, { once: true, passive: true });
+    this.cleanups.push(() => this.viewport?.removeEventListener('pointerdown', this.onFirstGesture));
     this.gesturePinchDistance = 0;
     this.onCanvasPointerDown = event => this.handlePointerDown(event);
     this.onCanvasPointerMove = event => this.handlePointerMove(event);
@@ -591,6 +617,11 @@ export class XKomzMasterInterface {
     if (this.cameraTargetPosition) {
       this.camera.position.lerp(this.cameraTargetPosition, 0.085);
       this.camera.lookAt(this.cameraLookTarget || new THREE.Vector3(0, 0, 0));
+    }
+    if (this.orientation && !this.cameraTargetPosition) {
+      this.camera.position.x += (this.orientation.y * 1.35 - this.camera.position.x) * 0.025;
+      this.camera.position.y += (9 - this.orientation.x * 1.1 - this.camera.position.y) * 0.025;
+      this.camera.lookAt(0, 0, 0);
     }
     if (this.coreGroup) { this.coreGroup.rotation.x = Math.sin(t * .17) * .12; this.coreGroup.rotation.y = t * .14; }
     if (this.coreHalo) { const pulse = 1 + Math.sin(t * 1.4) * .055; this.coreHalo.scale.setScalar(pulse); this.coreHalo.material.opacity = .055 + (Math.sin(t * 1.4) + 1) * .018; }
