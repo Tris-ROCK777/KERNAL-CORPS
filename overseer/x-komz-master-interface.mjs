@@ -570,7 +570,7 @@ export class XKomzMasterInterface {
     this.podNodeObjects = [];
     this.pods.forEach((pod, index) => {
       const angle = (index / this.pods.length) * Math.PI * 2 - Math.PI / 2;
-      const position = new THREE.Vector3(Math.cos(angle) * 12.2, Math.sin(angle * 2) * 1.15, Math.sin(angle) * 8.2);
+      const position = new THREE.Vector3(Math.cos(angle) * 5.25, Math.sin(angle) * 5.8, Math.sin(angle * 2) * 2.15);
       const material = new THREE.MeshBasicMaterial({ color: index === 2 ? 0xffbd4d : 0x65dfff, transparent: true, opacity: .92 });
       const orb = new THREE.Mesh(new THREE.SphereGeometry(.24, 16, 12), material);
       orb.position.copy(position); orb.userData.pod = pod; this.podNodeGroup.add(orb);
