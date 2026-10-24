@@ -668,6 +668,8 @@ export class XKomzMasterInterface {
     if (!this.camera) return;
     this.cameraTargetPosition = new THREE.Vector3(0, 9, 30);
     this.cameraLookTarget = new THREE.Vector3(0, 0, 0);
+    this.selectedNode = null;
+    if (this.scene) this.scene.rotation.set(0, 0, 0);
   }
 
   resize() {
@@ -702,7 +704,12 @@ export class XKomzMasterInterface {
       const distance = Math.hypot(points[1].lastX - points[0].lastX, points[1].lastY - points[0].lastY);
       if (this.gesturePinchDistance > 0 && distance > 0) {
         const ratio = this.gesturePinchDistance / distance;
-        this.camera.position.z = Math.max(15, Math.min(58, this.camera.position.z * ratio));
+        const focus = this.cameraLookTarget || new THREE.Vector3(0, 0, 0);
+        const offset = this.camera.position.clone().sub(focus);
+        if (offset.lengthSq() < 0.01) offset.set(0, 0.25, 1);
+        offset.setLength(Math.max(15, Math.min(58, offset.length() * ratio)));
+        this.cameraTargetPosition = focus.clone().add(offset);
+        this.camera.position.copy(this.cameraTargetPosition);
       }
       this.gesturePinchDistance = distance;
       return;
@@ -745,8 +752,12 @@ export class XKomzMasterInterface {
       this.openDrawer('telemetry');
     }
     const target = hitObject.position.clone();
-    const direction = target.clone().normalize();
-    const end = target.clone().add(direction.multiplyScalar(4));
+    // Keep the camera outside the core even when the selected node is near origin.
+    const direction = this.camera.position.clone().sub(target);
+    if (direction.lengthSq() < 0.01) direction.set(0, 0.25, 1);
+    direction.normalize();
+    const end = target.clone().add(direction.multiplyScalar(5.5));
+    end.y += 1.2;
     this.cameraTargetPosition = end;
     this.cameraLookTarget = target;
     this.dispatch('xkomz:node-selected', { node: this.selectedNode });
