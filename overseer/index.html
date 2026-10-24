@@ -258,7 +258,7 @@ experience.addEventListener('pointerup', event => {
   if (Math.abs(dx) > Math.abs(dy) * 1.15) {
     if (start.fromLeft && dx > 0) openMeshDrawer('left');
     else if (start.fromRight && dx < 0) openMeshDrawer('right');
-
+  }
 }, {passive:true});
 experience.addEventListener('pointercancel', () => { edgeGestureStart = null; }, {passive:true});
 let latestMeshSnapshot = null;
