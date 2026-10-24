@@ -564,6 +564,24 @@ export class XKomzMasterInterface {
     }
     this.scene.add(this.binaryGroup);
     this.nodeGroup = new THREE.Group(); this.scene.add(this.nodeGroup);
+    // Canonical application nodes are visual/selectable mesh objects, not network peers.
+    // Their presence is independent of telemetry and never increments live peer counts.
+    this.podNodeGroup = new THREE.Group(); this.scene.add(this.podNodeGroup);
+    this.podNodeObjects = [];
+    this.pods.forEach((pod, index) => {
+      const angle = (index / this.pods.length) * Math.PI * 2 - Math.PI / 2;
+      const position = new THREE.Vector3(Math.cos(angle) * 12.2, Math.sin(angle * 2) * 1.15, Math.sin(angle) * 8.2);
+      const material = new THREE.MeshBasicMaterial({ color: index === 2 ? 0xffbd4d : 0x65dfff, transparent: true, opacity: .92 });
+      const orb = new THREE.Mesh(new THREE.SphereGeometry(.24, 16, 12), material);
+      orb.position.copy(position); orb.userData.pod = pod; this.podNodeGroup.add(orb);
+      const halo = new THREE.Mesh(new THREE.SphereGeometry(.47, 12, 10), new THREE.MeshBasicMaterial({ color: index === 2 ? 0xffa52b : 0x2e9dff, transparent: true, opacity: .12, depthWrite: false }));
+      halo.position.copy(position); halo.userData.pod = pod; this.podNodeGroup.add(halo);
+      const hit = new THREE.Mesh(new THREE.SphereGeometry(.78, 8, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, colorWrite: false, depthWrite: false }));
+      hit.position.copy(position);
+      hit.userData.node = { id: pod.id, name: pod.name, label: pod.name, type: 'POD', status: 'APPLICATION NODE — NOT A PEER', podId: pod.id, description: pod.desc };
+      hit.userData.isPodNode = true;
+      this.podNodeGroup.add(hit); this.podNodeObjects.push(hit);
+    });
     this.raycaster = new THREE.Raycaster(); this.pointer = new THREE.Vector2();
     this.activePointers = new Map();
     // Device-orientation parallax is presentation-only and is opt-in on iOS.
@@ -705,17 +723,19 @@ export class XKomzMasterInterface {
   }
 
   pickNode(event) {
-    if (!this.renderer || !this.sceneObjects.length) return;
+    if (!this.renderer || (!this.sceneObjects.length && !this.podNodeObjects?.length)) return;
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.pointer.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    const hits = this.raycaster.intersectObjects(this.sceneObjects, false);
+    const hits = this.raycaster.intersectObjects([...this.sceneObjects, ...(this.podNodeObjects || [])], false);
     if (!hits.length) {
       if (this.options.viewportOnly) this.options.onGesture?.('close');
       return;
     }
-    const node = hits[0].object.userData.node;
-    this.selectedNode = node.raw;
+    const hitObject = hits[0].object;
+    const node = hitObject.userData.node || (hitObject.userData.pod ? { id: hitObject.userData.pod.id, name: hitObject.userData.pod.name, label: hitObject.userData.pod.name, type: 'POD', status: 'APPLICATION NODE — NOT A PEER', podId: hitObject.userData.pod.id, description: hitObject.userData.pod.desc, raw: { id: hitObject.userData.pod.id, name: hitObject.userData.pod.name, type: 'POD', status: 'APPLICATION NODE — NOT A PEER', description: hitObject.userData.pod.desc }, meshKey: 'pod:' + hitObject.userData.pod.id } : null);
+    if (!node) return;
+    this.selectedNode = node.raw || node;
     if (this.options.viewportOnly) {
       // Pass the mesh's stable selection key as well as the raw record. Records
       // without IDs must be resolved by their mesh slot, never by an empty ID.
@@ -724,7 +744,7 @@ export class XKomzMasterInterface {
       this.renderNodeDetails(this.selectedNode);
       this.openDrawer('telemetry');
     }
-    const target = hits[0].object.position.clone();
+    const target = hitObject.position.clone();
     const direction = target.clone().normalize();
     const end = target.clone().add(direction.multiplyScalar(4));
     this.cameraTargetPosition = end;
