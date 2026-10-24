@@ -42,6 +42,23 @@ a{color:inherit;text-decoration:none}
 .ledger-item i{font-size:10px;font-style:normal;letter-spacing:.1em;text-transform:uppercase;color:#73dfff}
 .ledger-item strong{margin:5px 0;font-size:14px}
 .ledger-item span{font-size:12px;line-height:1.45;color:#a9bfd2}
+/* Fixed screen-space controls never live in the WebGL projection layer. */
+#nodeTelemetry{left:10px;right:10px;bottom:calc(78px + env(safe-area-inset-bottom));width:auto;height:min(58dvh,620px);max-height:calc(100dvh - 150px);padding:14px 12px calc(14px + env(safe-area-inset-bottom));border-radius:18px;transform:translateY(calc(100% + 90px));z-index:60;scrollbar-width:thin}
+#nodeTelemetry.open{transform:translateY(0)}
+.telemetry-top{position:sticky;top:-14px;z-index:3;padding:8px 0 10px;margin:0 0 10px;background:rgba(4,8,16,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.telemetry h2{font-size:17px;overflow-wrap:anywhere}
+.mesh-context-head{line-height:1.5;overflow-wrap:anywhere}
+.selected-node-grid,.telemetry-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.telemetry-actions{gap:6px}
+.telemetry-actions button,.telemetry-actions a{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+#podDock{position:fixed;z-index:45;left:0;right:0;bottom:0;padding:8px 0 calc(8px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.9) 22%,rgba(0,0,0,.96));pointer-events:auto}
+#podDockTrack{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:4px 14px 8px;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#podDockTrack::-webkit-scrollbar{display:none}
+.pod-dock-item{flex:0 0 auto;min-width:100px;max-width:126px;min-height:48px;padding:9px 12px;border:1px solid rgba(99,218,255,.28);border-radius:13px;background:rgba(4,13,25,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#e8f9ff;text-align:left;scroll-snap-align:start}
+.pod-dock-item span{display:block;font-size:11px;font-weight:650;white-space:nowrap}
+.pod-dock-item small{display:block;margin-top:3px;font-size:8px;letter-spacing:.1em;color:#79dfff;white-space:nowrap}
+.pod-dock-item:active{border-color:#ffc15a;background:rgba(36,25,8,.94)}
+#meshViewportMount,.xk-root.xk-viewport-only,.xk-viewport{padding-bottom:calc(68px + env(safe-area-inset-bottom))}
 .pod-grid{display:grid;grid-template-columns:1fr;gap:12px;padding-bottom:10px}
 .pod-card{min-height:150px;perspective:1000px;cursor:pointer;outline:none}
 .pod-inner{position:relative;min-height:150px;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.7,.2,1)}
@@ -114,6 +131,14 @@ a{color:inherit;text-decoration:none}
    <article class="pod-card" tabindex="0" role="button" aria-label="X-Shield, tap to flip" style="--accent:#a8dcff"><div class="pod-inner"><div class="pod-face"><div><div class="pod-index">POD / 06</div><div class="pod-name">X-Shield</div><div class="pod-desc">Privacy and security-focused tools.</div></div><div class="pod-hint">Tap to flip ↻</div></div><div class="pod-face pod-back"><div><div class="pod-index">NETWORK ROLE</div><div class="pod-name">Security layer</div><div class="pod-desc">Inspect the actual authority and security workflows; tunnel status is not assumed.</div></div><div class="pod-commands"><a class="pod-open" href="./authority-enroll.html">AUTHORITY TOOLS ↗</a><a class="pod-open" href="./non-exportable-vault-verify.html">VERIFY KEY VAULT ↗</a></div></div></div></article>
   </div>
  </template>
+ <nav id="podDock" aria-label="Canonical application pods"><div id="podDockTrack">
+  <button class="pod-dock-item" type="button" data-pod-dock="planet-k"><span>Planet-K</span><small>POD 01</small></button>
+  <button class="pod-dock-item" type="button" data-pod-dock="kashkorner"><span>KashKorner</span><small>POD 02</small></button>
+  <button class="pod-dock-item" type="button" data-pod-dock="x-koins"><span>X-Koin’s</span><small>POD 03</small></button>
+  <button class="pod-dock-item" type="button" data-pod-dock="kernelodies"><span>Kernelodie’s</span><small>POD 04</small></button>
+  <button class="pod-dock-item" type="button" data-pod-dock="kernelvision"><span>KernelVision</span><small>POD 05</small></button>
+  <button class="pod-dock-item" type="button" data-pod-dock="x-shield"><span>X-Shield</span><small>POD 06</small></button>
+ </div></nav>
  <section class="telemetry" id="nodeTelemetry" aria-label="Peer node details" aria-hidden="true"></section>
  <template id="nodeTelemetryTemplate">
   <div class="telemetry-top"><div><div class="eyebrow" id="nodeLabel">NETWORK NODE / SELECTED</div><h2>Peer telemetry</h2></div><button class="telemetry-close" id="closeTelemetry" aria-label="Zoom back to mesh">×</button></div>
@@ -174,7 +199,7 @@ a{color:inherit;text-decoration:none}
 
 
 <script type="module">
-import XKomzMasterInterface from './x-komz-master-interface.mjs?build=podnodes-20261023c';
+import XKomzMasterInterface from './x-komz-master-interface.mjs?build=screen-dock-20261023d';
 const experience = document.getElementById('neuralExperience');
 const mount = document.getElementById('meshViewportMount');
 const panes = {
@@ -433,6 +458,17 @@ const mesh = new XKomzMasterInterface(mount, {
  ensureDrawerContent('left');
  ensureDrawerContent('right');
  ensureDrawerContent('telemetry');
+
+// Main-view dock routes into the existing operational pod drawer.
+document.querySelectorAll('[data-pod-dock]').forEach(button => button.addEventListener('click', () => {
+  openMeshDrawer('right');
+  const names = {'planet-k':'Planet-K','kashkorner':'KashKorner','x-koins':'X-Koin’s','kernelodies':'Kernelodie’s','kernelvision':'KernelVision','x-shield':'X-Shield'};
+  const podName = names[button.dataset.podDock];
+  requestAnimationFrame(() => {
+    const card = [...document.querySelectorAll('#podsDrawer .pod-card')].find(item => (item.getAttribute('aria-label') || '').startsWith(podName));
+    if (card) { card.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); card.classList.add('flipped'); }
+  });
+});
 window.addEventListener('pagehide', () => mesh.destroy(), { once: true });
 </script>
 
