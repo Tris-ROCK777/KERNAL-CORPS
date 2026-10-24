@@ -417,6 +417,11 @@ const mesh = new XKomzMasterInterface(mount, {
     else closeMeshDrawers();
   }
 });
+ // Materialize the real drawer content at startup while keeping all drawers closed.
+ // This preserves the operational console and canonical pods in the live DOM for accessibility and smoke verification.
+ ensureDrawerContent('left');
+ ensureDrawerContent('right');
+ ensureDrawerContent('telemetry');
 window.addEventListener('pagehide', () => mesh.destroy(), { once: true });
 </script>
 
